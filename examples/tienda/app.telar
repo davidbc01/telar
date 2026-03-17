@@ -16,7 +16,7 @@ datos Pedido
   total: número
   estado: texto
 
-# ── Página de inicio ───────────────────────────────────────────
+# Página de inicio 
 
 página inicio en "/"
   título "Bienvenido a MiTienda"
@@ -40,7 +40,7 @@ página inicio en "/"
   optimizar para móvil
   caché 5 minutos
 
-# ── Detalle de producto ────────────────────────────────────────
+# Detalle de producto
 
 página detalle en "/producto/(id)"
   título "(producto.nombre)"
@@ -58,7 +58,7 @@ página detalle en "/producto/(id)"
 
   optimizar para móvil
 
-# ── Carrito ────────────────────────────────────────────────────
+# Carrito
 
 página carrito en "/carrito"
   título "Tu carrito"
@@ -71,7 +71,7 @@ página carrito en "/carrito"
     mostrar "Tu carrito está vacío"
     botón "Ver productos" ir a inicio
 
-# ── Login ──────────────────────────────────────────────────────
+# Login
 
 página login en "/entrar"
   título "Entrar"

@@ -11,7 +11,7 @@ datos Articulo
   autor: texto
   etiquetas: lista de texto
 
-# ── Página principal ───────────────────────────────────────────
+# Página principal
 
 página inicio en "/"
   título "Mi Blog"
@@ -26,7 +26,7 @@ página inicio en "/"
   optimizar para móvil
   caché 30 minutos
 
-# ── Detalle de artículo ────────────────────────────────────────
+# Detalle de artículo
 
 página articulo en "/articulo/(id)"
   título "(articulo.título)"
@@ -45,7 +45,7 @@ página articulo en "/articulo/(id)"
   optimizar para móvil
   caché 1 hora
 
-# ── Página de contacto ─────────────────────────────────────────
+# Página de contacto
 
 página contacto en "/contacto"
   título "Contacto"
