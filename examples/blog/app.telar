@@ -1,0 +1,61 @@
+# Ejemplo: Blog personal
+# Un blog sencillo con listado de artículos y página de detalle.
+
+aplicación MiBlog
+  idioma español
+
+datos Articulo
+  título: texto
+  contenido: texto
+  fecha: fecha
+  autor: texto
+  etiquetas: lista de texto
+
+# ── Página principal ───────────────────────────────────────────
+
+página inicio en "/"
+  título "Mi Blog"
+  descripción "Artículos sobre tecnología y diseño"
+
+  mostrar Articulo recientes
+    máximo 10
+    ordenados por fecha
+    si falla
+      mostrar "No se pudieron cargar los artículos."
+
+  optimizar para móvil
+  caché 30 minutos
+
+# ── Detalle de artículo ────────────────────────────────────────
+
+página articulo en "/articulo/(id)"
+  título "(articulo.título)"
+  descripción "(articulo.contenido primeras 200 letras)"
+
+  mostrar articulo.título
+  mostrar articulo.fecha
+  mostrar articulo.autor
+  mostrar articulo.contenido
+  mostrar articulo.etiquetas
+
+  mostrar "Artículos relacionados"
+    filtrados por etiquetas = articulo.etiquetas
+    máximo 3
+
+  optimizar para móvil
+  caché 1 hora
+
+# ── Página de contacto ─────────────────────────────────────────
+
+página contacto en "/contacto"
+  título "Contacto"
+
+  campo "Tu nombre" tipo texto
+  campo "Tu correo" tipo email
+  campo "Mensaje" tipo área de texto
+
+  botón "Enviar" hacer enviarMensaje
+    si falla
+      mostrar "No se pudo enviar. Intenta de nuevo."
+    si funciona
+      mostrar "Mensaje enviado. Te respondo pronto."

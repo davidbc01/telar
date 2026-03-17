@@ -1,0 +1,86 @@
+# Ejemplo: Tienda online
+# Muestra una tienda con listado de productos, detalle y carrito.
+
+aplicación MiTienda
+  idioma español
+
+datos Producto
+  nombre: texto
+  precio: número
+  imagen: foto
+  descripción: texto
+  stock: número
+
+datos Pedido
+  productos: lista de Producto
+  total: número
+  estado: texto
+
+# ── Página de inicio ───────────────────────────────────────────
+
+página inicio en "/"
+  título "Bienvenido a MiTienda"
+  descripción "Los mejores productos al mejor precio"
+
+  mostrar Producto recientes
+    máximo 8
+    ordenados por fecha
+    si falla
+      mostrar "No se pudieron cargar los productos."
+      reintentar en 10 segundos
+
+  si el usuario está conectado
+    mostrar "Hola, (usuario.nombre)"
+    botón "Mi cuenta" ir a cuenta
+    botón "Mi carrito" ir a carrito
+  si no
+    botón "Entrar" ir a login
+    botón "Registrarse" ir a registro
+
+  optimizar para móvil
+  caché 5 minutos
+
+# ── Detalle de producto ────────────────────────────────────────
+
+página detalle en "/producto/(id)"
+  título "(producto.nombre)"
+
+  mostrar producto.imagen
+  mostrar producto.nombre
+  mostrar producto.precio
+  mostrar producto.descripción
+
+  si producto.stock > 0
+    botón "Añadir al carrito" hacer añadirAlCarrito
+  si no
+    mostrar "Sin stock — avísame cuando llegue"
+    botón "Avisarme" hacer suscribirStock
+
+  optimizar para móvil
+
+# ── Carrito ────────────────────────────────────────────────────
+
+página carrito en "/carrito"
+  título "Tu carrito"
+
+  si hay resultados
+    mostrar pedido.productos
+    mostrar "Total: (pedido.total) €"
+    botón "Finalizar compra" ir a pago
+  si no
+    mostrar "Tu carrito está vacío"
+    botón "Ver productos" ir a inicio
+
+# ── Login ──────────────────────────────────────────────────────
+
+página login en "/entrar"
+  título "Entrar"
+
+  campo "Correo electrónico" tipo email
+  campo "Contraseña" tipo contraseña
+
+  botón "Entrar" hacer iniciarSesion
+    si falla
+      mostrar "Correo o contraseña incorrectos"
+
+  botón "¿Olvidaste tu contraseña?" ir a recuperarContraseña

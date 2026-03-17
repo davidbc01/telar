@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+
+# Compilado
+dist/
+build/
+*.js.map
+
+# Entorno
+.env
+.env.local
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
