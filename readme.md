@@ -68,6 +68,7 @@ Telar complila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toc
 | Fase | Estado |
 | ------ | ------ |
 | Especificación del lenguaje | ✅ Completa (v0.1) |
+| Lexer - tokenización | ✅ Completo |
 | Parser / validador de sintaxis | 🔄 En desarrollo |
 | Generación de HTML estático | ⬜ Pendiente |
 | Compilador completo | ⬜ Pendiente |
