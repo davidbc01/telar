@@ -110,7 +110,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | CLI — compilar, servir, verificar | ✅ Completo |
 | Publicado en npm | ✅ Completo |
 | Live reload en telar servir | ✅ Completo |
-| Extensión VS Code | 🔄 En desarrollo |
+| Extensión VS Code | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
 
 ## Hoja de ruta
@@ -130,7 +130,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.3 - Experiencia de desarrollo
 - [x] Live reload en `telar servir`
-- [ ] Extensión para VS Code
+- [x] Extensión para VS Code
 - [ ] Mensajes de error mejorados con contexto visual
 
 ### v1.0 - Lanzamiento público
