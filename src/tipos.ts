@@ -138,14 +138,14 @@ export interface NodoCamposDatos {
 // título: "Bienvenido"
 export interface NodoTitulo {
     tipo: "titulo"
-    valor: string
+    texto: string
     linea: number
 }
 
 // descripción: "..."
 export interface NodoDescripcion {
     tipo: "descripcion"
-    valor: string
+    texto: string
     linea: number
 }
 
@@ -165,6 +165,7 @@ export interface NodoBoton {
     texto: string
     accion: AccionBoton
     destino: string
+    siFalla?: Nodo[]
     linea: number
 }
 
@@ -212,6 +213,7 @@ export interface NodoReintentar {
 
 export type TipoDato =
     | "texto"
+    | "número"
     | "numero"
     | "fecha"
     | "foto"
