@@ -13,29 +13,29 @@ import { Parser } from './parser'
 import { Generador } from './generador'
 import { TelarError } from './tipos'
 
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
  
 const AYUDA = `
-  Telar v${VERSION} — Lenguaje de programación para la web
- 
-  Uso:
-    telar <comando> [opciones]
- 
-  Comandos:
-    compilar <archivo.telar>        Compila a HTML + CSS
-    compilar <archivo.telar> -o <carpeta>  Especifica carpeta de salida
-    servir   <archivo.telar>        Compila y sirve en localhost
-    verificar <archivo.telar>       Verifica la sintaxis sin compilar
- 
-  Ejemplos:
-    telar compilar app.telar
-    telar compilar app.telar -o dist/
-    telar servir app.telar
-    telar verificar app.telar
- 
-  Opciones:
-    --ayuda, -a       Muestra esta ayuda
-    --version, -v     Muestra la versión
+    Telar v${VERSION} — Lenguaje de programación para la web
+    
+    Uso:
+        telar <comando> [opciones]
+    
+    Comandos:
+        compilar <archivo.telar>        Compila a HTML + CSS
+        compilar <archivo.telar> -o <carpeta>  Especifica carpeta de salida
+        servir   <archivo.telar>        Compila y sirve en localhost
+        verificar <archivo.telar>       Verifica la sintaxis sin compilar
+    
+    Ejemplos:
+        telar compilar app.telar
+        telar compilar app.telar -o dist/
+        telar servir app.telar
+        telar verificar app.telar
+    
+    Opciones:
+        --ayuda, -a       Muestra esta ayuda
+        --version, -v     Muestra la versión
 `
 
 // --- Entrada principal ---
@@ -99,41 +99,111 @@ function comandoCompilar(args: string[]) {
 function comandoServir(args: string[]) {
     const { archivo, salida } = parsearArgs(args, '.telar-tmp')
     const puerto = 3000
-    
+    const puertoWS = 3001
+
     // Compilar primero
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
     const archivos = compilar(archivo)
     if (!archivos) process.exit(1)
-    
+
     // Escribir a carpeta temporal
     if (!fs.existsSync(salida)) {
         fs.mkdirSync(salida, { recursive: true })
     }
-    for (const f of archivos) {
-        fs.writeFileSync(path.join(salida, f.nombre), f.contenido, 'utf-8')
+
+    function recompilarYEscribir() {
+        const nuevos = compilar(archivo)
+        if (!nuevos) return false
+        for (const f of nuevos) {
+            // Inyectar script de live reload en cada HTML
+            let contenido = f.contenido
+            if (f.nombre.endsWith('.html')) {
+                contenido = contenido.replace(
+                '</body>',
+                `<script>
+    const ws = new WebSocket('ws://localhost:${puertoWS}');
+    ws.onmessage = () => location.reload();
+</script>
+</body>`
+                )
+            }
+            fs.writeFileSync(path.join(salida, f.nombre), contenido, 'utf-8')
+        }
+        return true
     }
-    
-    // Servidor HTTP simple
+
+    recompilarYEscribir()
+
+    // Servidor WebSocket para live reload
+    const net = require('net')
+    const clientes: any[] = []
+
+    const wsServer = net.createServer((socket: any) => {
+        // Handshake WebSocket mínimo
+        socket.once('data', (data: Buffer) => {
+            const key = data.toString().match(/Sec-WebSocket-Key: (.+)/)?.[1]?.trim()
+            if (!key) return
+            const crypto = require('crypto')
+            const accept = crypto
+                .createHash('sha1')
+                .update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')
+                .digest('base64')
+            socket.write(
+                'HTTP/1.1 101 Switching Protocols\r\n' +
+                'Upgrade: websocket\r\n' +
+                'Connection: Upgrade\r\n' +
+                `Sec-WebSocket-Accept: ${accept}\r\n\r\n`
+            )
+            clientes.push(socket)
+            socket.on('close', () => {
+                const i = clientes.indexOf(socket)
+                if (i !== -1) clientes.splice(i, 1)
+            })
+        })
+    })
+
+    wsServer.listen(puertoWS)
+
+    function notificarClientes() {
+        // Frame WebSocket mínimo para enviar mensaje de texto
+        const msg = Buffer.from('reload')
+        const frame = Buffer.alloc(2 + msg.length)
+        frame[0] = 0x81 // FIN + opcode texto
+        frame[1] = msg.length
+        msg.copy(frame, 2)
+        clientes.forEach(s => {
+            try { s.write(frame) } catch (e) {}
+        })
+    }
+
+    // Watcher con debounce — evita doble disparo en Windows
+    let timeout: NodeJS.Timeout | null = null
+    fs.watch(archivo, () => {
+        if (timeout) clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            console.log(`\n↻  Cambio detectado — recompilando...`)
+            const ok = recompilarYEscribir()
+            if (ok) {
+            console.log(`✓  Listo`)
+            notificarClientes()
+            }
+        }, 100)
+    })
+
+    // Servidor HTTP
     const servidor = http.createServer((req, res) => {
         let urlPath = req.url === '/' ? '/index.html' : req.url ?? '/index.html'
-    
-        // Quitar query strings
         urlPath = urlPath.split('?')[0]
-    
-        // Añadir .html si no tiene extensión
-        if (!path.extname(urlPath)) {
-            urlPath = urlPath + '.html'
-        }
-    
+        if (!path.extname(urlPath)) urlPath = urlPath + '.html'
+
         const rutaArchivo = path.join(salida, urlPath)
-    
+
         if (fs.existsSync(rutaArchivo)) {
             const ext = path.extname(rutaArchivo)
             const tipo = ext === '.html' ? 'text/html; charset=utf-8'
                         : ext === '.css'  ? 'text/css; charset=utf-8'
                         : ext === '.js'   ? 'application/javascript'
                         : 'text/plain'
-        
             res.writeHead(200, { 'Content-Type': tipo })
             res.end(fs.readFileSync(rutaArchivo))
         } else {
@@ -145,16 +215,18 @@ function comandoServir(args: string[]) {
             `)
         }
     })
-    
+
     servidor.listen(puerto, () => {
         console.log(`✓  Compilación completada`)
-        console.log(`\n🌐  Telar sirviendo en http://localhost:${puerto}\n`)
-        console.log(`   Presiona Ctrl+C para parar\n`)
+        console.log(`\n🌐  Telar sirviendo en http://localhost:${puerto}`)
+        console.log(`⚡  Live reload activo — guarda el archivo para recompilar`)
+        console.log(`\n   Presiona Ctrl+C para parar\n`)
     })
-    
-    // Limpiar carpeta temporal al salir
+
+    // Limpiar al salir
     process.on('SIGINT', () => {
         console.log('\n\n   Parando servidor...')
+        wsServer.close()
         fs.rmSync(salida, { recursive: true, force: true })
         process.exit(0)
     })
