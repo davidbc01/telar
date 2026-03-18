@@ -9,6 +9,7 @@ import {
     NodoBoton, NodoCampo, NodoSi,
     NodoOptimizar, NodoCache, NodoReintentar
 } from './tipos'
+import { GeneradorJS } from './generador-js'
 
 export interface ArchivoGenerado {
     nombre: string // e.g. "index.html"
@@ -36,6 +37,12 @@ export class Generador {
         archivos.push({
             nombre: 'telar.css',
             contenido: this.generarCSS()
+        })
+
+        const generadorJS = new GeneradorJS(this.app)
+        archivos.push({
+            nombre: 'telar.js',
+            contenido: generadorJS.generar()
         })
 
         return archivos
