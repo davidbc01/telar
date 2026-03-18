@@ -6,6 +6,12 @@
   "bin": {
     "telar": "./dist/cli.js"
   },
+  "files": [
+    "dist/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/cli.ts",
@@ -13,13 +19,7 @@
     "test:run": "vitest run",
     "lint": "tsc --noEmit"
   },
-  "keywords": [
-    "programming-language",
-    "spanish",
-    "web",
-    "declarative",
-    "compiler"
-  ],
+  "keywords": ["programming-language", "spanish", "web", "declarative", "compiler"],
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.0.0",
