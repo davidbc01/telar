@@ -28,7 +28,7 @@ aplicación MiTienda
 ## Instalación
 
 ```bash
-npm install -g telar
+npm install -g @davidbc01/telar
 ```
 
 O clona el repositorio para desarrollar:
