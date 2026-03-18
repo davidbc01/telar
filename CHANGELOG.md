@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.2.2] - 2026-03-18
+
+### Añadido
+
+- Live reload en `telar servir` - el navegador se recarga al guardar el archivo
+- Debounce para evitar doble disparo en Windows
+- WebSocket integrado en el servidor de desarrollo
+
+---
+
 ## [0.2.1] - 2026-03-18
 
 ### Añadido

@@ -109,8 +109,8 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Generación de JavaScript | ✅ Completo |
 | CLI — compilar, servir, verificar | ✅ Completo |
 | Publicado en npm | ✅ Completo |
-| Live reload en telar servir | 🟪 Pendiente |
-| Extensión VS Code | 🟪 Pendiente |
+| Live reload en telar servir | ✅ Completo |
+| Extensión VS Code | 🔄 En desarrollo |
 | Lanzamiento público | 🟪 Pendiente |
 
 ## Hoja de ruta
@@ -129,7 +129,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Servidor HTTP integrado en `telar servir`
 
 ### v0.3 - Experiencia de desarrollo
-- [ ] Live reload en `telar servir`
+- [x] Live reload en `telar servir`
 - [ ] Extensión para VS Code
 - [ ] Mensajes de error mejorados con contexto visual
 
@@ -141,7 +141,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ## ¿Por qué en español?
 
-La mayoria de los lenguajes de programación usan palabras clave en inglés. Esto añade una barrera invisible para los más de 500 millones de hispanohablantes que aprenden a programar.
+La mayoría de los lenguajes de programación usan palabras clave en inglés. Esto añade una barrera invisible para los más de 500 millones de hispanohablantes que aprenden a programar.
 
 Telar no pretende reemplazar el inglés como lengua franca de la programación. Pretende demostrar que la sintaxis de un lenguaje puede ser un dialecto estructurado de cualquier idioma humano, y que eso reduce drásticamente la curva de aprendizaje.
 
