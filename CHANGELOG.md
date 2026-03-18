@@ -5,7 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.2.1] - 2026-03-18
+
+### Añadido
+
+- Generador JavaScript completo
+- Runtime Telar con manejo de sesión y condiciones dinámicas
+- Cargadores de datos automáticos con manejo de errores
+- Acciones de botones con feedback visual
+
+---
+
 ## [0.2.0] - 2026-03-18
+
+### Añadido
 
 - CLI completa - comandos `compilar`, `servir` y `verificar`
 - Servidor HTTP integrado en `telar servir`

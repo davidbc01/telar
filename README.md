@@ -106,26 +106,32 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Lexer - tokenización | ✅ Completo |
 | Parser - validador de sintaxis | ✅ Completo |
 | Generación de HTML + CSS | ✅ Completo |
+| Generación de JavaScript | ✅ Completo |
 | CLI — compilar, servir, verificar | ✅ Completo |
-| Generación de JavaScript | 🔄 En desarrollo |
-| CLI instalable (npm) | 🟪 Pendiente |
+| Publicado en npm | ✅ Completo |
+| Live reload en telar servir | 🟪 Pendiente |
 | Extensión VS Code | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
 
 ## Hoja de ruta
 
-### v0.1 - Prueba de concepto
+### v0.1 - Prueba de concepto ✅
 - [x] Lexer que tokeniza archivos `.telar`
 - [x] Parser que valida la sintaxis
 - [x] Mensajes de error en español
 - [x] Generación de HTML estático + CSS estático
 - [x] CLI con comandos `compilar`, `servir` y `verificar`
 
-### v0.2 - Compilador funcional
-- [ ] Generación de JavaScript
-- [ ] Generación de CSS responsivo
-- [ ] Soporte para modelos de datos
-- [ ] CLI básica: `telar compilar`, `telar servir`
+### v0.2 - Compilador funcional ✅
+- [x] Generación de JavaScript
+- [x] CLI instalable: `npm install -g @davidbc01/telar`
+- [x] Soporte para condiciones dinámicas y cargadores de datos
+- [x] Servidor HTTP integrado en `telar servir`
+
+### v0.3 - Experiencia de desarrollo
+- [ ] Live reload en `telar servir`
+- [ ] Extensión para VS Code
+- [ ] Mensajes de error mejorados con contexto visual
 
 ### v1.0 - Lanzamiento público
 - [ ] Estabilidad de sintaxis
