@@ -4,11 +4,11 @@
   "description": "Lenguaje de programación declarativo para la web, escrito en español",
   "main": "dist/index.js",
   "bin": {
-    "telar": "dist/index.js"
+    "telar": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node src/cli.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "tsc --noEmit"
