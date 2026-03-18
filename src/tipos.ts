@@ -173,7 +173,7 @@ export interface NodoBoton {
 export interface NodoCampo {
     tipo: "campo"
     etiqueta: string
-    tipoCampo: TipoDato
+    tipoCampo: TipoCampo
     linea: number
 }
 
@@ -182,7 +182,7 @@ export interface NodoSi {
     tipo: "si"
     condicion: Condicion
     entonces: Nodo[]
-    sino?: Nodo[]
+    siNo?: Nodo[]
     linea: number
 }
 
@@ -214,7 +214,6 @@ export interface NodoReintentar {
 export type TipoDato =
     | "texto"
     | "número"
-    | "numero"
     | "fecha"
     | "foto"
     | "verdad"

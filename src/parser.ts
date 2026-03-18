@@ -320,16 +320,16 @@ export class Parser {
         return { tipo: "campo", etiqueta, tipoCampo, linea: token.linea }
     }
  
-    private parsearTipoCampo(): TipoDato {
+    private parsearTipoCampo(): TipoCampo {
         const token = this.actual()
         const valor = token.valor.toLowerCase()
     
-        const tipos: Record<string, TipoDato> = {
+        const tipos: Record<string, TipoCampo> = {
             "texto": "texto",
-            "email": "texto",
-            "contraseña": "texto",
-            "número": "número",
-            "numero": "número",
+            "email": "email",
+            "contraseña": "contraseña",
+            "numero": "texto",
+            "número": "texto",
         }
     
         if (tipos[valor]) {
@@ -368,16 +368,16 @@ export class Parser {
     
         const condicion = this.parsearCondicion()
         const entonces = this.parsearBloque()
-        let sino: Nodo[] | undefined
+        let siNo: Nodo[] | undefined
     
         // Buscar "si no" al mismo nivel
         if (this.actual().tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.SiNo) {
             this.avanzar() // si
             this.avanzar() // no
-            sino = this.parsearBloque()
+            siNo = this.parsearBloque()
         }
         
-        return { tipo: "si", condicion, entonces, sino, linea: token.linea }
+        return { tipo: "si", condicion, entonces, siNo, linea: token.linea }
     }
 
     private parsearCondicion(): Condicion {
