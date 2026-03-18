@@ -5,6 +5,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.1.3] - 2026-03-18
+
+### Añadido
+
+- Generador HTML completo - produce HTML semántico, CSS responsivo
+- Soporte para condiciones, formularios, botones y listas
+- CSS base generado automáticamente con variables y responsive
+- CLI acepta carpeta de salida: telar compilar app.telar dist/
+
 ## [0.1.2] - 2026-03-18
 
 ### Añadido

@@ -25,6 +25,19 @@ aplicación MiTienda
 
 ---
 
+## Instalación
+
+```bash
+git clone https://github.com/davidbc01/telar
+cd telar
+npm install
+npx ts-node src/index.ts examples/tienda/app.telar dist/
+```
+
+Abre `dist/index.html` en tu navegador.
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -70,8 +83,9 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Especificación del lenguaje | ✅ Completa (v0.1) |
 | Lexer - tokenización | ✅ Completo |
 | Parser - validador de sintaxis | ✅ Completo |
-| Generación de HTML estático | 🔄 Pendiente |
-| Compilador completo | 🟪 Pendiente |
+| Generación de HTML + CSS | ✅ Completo |
+| Generación de JavaScript | 🔄 En desarrollo |
+| CLI instalable (npm) | 🟪 Pendiente |
 | Extensión VS Code | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
 
@@ -81,7 +95,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Lexer que tokeniza archivos `.telar`
 - [x] Parser que valida la sintaxis
 - [x] Mensajes de error en español
-- [ ] Generación de HTML estático
+- [x] Generación de HTML estático + CSS estático
 
 ### v0.2 - Compilador funcional
 - [ ] Generación de JavaScript
