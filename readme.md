@@ -5,7 +5,7 @@
 ```telar
 aplicación MiTienda
 
-  página incio en "/"
+  página inicio en "/"
     título "Bienvenido"
 
     mostrar productos recientes
@@ -41,9 +41,9 @@ Todo eso es trabajo que no tiene nada que ver con el problema que el desarrollad
 
 ## La hipótesis de Telar
 
-Un lenguaje donde describes la **intención**, y el complilador toma todas las decisiones técnicas.
+Un lenguaje donde describes la **intención**, y el compilador toma todas las decisiones técnicas.
 
-Telar complila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca esos archivos. El lenguaje tiene opiniones fuertes y defaults inteligentes: responsive, accesible y optimizado por defecto.
+Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca esos archivos. El lenguaje tiene opiniones fuertes y defaults inteligentes: responsive, accesible y optimizado por defecto.
 
 ## Filosofía
 
@@ -63,30 +63,31 @@ Telar complila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toc
 
 ## Estado actual
 
-🟡 **En diseño** - Especificación del lenguaje en proceso.
+🟢 **En desarrollo activo**
 
 | Fase | Estado |
 | ------ | ------ |
 | Especificación del lenguaje | ✅ Completa (v0.1) |
 | Lexer - tokenización | ✅ Completo |
-| Parser / validador de sintaxis | 🔄 En desarrollo |
-| Generación de HTML estático | ⬜ Pendiente |
-| Compilador completo | ⬜ Pendiente |
-| Extensión VS Code | ⬜ Pendiente |
-| Lanzamiento público | ⬜ Pendiente |
+| Parser - validador de sintaxis | ✅ Completo |
+| Generación de HTML estático | 🔄 Pendiente |
+| Compilador completo | 🟪 Pendiente |
+| Extensión VS Code | 🟪 Pendiente |
+| Lanzamiento público | 🟪 Pendiente |
 
 ## Hoja de ruta
 
 ### v0.1 - Prueba de concepto
-- [ ] Parser que valida archivos `.telar`
-- [ ] Mensaje de error en español
+- [x] Lexer que tokeniza archivos `.telar`
+- [x] Parser que valida la sintaxis
+- [x] Mensajes de error en español
 - [ ] Generación de HTML estático
 
 ### v0.2 - Compilador funcional
 - [ ] Generación de JavaScript
 - [ ] Generación de CSS responsivo
 - [ ] Soporte para modelos de datos
-- [ ] CLI básica: `telar complilar`, `telar servir`
+- [ ] CLI básica: `telar compilar`, `telar servir`
 
 ### v1.0 - Lanzamiento público
 - [ ] Estabilidad de sintaxis
@@ -98,13 +99,13 @@ Telar complila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toc
 
 La mayoria de los lenguajes de programación usan palabras clave en inglés. Esto añade una barrera invisible para los más de 500 millones de hispanohablantes que aprenden a programar.
 
-Telar no pretende reemplazar el inglés como lengua fraca de la programación. Pretende demostrar que la sintaxis de un lenguaje puede ser un dialecto estructurado de cualquier idioma humano, y que eso reduce drásticamente la curva de aprendizaje.
+Telar no pretende reemplazar el inglés como lengua franca de la programación. Pretende demostrar que la sintaxis de un lenguaje puede ser un dialecto estructurado de cualquier idioma humano, y que eso reduce drásticamente la curva de aprendizaje.
 
 ## Cómo contribuir
 
 El proyecto está en sus primeras fases. La contribución más valiosa ahora mismo es **probar la sintaxis**:
 
-1. Lee la [especificación](./docs/especificacion-v0.1.md)
+1. Lee la [especificación](./docs/especificacion.md)
 2. Intenta escribir tu caso de uso real en Telar
 3. Abre un issue con lo que se sintió forzado o incómodo
 

@@ -1,7 +1,27 @@
 # Historial de cambios
 
 Todos los cambios relevantes de Telar se documentan aquí.
-El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
+El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
+
+---
+
+## [0.1.2] - 2026-03-18
+
+### Añadido
+- Parser completo - construye AST desde tokens
+- Soporte para páginas, modelos, condiciones, botones, campos
+- Manejo de bloques "si falla" en mostrar y botones
+- Validación de sintaxis con errores en español
+
+---
+
+## [0.1.1] - 2026-03-17
+
+### Añadido
+- Lexer completo - tokeniza archivos .telar
+- Soporte para tildes, ñ y caracteres especiales del español
+- Manejo de saltos de línea Windows y Unix
+- Mensajes de error en español con sugerencias
 
 ---
 
@@ -14,11 +34,3 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - Hoja de ruta hasta 1.0
 - Ejemplos de código: tienda y blog
 - Licencia Apache 2.0
-
-## [0.1.1] - 2026-03-17
-
-### Añadido
-- Lexer completo - tokeniza archivos .telar a 228 tokens
-- Soporte para tildes, ñ y caracteres especiales del español
-- Manejo de saltos de línea Windows y Linux
-- Mensajes de error en español con sugerencias
