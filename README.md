@@ -28,13 +28,35 @@ aplicación MiTienda
 ## Instalación
 
 ```bash
+npm install -g telar
+```
+
+O clona el repositorio para desarrollar:
+
+```bash
 git clone https://github.com/davidbc01/telar
 cd telar
 npm install
-npx ts-node src/index.ts examples/tienda/app.telar dist/
+npx ts-node src/cli.ts compilar examples/tienda/app.telar dist/
 ```
 
-Abre `dist/index.html` en tu navegador.
+---
+
+## Uso
+
+```bash
+# Verificar la sintaxis de un archivo
+telar verificar app.telar
+
+# Compilar a HTML + CSS
+telar compilar app.telar
+
+# Compilar a una carpeta específica
+telar compilar app.telar -o dist/
+
+# Compilar y servir en el navegador
+telar servir app.telar
+```
 
 ---
 
@@ -84,6 +106,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Lexer - tokenización | ✅ Completo |
 | Parser - validador de sintaxis | ✅ Completo |
 | Generación de HTML + CSS | ✅ Completo |
+| CLI — compilar, servir, verificar | ✅ Completo |
 | Generación de JavaScript | 🔄 En desarrollo |
 | CLI instalable (npm) | 🟪 Pendiente |
 | Extensión VS Code | 🟪 Pendiente |
@@ -96,6 +119,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Parser que valida la sintaxis
 - [x] Mensajes de error en español
 - [x] Generación de HTML estático + CSS estático
+- [x] CLI con comandos `compilar`, `servir` y `verificar`
 
 ### v0.2 - Compilador funcional
 - [ ] Generación de JavaScript
