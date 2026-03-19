@@ -1,6 +1,6 @@
-# Especificación de Telar v0.1
+# Especificación de Telar v0.4
 
-> Este documento define qué es Telar, que problema resuelve, cómo se ve el código
+> Este documento define qué es Telar, qué problema resuelve, cómo se ve el código
 > y cuál es la hoja de ruta. Es el documento fundacional del proyecto.
 
 ---
@@ -30,7 +30,7 @@ Todo eso es trabajo que no tiene nada que ver con el problema que el desarrollad
 
 ## 2. Filosofía de diseño
 
-### Principio 1 - Declarativo siempre
+### Principio 1 — Declarativo siempre
 
 El desarrollador describe qué quiere, nunca cómo conseguirlo.
 
@@ -40,21 +40,27 @@ El desarrollador describe qué quiere, nunca cómo conseguirlo.
      ordenados por precio
 ```
 
-### Principio 2 - El silencio no existe
+### Principio 2 — El silencio no existe
 
 Telar nunca falla en silencio. Los errores son claros, en español, y sugieren cómo arreglarlos.
 
-```telar
-✗  Línea 12: "máximo muchos" — se esperaba un número
-   ¿Quisiste decir "máximo 10"?
-   Sugerencia: los números van sin comillas en Telar
+```
+✗  app.telar:12:9 — se esperaba un número
+
+   10 │  mostrar productos recientes
+   11 │    ordenados por precio
+→  12 │    máximo muchos
+                    ^^^^^
+   13 │    si falla
+
+  Sugerencia: los números van sin comillas. Prueba con: máximo 10
 ```
 
-### Principio 3 - Defaults con opinión
+### Principio 3 — Defaults con opinión
 
-Optimización móvil, caché, acesibilidad ARIA y lazy loading activados por defecto. Sin configuración.
+Optimización móvil, caché, accesibilidad ARIA y lazy loading activados por defecto. Sin configuración.
 
-### Principio 4 - Legibilidad humana
+### Principio 4 — Legibilidad humana
 
 El código de Telar debe poder ser leído por alguien sin experiencia técnica.
 Es una restricción de diseño, no un objetivo estético.
@@ -63,13 +69,13 @@ Es una restricción de diseño, no un objetivo estético.
 
 ## 3. Sintaxis
 
-Telar usa un dialecto estructurado del español. No es español completamente libre - es un conjunto finito y aprendible de patrones de frase.
+Telar usa un dialecto estructurado del español. No es español completamente libre — es un conjunto finito y aprendible de patrones de frase.
 
 ### Reglas fundamentales
 
 - La indentación es significativa (2 espacios)
 - Los nombres propios van en mayúscula inicial
-- Las cademas de texto van entre comillas dobles
+- Las cadenas de texto van entre comillas dobles
 - Los números van sin comillas y sin unidades
 - Los comentarios empiezan con `#`
 
@@ -118,43 +124,93 @@ mostrar productos recientes
 
 ## 4. El compilador
 
-El compilador toma un archivo `.telar` y produce un bundle listo para desplegar. No requiere configuración.
+El compilador toma un archivo `.telar` y produce un bundle listo para desplegar en tres fases:
+
+**Lexer** — tokeniza el archivo reconociendo el español con tildes y ñ.
+
+**Parser** — construye el árbol de sintaxis abstracta (AST) desde los tokens.
+
+**Generador** — recorre el AST y produce HTML semántico, CSS responsivo y JavaScript optimizado.
 
 ### Qué genera automáticamente
 
 - HTML semántico con atributos ARIA
 - CSS mínimo y responsivo
-- JavaScript optimizado (<5kb base)
+- JavaScript con runtime de condiciones dinámicas y carga de datos
 - Lazy loading automático
 - Cache headers configurados
 
-### Estrategia de compilación
+### Qué hace el JavaScript generado
 
-La v0.1 complila a JavaScript estándar. Las versiones futuras explorarán WebAssembly para mayor rendimiento.
+- `mostrar Producto recientes` → llamada a `/api/producto?limit=8&sort=precio`
+- `si el usuario está conectado` → lee el estado de sesión del localStorage
+- `si falla` → muestra el mensaje de error y reintenta si se especifica
+- `hacer acción` → POST a `/api/accion/nombre` con feedback visual
 
 ---
 
-## 5. Hoja de ruta
+## 5. CLI
+
+```bash
+# Compilar a HTML + CSS + JS
+telar compilar app.telar
+telar compilar app.telar -o dist/
+
+# Servir con live reload
+telar servir app.telar
+
+# Verificar sintaxis
+telar verificar app.telar
+
+# Gestionar paquetes
+telar añadir formulario
+telar quitar formulario
+telar paquetes
+telar buscar <término>
+```
+
+---
+
+## 6. Gestor de paquetes
+
+Los paquetes de Telar son repositorios de GitHub con el prefijo `telar-`.
+
+```bash
+telar añadir davidbc01/telar-formulario
+# o con alias corto si es un paquete oficial:
+telar añadir formulario
+```
+
+Los paquetes se instalan en la carpeta `paquetes/` y se registran en `telar.paquetes.json`.
+
+---
+
+## 7. Hoja de ruta
 
 | Versión | Estado | Objetivo |
-| --------- | --------- | --------- |
-| 0.1 | 🔄 En progreso | Parser y validador de sintaxis |
-| 0.2 | ⬜ Pendiente | Compilador funcional |
-| 0.3 | ⬜ Pendiente | Tooling (VS Code, CLI) |
-| 1.0 | ⬜ Pendiente | Lanzamiento público |
+|---------|--------|----------|
+| 0.1 | ✅ Completo | Lexer, parser, generador HTML |
+| 0.2 | ✅ Completo | Generador JavaScript, CLI |
+| 0.3 | ✅ Completo | Live reload, extensión VS Code, errores visuales |
+| 0.4 | ✅ Completo | Gestor de paquetes |
+| 0.5 | 🔄 En desarrollo | Sintaxis `usar`, paquetes oficiales, `telar nuevo` |
+| 0.6 | 🟪 Pendiente | Tests completos, CI/CD |
+| 0.7 | 🟪 Pendiente | Documentación web en telar.dev |
+| 1.0 | 🟪 Pendiente | Lanzamiento público |
 
 ---
 
-## 6. Comparativa
+## 8. Comparativa
 
 | | React | Svelte | Elm | Telar |
-| --- | --- | --- | --- | --- |
+|---|---|---|---|---|
 | Sintaxis | JSX + JS | HTML+JS | Haskell-like | Español natural |
-| Curva aprendizaje | Alta | Media | Media | Ninguna |
+| Curva aprendizaje | Alta | Media | Muy alta | Baja |
 | Config inicial | Alta | Media | Media | Ninguna |
 | Errores claros | No | Parcial | Sí | Sí |
 | Optimización auto | No | Parcial | Parcial | Sí |
+| Gestor de paquetes | npm | npm | elm-package | telar añadir |
 
 ---
 
-*Especificación v0.1 - Marzo 2026*
+*Especificación v0.4 — Marzo 2026*
