@@ -129,7 +129,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Extensión VS Code | ✅ Completo |
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
-| Sintaxis `usar` para paquetes | 🟪 Pendiente |
+| Sintaxis `usar` y bloque `código` | ✅ Completo |
 | Tests completos | 🟪 Pendiente |
 | Comando `telar nuevo` | 🟪 Pendiente |
 | Documentación web | 🟪 Pendiente |
@@ -163,7 +163,8 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Registro local en `telar.paquetes.json`
 
 ### v0.5 — Sintaxis `usar` y paquetes oficiales
-- [ ] Palabra clave `usar` en el lenguaje
+- [x] Palabra clave `usar` en el lenguaje
+- [x] Bloque `código` para JavaScript directo
 - [ ] Al menos 3 paquetes oficiales: formulario, navbar, lista
 - [ ] Comando `telar nuevo` para crear proyectos
 

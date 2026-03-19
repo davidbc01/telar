@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.5.0] - 2026-03-19
+
+### Añadido
+- Sintaxis `usar paquete` para incluir componentes reutilizables
+- Bloque `código ... fin código` para JavaScript directo
+- Parser refactorizado con tokens de indentación para bloques correctos
+
+### Corregido
+- Condicionales anidados ahora se generan correctamente
+- Modificadores de `mostrar` respetan los niveles de indentación
+- IDs de campos con tildes y ñ se normalizan correctamente
+
+---
+
 ## [0.4.0] — 2026-03-19
 
 ### Añadido
