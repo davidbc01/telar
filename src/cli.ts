@@ -56,7 +56,7 @@ const comando = args[0]
  
 switch (comando) {
     case 'compilar':
-        comandoCompilar(args.slice(1))
+        comandoCompilar(args[1])
         break
     case 'servir':
         comandoServir(args.slice(1))
@@ -72,26 +72,33 @@ switch (comando) {
 
 // --- Comando: compilar ---
 
-function comandoCompilar(args: string[]) {
-    const { archivo, salida } = parsearArgs(args, 'dist')
-    
-    console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
-    
-    const archivos = compilar(archivo)
-    if (!archivos) process.exit(1)
-    
-    // Crear carpeta de salida
-    if (!fs.existsSync(salida)) {
-        fs.mkdirSync(salida, { recursive: true })
+function comandoCompilar(rutaArchivo: string) {
+    const nombreArchivo = path.basename(rutaArchivo)
+
+    try {
+        const contenido = leerArchivo(rutaArchivo)
+        if (!contenido) return null
+
+        const lexer = new Lexer(contenido)
+        const tokens = lexer.tokenizar()
+
+        const parser = new Parser(tokens)
+        const arbol = parser.parsear()
+
+        const generador = new Generador(arbol)
+        return generador.generar()
+
+    } catch (error) {
+        if (error instanceof TelarError) {
+            const contenido = fs.existsSync(rutaArchivo)
+                ? fs.readFileSync(rutaArchivo, 'utf-8')
+                : undefined
+            console.error(error.formatear(nombreArchivo, contenido))
+        } else {
+            console.error(error)
+        }
+        return null
     }
-    
-    for (const f of archivos) {
-        const ruta = path.join(salida, f.nombre)
-        fs.writeFileSync(ruta, f.contenido, 'utf-8')
-        console.log(`✓  ${f.nombre}`)
-    }
-    
-    console.log(`\n✓  ${archivos.length} archivos generados en ${salida}/\n`)
 }
 
 // --- Comando: servir ---
@@ -261,7 +268,10 @@ function comandoVerificar(args: string[]) {
     
     } catch (error) {
         if (error instanceof TelarError) {
-            console.error(error.formatear(nombreArchivo))
+            const contenido = fs.existsSync(archivo)
+                ? fs.readFileSync(archivo, 'utf-8')
+                : undefined
+            console.error(error.formatear(nombreArchivo, contenido))
         } else {
             console.error(error)
         }

@@ -269,12 +269,38 @@ export class TelarError extends Error {
     }
 
     // Formatea el error para mostrarlo en la terminal
-    formatear(nombreArchivo: string): string {
+    formatear(nombreArchivo: string, contenido?: string): string {
         const ubicacion = `${nombreArchivo}:${this.linea}:${this.columna}`
-        let salida = `\n✗  ${ubicacion}: ${this.message}\n`
-        if (this.sugerencia) {
-            salida += `   Sugerencia: ${this.sugerencia}\n`
+        let salida = `\n✗  ${ubicacion} — ${this.message}\n`
+
+        if (contenido) {
+            const lineas = contenido.split('\n')
+            const inicio = Math.max(0, this.linea - 3)
+            const fin = Math.min(lineas.length, this.linea + 2)
+
+            salida += '\n'
+
+            for (let i = inicio; i < fin; i++) {
+                const numLinea = i + 1
+                const esLineaError = numLinea === this.linea
+                const prefijo = esLineaError ? '→' : ' '
+                const num = String(numLinea).padStart(4)
+
+                salida += `  ${prefijo} ${num} │  ${lineas[i]}\n`
+
+                if (esLineaError) {
+                    const espacios = ' '.repeat(this.columna + 7)
+                    salida += `  ${espacios}^^^^^\n`
+                }
+            }
+
+            salida += '\n'
         }
+
+        if (this.sugerencia) {
+            salida += `  Sugerencia: ${this.sugerencia}\n`
+        }
+
         return salida
     }
 }
