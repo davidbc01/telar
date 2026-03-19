@@ -1,0 +1,16 @@
+# Paquete: telar-formulario
+# Un formulario de contacto reutilizable
+
+página contacto en "/contacto"
+  título "Contacto"
+  descripción "Envíanos un mensaje"
+
+  campo "Tu nombre" tipo texto
+  campo "Tu correo" tipo email
+  campo "Mensaje" tipo área de texto
+
+  botón "Enviar" hacer enviarFormulario
+    si falla
+      mostrar "No se pudo enviar. Intenta de nuevo."
+    si funciona
+      mostrar "Mensaje enviado correctamente."

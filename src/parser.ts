@@ -9,6 +9,7 @@ import {
     NodoAplicacion, NodoPagina, NodoDatos, NodoCamposDatos,
     NodoTitulo, NodoDescripcion, NodoMostrar, NodoBoton,
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
+    NodoUsar, NodoCodigo,
     Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion
 } from './tipos'
 import { Errores } from './errores'
@@ -18,10 +19,7 @@ export class Parser {
     private posicion: number = 0
 
     constructor(tokens: Token[]) {
-        // Filtramos tokens de indentación — el parser no los necesita
         this.tokens = tokens.filter(t =>
-            t.tipo !== TipoToken.Indentacion &&
-            t.tipo !== TipoToken.FinIndentacion &&
             t.tipo !== TipoToken.NuevaLinea
         )
     }
@@ -60,6 +58,13 @@ export class Parser {
         while (!this.finArchivo()) {
             const actual = this.actual()
 
+            // Saltar tokens de indentación a nivel raíz
+            if (actual.tipo === TipoToken.Indentacion || 
+                actual.tipo === TipoToken.FinIndentacion) {
+                this.avanzar()
+                continue
+            }
+
             if (actual.tipo === TipoToken.Idioma) {
                 this.avanzar()
                 idioma = this.consumirIdentificador().valor
@@ -76,7 +81,6 @@ export class Parser {
                 continue
             }
 
-            // Token no reconocido a nivel raíz — saltar
             this.avanzar()
         }
     
@@ -96,18 +100,30 @@ export class Parser {
         const token = this.consumir(TipoToken.Datos)
         const nombre = this.consumir(TipoToken.Nombre).valor
         const campos: NodoCamposDatos[] = []
-    
-        // Leer campos hasta encontrar otra sección de nivel raíz
-        while (!this.finArchivo() && this.esNivelRaiz()) {
-            const campo = this.parsearCampoDatos()
-            if (campo) campos.push(campo)
+
+        if (this.actual().tipo === TipoToken.Indentacion) {
+            this.avanzar()
+            let intentos = 0
+            while (!this.finArchivo() && this.actual().tipo !== TipoToken.FinIndentacion) {
+                intentos++
+                if (intentos > 20) {
+                    break
+                }
+                const campo = this.parsearCampoDatos()
+                if (campo) campos.push(campo)
+            }
+            if (this.actual().tipo === TipoToken.FinIndentacion) this.avanzar()
         }
-    
+
         return { tipo: "datos", nombre, campos, linea: token.linea }
     }
  
     private parsearCampoDatos(): NodoCamposDatos | null {
-        if (this.actual().tipo !== TipoToken.Identificador) return null
+        // Saltar tokens que no son campos
+        if (this.actual().tipo !== TipoToken.Identificador) {
+            this.avanzar()
+            return null
+        }
     
         const nombreToken = this.consumirIdentificador()
     
@@ -158,22 +174,9 @@ export class Parser {
     private parsearPagina(): NodoPagina {
         const token = this.consumir(TipoToken.Pagina)
         const nombre = this.consumirIdentificador().valor
-    
-        if (this.actual().tipo !== TipoToken.En) {
-            throw new TelarError(
-                Errores.rutaPagina(nombre, this.actual().linea, this.actual().columna)
-            )
-        }
         this.consumir(TipoToken.En)
         const ruta = this.consumir(TipoToken.Texto).valor
-        const hijos: Nodo[] = []
-    
-        // Leer hijos hasta encontrar otra página o fin
-        while (!this.finArchivo() && !this.esSiguientePagina()) {
-            const nodo = this.parsearNodo()
-            if (nodo) hijos.push(nodo)
-        }
-    
+        const hijos = this.parsearBloquePagina()
         return { tipo: "pagina", nombre, ruta, hijos, linea: token.linea }
     }
  
@@ -181,7 +184,12 @@ export class Parser {
  
     private parsearNodo(): Nodo | null {
         const actual = this.actual()
-    
+
+        if (actual.tipo === TipoToken.Indentacion || actual.tipo === TipoToken.FinIndentacion) {
+            this.avanzar()
+            return null
+        }
+
         switch (actual.tipo) {
             case TipoToken.Titulo:      return this.parsearTitulo()
             case TipoToken.Descripcion: return this.parsearDescripcion()
@@ -192,9 +200,11 @@ export class Parser {
             case TipoToken.Optimizar:   return this.parsearOptimizar()
             case TipoToken.Cache:       return this.parsearCache()
             case TipoToken.Reintentar:  return this.parsearReintentar()
+            case TipoToken.Usar:        return this.parsearUsar()
+            case TipoToken.Codigo:      return this.parsearCodigo()
             default:
-                this.avanzar()
-                return null
+            this.avanzar()
+            return null
         }
     }
  
@@ -218,63 +228,76 @@ export class Parser {
         const modeloToken = this.actual()
         const modelo = modeloToken.valor
         this.avanzar()
-    
+
         const modificadores: ModificadorMostrar[] = []
         let siFalla: Nodo[] | undefined
         let siFunciona: Nodo[] | undefined
-    
-        // Leer modificadores opcionales
-        while (!this.finArchivo() && (!this.esInstruccionNueva() || this.actual().tipo === TipoToken.Si)) {
-            const t = this.actual()
-        
-            if (t.tipo === TipoToken.Recientes) {
-                modificadores.push({ tipo: "recientes" })
-                this.avanzar()
-                continue
+
+        // Los modificadores pueden venir directamente o en bloque indentado
+        const leerModificadores = () => {
+            while (!this.finArchivo()) {
+                const t = this.actual()
+
+                if (t.tipo === TipoToken.Indentacion) {
+                    this.avanzar()
+                    continue
+                }
+
+                if (t.tipo === TipoToken.FinIndentacion) {
+                    break
+                }
+
+                if (t.tipo === TipoToken.Recientes) {
+                    modificadores.push({ tipo: "recientes" })
+                    this.avanzar()
+                    continue
+                }
+
+                if (t.tipo === TipoToken.Maximo) {
+                    this.avanzar()
+                    const cantidad = parseInt(this.consumir(TipoToken.Numero).valor)
+                    modificadores.push({ tipo: "maximo", cantidad })
+                    continue
+                }
+
+                if (t.tipo === TipoToken.Ordenados) {
+                    this.avanzar()
+                    if (this.actual().tipo === TipoToken.Por) this.avanzar()
+                    const campo = this.consumirIdentificador().valor
+                    modificadores.push({ tipo: "ordenados", campo })
+                    continue
+                }
+
+                if (t.tipo === TipoToken.Filtrados) {
+                    this.avanzar()
+                    if (this.actual().tipo === TipoToken.Por) this.avanzar()
+                    const campo = this.consumirIdentificador().valor
+                    if (this.actual().tipo === TipoToken.Igual) this.avanzar()
+                    const valor = this.consumir(TipoToken.Texto).valor
+                    modificadores.push({ tipo: "filtrados", campo, valor })
+                    continue
+                }
+
+                if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Falla) {
+                    this.avanzar()
+                    this.avanzar()
+                    siFalla = this.parsearBloqueIndentado()
+                    continue
+                }
+
+                if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Funciona) {
+                    this.avanzar()
+                    this.avanzar()
+                    siFunciona = this.parsearBloqueIndentado()
+                    continue
+                }
+
+                break
             }
-        
-            if (t.tipo === TipoToken.Maximo) {
-                this.avanzar()
-                const cantidad = parseInt(this.consumir(TipoToken.Numero).valor)
-                modificadores.push({ tipo: "maximo", cantidad })
-                continue
-            }
-        
-            if (t.tipo === TipoToken.Ordenados) {
-                this.avanzar()
-                if (this.actual().tipo === TipoToken.Por) this.avanzar()
-                const campo = this.consumirIdentificador().valor
-                modificadores.push({ tipo: "ordenados", campo })
-                continue
-            }
-        
-            if (t.tipo === TipoToken.Filtrados) {
-                this.avanzar()
-                if (this.actual().tipo === TipoToken.Por) this.avanzar()
-                const campo = this.consumirIdentificador().valor
-                if (this.actual().tipo === TipoToken.Igual) this.avanzar()
-                const valor = this.consumir(TipoToken.Texto).valor
-                modificadores.push({ tipo: "filtrados", campo, valor })
-                continue
-            }
-        
-            if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Falla) {
-                this.avanzar() // si
-                this.avanzar() // falla
-                siFalla = this.parsearBloque()
-                continue
-            }
-        
-            if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Funciona) {
-                this.avanzar() // si
-                this.avanzar() // funciona
-                siFunciona = this.parsearBloque()
-                continue
-            }
-        
-            break
         }
-    
+
+        leerModificadores()
+
         return { tipo: "mostrar", modelo, modificadores, siFalla, siFunciona, linea: token.linea }
     }
  
@@ -353,6 +376,30 @@ export class Parser {
     // si el usuario está conectado / si hay resultados / si no
     private parsearSi(): NodoSi {
         const token = this.consumir(TipoToken.Si)
+
+        // "si falla" — bloque de error
+        if (this.actual().tipo === TipoToken.Falla) {
+            this.avanzar()
+            const entonces = this.parsearBloqueIndentado()
+            return {
+                tipo: "si",
+                condicion: { tipo: "hay_resultados" },
+                entonces,
+                linea: token.linea
+            }
+        }
+
+        // "si funciona" — bloque de éxito
+        if (this.actual().tipo === TipoToken.Funciona) {
+            this.avanzar()
+            const entonces = this.parsearBloqueIndentado()
+            return {
+                tipo: "si",
+                condicion: { tipo: "hay_resultados" },
+                entonces,
+                linea: token.linea
+            }
+        }
     
         // "si no" — rama else
         if (this.actual().tipo === TipoToken.SiNo) {
@@ -461,14 +508,83 @@ export class Parser {
         return { tipo: "reintentar", segundos, linea: token.linea }
     }
 
+    // usar formulario
+    private parsearUsar(): NodoUsar {
+        const token = this.consumir(TipoToken.Usar)
+        const paquete = this.consumirIdentificador().valor
+        return { tipo: "usar", paquete, linea: token.linea }
+    }
+
+    // código ... fin código
+    private parsearCodigo(): NodoCodigo {
+        const token = this.actual()
+        const contenido = token.valor
+        this.avanzar()
+        return { tipo: "codigo", contenido, linea: token.linea }
+    }
+
     // ── Helpers ─────────────────────────────────────────────────
 
     private parsearBloque(): Nodo[] {
+        return this.parsearBloqueIndentado()
+    }
+
+    private parsearBloqueIndentado(): Nodo[] {
         const nodos: Nodo[] = []
-        while (!this.finArchivo() && !this.esInstruccionNueva() && !this.esSiguientePagina()) {
+
+        if (this.actual().tipo !== TipoToken.Indentacion) {
+            return nodos
+        }
+        this.avanzar() // consumir INDENTACION de apertura
+
+        while (!this.finArchivo()) {
+            const t = this.actual().tipo
+
+            if (t === TipoToken.FinIndentacion) {
+            this.avanzar() // consumir FIN_INDENTACION
+            break          // siempre parar — un nivel, un bloque
+            }
+
+            if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.FinArchivo) {
+            break
+            }
+
             const nodo = this.parsearNodo()
             if (nodo) nodos.push(nodo)
         }
+
+        return nodos
+    }
+
+    private parsearBloquePagina(): Nodo[] {
+        const nodos: Nodo[] = []
+
+        if (this.actual().tipo !== TipoToken.Indentacion) {
+            return nodos
+        }
+        this.avanzar()
+
+        while (!this.finArchivo()) {
+            const t = this.actual().tipo
+
+            if (t === TipoToken.FinIndentacion) {
+                this.avanzar()
+                // Si viene otro INDENTACION, es el mismo nivel de página — continuar
+                if (this.actual().tipo === TipoToken.Indentacion) {
+                    this.avanzar()
+                    continue
+                }
+                break
+            }
+
+            if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.FinArchivo) {
+                break
+            }
+
+            const nodo = this.parsearNodo()
+            if (nodo) nodos.push(nodo)
+        }
+
         return nodos
     }
 
@@ -484,13 +600,7 @@ export class Parser {
     }
 
     private esInstruccionNueva(): boolean {
-        const t = this.actual().tipo
-        return [
-            TipoToken.Titulo, TipoToken.Descripcion, TipoToken.Mostrar,
-            TipoToken.Boton, TipoToken.Campo, TipoToken.Si,
-            TipoToken.Optimizar, TipoToken.Cache, TipoToken.Reintentar,
-            TipoToken.Pagina, TipoToken.Datos, TipoToken.FinArchivo
-        ].includes(t)
+        return false
     }
 
     private consumir(tipo: TipoToken): Token {

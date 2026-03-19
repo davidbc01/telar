@@ -7,7 +7,8 @@ import {
     NodoAplicacion, NodoPagina, Nodo,
     NodoTitulo, NodoDescripcion, NodoMostrar,
     NodoBoton, NodoCampo, NodoSi,
-    NodoOptimizar, NodoCache, NodoReintentar
+    NodoOptimizar, NodoCache, NodoReintentar,
+    NodoUsar, NodoCodigo
 } from './tipos'
 import { GeneradorJS } from './generador-js'
 
@@ -90,6 +91,8 @@ ${this.indentar(cuerpo, 4)}
             case 'optimizar':   return '' // ya procesado en el head
             case 'cache':       return '' // ya procesado en el head
             case 'reintentar':  return this.generarReintentar(nodo)
+            case 'usar':        return this.generarUsar(nodo)
+            case 'codigo':      return this.generarCodigo(nodo)
             default:            return ''
         }
     }
@@ -184,6 +187,23 @@ ${this.indentar(cuerpo, 4)}
         return `<button class="reintentar" data-reintentar="${nodo.segundos}" type="button">
     Reintentar
 </button>`
+    }
+
+    // usar formulario
+    private generarUsar(nodo: NodoUsar): string {
+        return `<div data-paquete="${nodo.paquete}" class="telar-paquete">
+<!-- Paquete: ${nodo.paquete} -->
+</div>`
+    }
+
+    // código ... fin código
+    private generarCodigo(nodo: NodoCodigo): string {
+        return `<script>
+// Código personalizado
+(function() {
+${nodo.contenido}
+})();
+</script>`
     }
 
     // --- CSS ---
@@ -340,8 +360,11 @@ input:focus, textarea:focus {
     
     private textoAId(texto: string): string {
         return texto.toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
+            .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
+            .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ü/g, 'u')
+            .replace(/ñ/g, 'n')
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
     }
     
     private escapar(texto: string): string {

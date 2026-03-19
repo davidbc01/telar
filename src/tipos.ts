@@ -15,6 +15,9 @@ export enum TipoToken {
     Pagina = "pagina",
     Datos = "datos",
     En = "en",
+    Usar = "usar",
+    Codigo = "codigo",
+    FinCodigo = "fin_codigo",
 
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -99,6 +102,8 @@ export type Nodo =
     | NodoOptimizar
     | NodoCache
     | NodoReintentar
+    | NodoUsar
+    | NodoCodigo
 
 // aplicación MiTienda
 export interface NodoAplicacion {
@@ -205,6 +210,20 @@ export interface NodoCache {
 export interface NodoReintentar {
     tipo: "reintentar"
     segundos: number
+    linea: number
+}
+
+// usar formulario
+export interface NodoUsar {
+    tipo: "usar"
+    paquete: string
+    linea: number
+}
+
+// código ... fin código
+export interface NodoCodigo {
+    tipo: "codigo"
+    contenido: string
     linea: number
 }
 

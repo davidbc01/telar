@@ -54,6 +54,10 @@ const PALABRAS_CLAVE: Record<string, TipoToken> = {
     "tipo": TipoToken.Tipo,
     "idioma": TipoToken.Idioma,
     "no": TipoToken.SiNo,
+    "usar": TipoToken.Usar,
+    "código": TipoToken.Codigo,
+    "codigo": TipoToken.Codigo,
+    "fin": TipoToken.FinCodigo,
 }
 
 export class Lexer {
@@ -224,15 +228,19 @@ export class Lexer {
             valor += this.actual()
             this.avanzar()
         }
-    
-        // Comprobar si es palabra clave
+
         const tipo = PALABRAS_CLAVE[valor.toLowerCase()] ?? TipoToken.Identificador
-    
-        // Si empieza por mayúscula y no es palabra clave, es un Nombre propio
+
+        // Si es "código", leer el bloque completo hasta "fin código"
+        if (tipo === TipoToken.Codigo) {
+            while (!this.finArchivo() && this.actual() !== "\n") this.avanzar()
+            return this.leerBloqueCodigo()
+        }
+
         if (tipo === TipoToken.Identificador && valor[0] === valor[0].toUpperCase() && valor[0] !== valor[0].toLowerCase()) {
             return this.crearToken(TipoToken.Nombre, valor)
         }
-    
+
         return this.crearToken(tipo, valor)
     }
  
@@ -259,5 +267,39 @@ export class Lexer {
  
     private crearToken(tipo: TipoToken, valor: string): Token {
         return { tipo, valor, linea: this.linea, columna: this.columna }
+    }
+
+    private leerBloqueCodigo(): Token {
+        const linea = this.linea
+        let contenido = ""
+
+        // Leer hasta encontrar "fin código" o "fin codigo"
+        while (!this.finArchivo()) {
+            // Detectar "fin" al inicio de línea
+            if (this.actual() === "\n") {
+                this.avanzar()
+                this.linea++
+                this.columna = 1
+
+                // Saltar espacios
+                while (this.actual() === " ") this.avanzar()
+
+                // Comprobar si es "fin código"
+                const resto = this.texto.slice(this.posicion)
+                if (resto.startsWith("fin código") || resto.startsWith("fin codigo")) {
+                    // Avanzar hasta el fin de línea
+                    while (!this.finArchivo() && this.actual() !== "\n") this.avanzar()
+                    return this.crearToken(TipoToken.Codigo, contenido.trim())
+                }
+
+                contenido += "\n"
+                continue
+            }
+
+            contenido += this.actual()
+            this.avanzar()
+        }
+
+        return this.crearToken(TipoToken.Codigo, contenido.trim())
     }
 }
