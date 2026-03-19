@@ -48,7 +48,7 @@ npx ts-node src/cli.ts compilar examples/tienda/app.telar dist/
 # Verificar la sintaxis de un archivo
 telar verificar app.telar
 
-# Compilar a HTML + CSS
+# Compilar a HTML + CSS + JS
 telar compilar app.telar
 
 # Compilar a una carpeta específica
@@ -80,70 +80,87 @@ Un lenguaje donde describes la **intención**, y el compilador toma todas las de
 
 Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca esos archivos. El lenguaje tiene opiniones fuertes y defaults inteligentes: responsive, accesible y optimizado por defecto.
 
+---
+
 ## Filosofía
 
-**Declarativo siempre** - Describes qué quieres, no cómo conseguirlo.
+**Declarativo siempre** — Describes qué quieres, no cómo conseguirlo.
 
-**El silencio no existe** - Telar nunca falla silenciosamente. Los errores son claros, en español, y sugieren cómo arreglarlos.
+**El silencio no existe** — Telar nunca falla silenciosamente. Los errores son claros, en español, y sugieren cómo arreglarlos.
 
 ```
-✗  Línea 12: "máximo muchos" - se esperaba un número
-   ¿Quisiste decir "máximo 10"?
-   Sugerencia: los números van sin comillas en Telar
+✗  app.telar:12:9 — se esperaba un número
+
+   10 │  mostrar productos recientes
+   11 │    ordenados por precio
+→  12 │    máximo muchos
+                    ^^^^^
+   13 │    si falla
+
+  Sugerencia: los números van sin comillas. Prueba con: máximo 10
 ```
 
-**Defaults con opinión** - Optimización móvil, caché, accesibilidad ARIA y lazy loading activados por defecto. Sin configuración.
+**Defaults con opinión** — Optimización móvil, caché, accesibilidad ARIA y lazy loading activados por defecto. Sin configuración.
 
-**Legibilidad humana** - El código de Telar puede ser leído por alguien sin experiencia técnica. No es un objetivo estético: es una restricción de diseño.
+**Legibilidad humana** — El código de Telar puede ser leído por alguien sin experiencia técnica. No es un objetivo estético: es una restricción de diseño.
+
+---
 
 ## Estado actual
 
 🟢 **En desarrollo activo**
 
 | Fase | Estado |
-| ------ | ------ |
+|------|--------|
 | Especificación del lenguaje | ✅ Completa (v0.1) |
-| Lexer - tokenización | ✅ Completo |
-| Parser - validador de sintaxis | ✅ Completo |
+| Lexer — tokenización | ✅ Completo |
+| Parser — validador de sintaxis | ✅ Completo |
 | Generación de HTML + CSS | ✅ Completo |
 | Generación de JavaScript | ✅ Completo |
 | CLI — compilar, servir, verificar | ✅ Completo |
 | Publicado en npm | ✅ Completo |
 | Live reload en telar servir | ✅ Completo |
 | Extensión VS Code | ✅ Completo |
+| Mensajes de error con contexto visual | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
+
+---
 
 ## Hoja de ruta
 
-### v0.1 - Prueba de concepto ✅
+### v0.1 — Prueba de concepto ✅
 - [x] Lexer que tokeniza archivos `.telar`
 - [x] Parser que valida la sintaxis
 - [x] Mensajes de error en español
-- [x] Generación de HTML estático + CSS estático
+- [x] Generación de HTML + CSS estático
 - [x] CLI con comandos `compilar`, `servir` y `verificar`
 
-### v0.2 - Compilador funcional ✅
+### v0.2 — Compilador funcional ✅
 - [x] Generación de JavaScript
 - [x] CLI instalable: `npm install -g @davidbc01/telar`
 - [x] Soporte para condiciones dinámicas y cargadores de datos
 - [x] Servidor HTTP integrado en `telar servir`
 
-### v0.3 - Experiencia de desarrollo
+### v0.3 — Experiencia de desarrollo ✅
 - [x] Live reload en `telar servir`
 - [x] Extensión para VS Code
-- [ ] Mensajes de error mejorados con contexto visual
+- [x] Mensajes de error mejorados con contexto visual
 
-### v1.0 - Lanzamiento público
+### v1.0 — Lanzamiento público
 - [ ] Estabilidad de sintaxis
 - [ ] Gestor de paquetes Telar
 - [ ] Documentación completa
 - [ ] Comunidad
+
+---
 
 ## ¿Por qué en español?
 
 La mayoría de los lenguajes de programación usan palabras clave en inglés. Esto añade una barrera invisible para los más de 500 millones de hispanohablantes que aprenden a programar.
 
 Telar no pretende reemplazar el inglés como lengua franca de la programación. Pretende demostrar que la sintaxis de un lenguaje puede ser un dialecto estructurado de cualquier idioma humano, y que eso reduce drásticamente la curva de aprendizaje.
+
+---
 
 ## Cómo contribuir
 
@@ -155,9 +172,11 @@ El proyecto está en sus primeras fases. La contribución más valiosa ahora mis
 
 Toda la discusión de diseño del lenguaje ocurre en [Issues](../../issues).
 
+---
+
 ## Licencia
 
-Apache 2.0 - Ve [LICENSE](./LICENSE) para más detalles.
+Apache 2.0 — Ve [LICENSE](./LICENSE) para más detalles.
 
 ---
 
