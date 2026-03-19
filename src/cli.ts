@@ -2,7 +2,7 @@
 // ---
 // cli.ts
 // Interfaz de línea de comandos de Telar.
-// Comandos: compilar, servir, verificar
+// Comandos: compilar, servir, verificar, añadir, quitar, paquetes, buscar
 // ---
 
 import * as fs from 'fs'
@@ -12,51 +12,58 @@ import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { Generador } from './generador'
 import { TelarError } from './tipos'
+import { instalarPaquete, listarPaquetes, eliminarPaquete, buscarPaquetes } from './paquetes'
 
-const VERSION = '0.2.0'
- 
+const VERSION = '0.4.0'
+
 const AYUDA = `
-    Telar v${VERSION} — Lenguaje de programación para la web
-    
-    Uso:
-        telar <comando> [opciones]
-    
-    Comandos:
-        compilar <archivo.telar>        Compila a HTML + CSS
-        compilar <archivo.telar> -o <carpeta>  Especifica carpeta de salida
-        servir   <archivo.telar>        Compila y sirve en localhost
-        verificar <archivo.telar>       Verifica la sintaxis sin compilar
-    
-    Ejemplos:
-        telar compilar app.telar
-        telar compilar app.telar -o dist/
-        telar servir app.telar
-        telar verificar app.telar
-    
-    Opciones:
-        --ayuda, -a       Muestra esta ayuda
-        --version, -v     Muestra la versión
+  Telar v${VERSION} — Lenguaje de programación para la web
+
+  Uso:
+    telar <comando> [opciones]
+
+  Comandos:
+    compilar  <archivo.telar>               Compila a HTML + CSS + JS
+    compilar  <archivo.telar> -o <carpeta>  Especifica carpeta de salida
+    servir    <archivo.telar>               Compila y sirve en localhost
+    verificar <archivo.telar>               Verifica la sintaxis sin compilar
+    añadir    <paquete>                     Instala un paquete
+    quitar    <paquete>                     Elimina un paquete
+    paquetes                                Lista los paquetes instalados
+    buscar    <término>                     Busca paquetes en GitHub
+
+  Ejemplos:
+    telar compilar app.telar
+    telar compilar app.telar -o dist/
+    telar servir app.telar
+    telar verificar app.telar
+    telar añadir formulario
+    telar buscar lista
+
+  Opciones:
+    --ayuda, -a       Muestra esta ayuda
+    --version, -v     Muestra la versión
 `
 
-// --- Entrada principal ---
+// ── Entrada principal ─────────────────────────────────────────
 
 const args = process.argv.slice(2)
- 
+
 if (args.length === 0 || args.includes('--ayuda') || args.includes('-a')) {
     console.log(AYUDA)
     process.exit(0)
 }
- 
+
 if (args.includes('--version') || args.includes('-v')) {
     console.log(`Telar v${VERSION}`)
     process.exit(0)
 }
- 
+
 const comando = args[0]
- 
+
 switch (comando) {
     case 'compilar':
-        comandoCompilar(args[1])
+        comandoCompilar(args.slice(1))
         break
     case 'servir':
         comandoServir(args.slice(1))
@@ -64,56 +71,58 @@ switch (comando) {
     case 'verificar':
         comandoVerificar(args.slice(1))
         break
+    case 'añadir':
+        comandoAñadir(args.slice(1))
+        break
+    case 'quitar':
+        comandoQuitar(args.slice(1))
+        break
+    case 'paquetes':
+        listarPaquetes()
+        break
+    case 'buscar':
+        comandoBuscar(args.slice(1))
+        break
     default:
         console.error(`\n✗  Comando desconocido: "${comando}"`)
         console.error(`   Usa "telar --ayuda" para ver los comandos disponibles\n`)
         process.exit(1)
 }
 
-// --- Comando: compilar ---
+// ── Comando: compilar ─────────────────────────────────────────
 
-function comandoCompilar(rutaArchivo: string) {
-    const nombreArchivo = path.basename(rutaArchivo)
+function comandoCompilar(args: string[]) {
+    const { archivo, salida } = parsearArgs(args, 'dist')
 
-    try {
-        const contenido = leerArchivo(rutaArchivo)
-        if (!contenido) return null
+    console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
 
-        const lexer = new Lexer(contenido)
-        const tokens = lexer.tokenizar()
+    const archivos = compilar(archivo)
+    if (!archivos) process.exit(1)
 
-        const parser = new Parser(tokens)
-        const arbol = parser.parsear()
-
-        const generador = new Generador(arbol)
-        return generador.generar()
-
-    } catch (error) {
-        if (error instanceof TelarError) {
-            const contenido = fs.existsSync(rutaArchivo)
-                ? fs.readFileSync(rutaArchivo, 'utf-8')
-                : undefined
-            console.error(error.formatear(nombreArchivo, contenido))
-        } else {
-            console.error(error)
-        }
-        return null
+    if (!fs.existsSync(salida)) {
+        fs.mkdirSync(salida, { recursive: true })
     }
+
+    for (const f of archivos) {
+        const ruta = path.join(salida, f.nombre)
+        fs.writeFileSync(ruta, f.contenido, 'utf-8')
+        console.log(`✓  ${f.nombre}`)
+    }
+
+    console.log(`\n✓  ${archivos.length} archivos generados en ${salida}/\n`)
 }
 
-// --- Comando: servir ---
+// ── Comando: servir ───────────────────────────────────────────
 
 function comandoServir(args: string[]) {
     const { archivo, salida } = parsearArgs(args, '.telar-tmp')
     const puerto = 3000
     const puertoWS = 3001
 
-    // Compilar primero
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
     const archivos = compilar(archivo)
     if (!archivos) process.exit(1)
 
-    // Escribir a carpeta temporal
     if (!fs.existsSync(salida)) {
         fs.mkdirSync(salida, { recursive: true })
     }
@@ -122,12 +131,11 @@ function comandoServir(args: string[]) {
         const nuevos = compilar(archivo)
         if (!nuevos) return false
         for (const f of nuevos) {
-            // Inyectar script de live reload en cada HTML
-            let contenido = f.contenido
-            if (f.nombre.endsWith('.html')) {
-                contenido = contenido.replace(
-                '</body>',
-                `<script>
+        let contenido = f.contenido
+        if (f.nombre.endsWith('.html')) {
+            contenido = contenido.replace(
+            '</body>',
+            `<script>
     const ws = new WebSocket('ws://localhost:${puertoWS}');
     ws.onmessage = () => location.reload();
 </script>
@@ -141,12 +149,10 @@ function comandoServir(args: string[]) {
 
     recompilarYEscribir()
 
-    // Servidor WebSocket para live reload
     const net = require('net')
     const clientes: any[] = []
 
     const wsServer = net.createServer((socket: any) => {
-        // Handshake WebSocket mínimo
         socket.once('data', (data: Buffer) => {
             const key = data.toString().match(/Sec-WebSocket-Key: (.+)/)?.[1]?.trim()
             if (!key) return
@@ -172,10 +178,9 @@ function comandoServir(args: string[]) {
     wsServer.listen(puertoWS)
 
     function notificarClientes() {
-        // Frame WebSocket mínimo para enviar mensaje de texto
         const msg = Buffer.from('reload')
         const frame = Buffer.alloc(2 + msg.length)
-        frame[0] = 0x81 // FIN + opcode texto
+        frame[0] = 0x81
         frame[1] = msg.length
         msg.copy(frame, 2)
         clientes.forEach(s => {
@@ -183,7 +188,6 @@ function comandoServir(args: string[]) {
         })
     }
 
-    // Watcher con debounce — evita doble disparo en Windows
     let timeout: NodeJS.Timeout | null = null
     fs.watch(archivo, () => {
         if (timeout) clearTimeout(timeout)
@@ -191,13 +195,12 @@ function comandoServir(args: string[]) {
             console.log(`\n↻  Cambio detectado — recompilando...`)
             const ok = recompilarYEscribir()
             if (ok) {
-            console.log(`✓  Listo`)
-            notificarClientes()
+                console.log(`✓  Listo`)
+                notificarClientes()
             }
         }, 100)
     })
 
-    // Servidor HTTP
     const servidor = http.createServer((req, res) => {
         let urlPath = req.url === '/' ? '/index.html' : req.url ?? '/index.html'
         urlPath = urlPath.split('?')[0]
@@ -230,7 +233,6 @@ function comandoServir(args: string[]) {
         console.log(`\n   Presiona Ctrl+C para parar\n`)
     })
 
-    // Limpiar al salir
     process.on('SIGINT', () => {
         console.log('\n\n   Parando servidor...')
         wsServer.close()
@@ -239,33 +241,33 @@ function comandoServir(args: string[]) {
     })
 }
 
-// --- Comando: verificar ---
+// ── Comando: verificar ────────────────────────────────────────
 
 function comandoVerificar(args: string[]) {
     const { archivo } = parsearArgs(args, '')
     const nombreArchivo = path.basename(archivo)
-    
+
     console.log(`\nTelar — verificando ${nombreArchivo}...\n`)
-    
+
     try {
         const contenido = leerArchivo(archivo)
         if (!contenido) process.exit(1)
-    
+
         const lexer = new Lexer(contenido)
         const tokens = lexer.tokenizar()
-    
+
         const parser = new Parser(tokens)
         const arbol = parser.parsear()
-    
+
         console.log(`✓  Sintaxis correcta`)
         console.log(`   ${arbol.paginas.length} páginas, ${arbol.datos.length} modelos\n`)
-    
+
         arbol.paginas.forEach(p => {
             console.log(`   📄 ${p.nombre} (${p.ruta})`)
         })
-    
+
         console.log()
-    
+
     } catch (error) {
         if (error instanceof TelarError) {
             const contenido = fs.existsSync(archivo)
@@ -279,27 +281,69 @@ function comandoVerificar(args: string[]) {
     }
 }
 
-// --- Helpers ---
+// ── Comandos: paquetes ────────────────────────────────────────
+
+async function comandoAñadir(args: string[]) {
+    if (args.length === 0) {
+        console.error('\n✗  Falta el nombre del paquete')
+        console.error('   Ejemplo: telar añadir formulario\n')
+        process.exit(1)
+    }
+    try {
+        await instalarPaquete(args[0])
+        process.exit(0)
+    } catch (error: any) {
+        console.error(`\n✗  ${error.message}\n`)
+        process.exit(1)
+    }
+}
+
+function comandoQuitar(args: string[]) {
+    if (args.length === 0) {
+        console.error('\n✗  Falta el nombre del paquete\n')
+        process.exit(1)
+    }
+    try {
+        eliminarPaquete(args[0])
+    } catch (error: any) {
+        console.error(`\n✗  ${error.message}\n`)
+        process.exit(1)
+    }
+}
+
+async function comandoBuscar(args: string[]) {
+    if (args.length === 0) {
+        console.error('\n✗  Falta el término de búsqueda\n')
+        process.exit(1)
+    }
+    await buscarPaquetes(args[0])
+    process.exit(0)
+}
+
+// ── Helpers ───────────────────────────────────────────────────
 
 function compilar(rutaArchivo: string) {
     const nombreArchivo = path.basename(rutaArchivo)
-    
+
     try {
         const contenido = leerArchivo(rutaArchivo)
         if (!contenido) return null
-    
+
         const lexer = new Lexer(contenido)
         const tokens = lexer.tokenizar()
-    
+
         const parser = new Parser(tokens)
         const arbol = parser.parsear()
-    
+
         const generador = new Generador(arbol)
         return generador.generar()
-    
+
     } catch (error) {
         if (error instanceof TelarError) {
-            console.error(error.formatear(nombreArchivo))
+        const contenido = fs.existsSync(rutaArchivo)
+            ? fs.readFileSync(rutaArchivo, 'utf-8')
+            : undefined
+        console.error(error.formatear(nombreArchivo, contenido))
         } else {
             console.error(error)
         }
@@ -312,12 +356,12 @@ function leerArchivo(ruta: string): string | null {
         console.error(`\n✗  No se encontró el archivo: ${ruta}\n`)
         return null
     }
-    
+
     if (!ruta.endsWith('.telar')) {
         console.error(`\n✗  El archivo debe tener extensión .telar\n`)
         return null
     }
-    
+
     return fs.readFileSync(ruta, 'utf-8')
 }
 
@@ -327,12 +371,12 @@ function parsearArgs(args: string[], salidaDefault: string) {
         console.error(`   Ejemplo: telar compilar app.telar\n`)
         process.exit(1)
     }
-    
+
     const archivo = args[0]
     const indiceO = args.indexOf('-o')
     const salida = indiceO !== -1 && args[indiceO + 1]
         ? args[indiceO + 1]
         : salidaDefault
-    
+
     return { archivo, salida }
 }
