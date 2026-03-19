@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.4.0] — 2026-03-19
+
+### Añadido
+- Gestor de paquetes - comandos `añadir`, `quitar`, `buscar` y `paquetes`
+- Los paquetes son repositorios de GitHub con prefijo `telar-`
+- Soporte para ramas `main` y `master`
+- Registro local en `telar.paquetes.json`
+- Primer paquete oficial: `telar-formulario`
+
+---
+
 ## [0.3.1] — 2026-03-19
 
 ### Mejorado

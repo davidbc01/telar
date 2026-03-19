@@ -56,6 +56,12 @@ telar compilar app.telar -o dist/
 
 # Compilar y servir en el navegador
 telar servir app.telar
+
+# Gestionar paquetes
+telar añadir formulario
+telar quitar formulario
+telar paquetes
+telar buscar <término>
 ```
 
 ---
@@ -122,6 +128,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Live reload en telar servir | ✅ Completo |
 | Extensión VS Code | ✅ Completo |
 | Mensajes de error con contexto visual | ✅ Completo |
+| Gestor de paquetes | ✅ Completo |
+| Sintaxis `usar` para paquetes | 🟪 Pendiente |
+| Tests completos | 🟪 Pendiente |
+| Comando `telar nuevo` | 🟪 Pendiente |
+| Documentación web | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
 
 ---
@@ -146,11 +157,30 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Extensión para VS Code
 - [x] Mensajes de error mejorados con contexto visual
 
+### v0.4 — Gestor de paquetes ✅
+- [x] Comandos `añadir`, `quitar`, `buscar` y `paquetes`
+- [x] Paquetes como repositorios de GitHub con prefijo `telar-`
+- [x] Registro local en `telar.paquetes.json`
+
+### v0.5 — Sintaxis `usar` y paquetes oficiales
+- [ ] Palabra clave `usar` en el lenguaje
+- [ ] Al menos 3 paquetes oficiales: formulario, navbar, lista
+- [ ] Comando `telar nuevo` para crear proyectos
+
+### v0.6 — Tests y robustez
+- [ ] Tests completos para lexer, parser y generador
+- [ ] Manejo de edge cases en el compilador
+- [ ] CI/CD con GitHub Actions
+
+### v0.7 — Documentación web
+- [ ] Web de documentación en telar.dev
+- [ ] Guías de inicio rápido
+- [ ] Referencia completa de sintaxis
+
 ### v1.0 — Lanzamiento público
-- [ ] Estabilidad de sintaxis
-- [ ] Gestor de paquetes Telar
-- [ ] Documentación completa
-- [ ] Comunidad
+- [ ] Estabilidad de sintaxis — sin breaking changes
+- [ ] Comunidad activa
+- [ ] Al menos un proyecto real construido con Telar
 
 ---
 
