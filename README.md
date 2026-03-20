@@ -130,8 +130,8 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
+| Comando `telar nuevo` | ✅ Pendiente |
 | Tests completos | 🟪 Pendiente |
-| Comando `telar nuevo` | 🟪 Pendiente |
 | Documentación web | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
 
@@ -165,8 +165,8 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 ### v0.5 — Sintaxis `usar` y paquetes oficiales
 - [x] Palabra clave `usar` en el lenguaje
 - [x] Bloque `código` para JavaScript directo
+- [x] Comando `telar nuevo` para crear proyectos
 - [ ] Al menos 3 paquetes oficiales: formulario, navbar, lista
-- [ ] Comando `telar nuevo` para crear proyectos
 
 ### v0.6 — Tests y robustez
 - [ ] Tests completos para lexer, parser y generador

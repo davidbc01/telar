@@ -5,6 +5,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.5.1] - 2026-03-20
+
+### Añadido
+- Comando `telar nuevo <nombre>` - crea un proyecto completo desde cero
+- Genera app.telar, README.md, .gitignore y telar.paquetes.json
+
+---
+
 ## [0.5.0] - 2026-03-19
 
 ### Añadido
