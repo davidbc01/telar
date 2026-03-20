@@ -6,11 +6,15 @@
 aplicación MiTienda
 
   página inicio en "/"
+    usar navbar
     título "Bienvenido"
 
     mostrar productos recientes
       máximo 8
       ordenados por precio
+      si falla
+        mostrar "Sin conexión"
+        reintentar en 5 segundos
 
     si el usuario está conectado
       botón "Mi cuenta" ir a cuenta
@@ -45,16 +49,17 @@ npx ts-node src/cli.ts compilar examples/tienda/app.telar dist/
 ## Uso
 
 ```bash
-# Verificar la sintaxis de un archivo
+# Crear un proyecto nuevo
+telar nuevo mi-proyecto
+
+# Verificar la sintaxis
 telar verificar app.telar
 
 # Compilar a HTML + CSS + JS
 telar compilar app.telar
-
-# Compilar a una carpeta específica
 telar compilar app.telar -o dist/
 
-# Compilar y servir en el navegador
+# Servir en el navegador con live reload
 telar servir app.telar
 
 # Gestionar paquetes
@@ -123,15 +128,16 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Parser — validador de sintaxis | ✅ Completo |
 | Generación de HTML + CSS | ✅ Completo |
 | Generación de JavaScript | ✅ Completo |
-| CLI — compilar, servir, verificar | ✅ Completo |
+| CLI — compilar, servir, verificar, nuevo | ✅ Completo |
 | Publicado en npm | ✅ Completo |
 | Live reload en telar servir | ✅ Completo |
 | Extensión VS Code | ✅ Completo |
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Comando `telar nuevo` | ✅ Pendiente |
-| Tests completos | 🟪 Pendiente |
+| Tests completos (94) + CI/CD | ✅ Completo |
+| Componentes reutilizables | 🟪 Pendiente |
+| Layouts | 🟪 Pendiente |
 | Documentación web | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
 
@@ -162,21 +168,26 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Paquetes como repositorios de GitHub con prefijo `telar-`
 - [x] Registro local en `telar.paquetes.json`
 
-### v0.5 — Sintaxis `usar` y paquetes oficiales
+### v0.5 — Sintaxis `usar` y paquetes oficiales ✅
 - [x] Palabra clave `usar` en el lenguaje
 - [x] Bloque `código` para JavaScript directo
 - [x] Comando `telar nuevo` para crear proyectos
-- [x] Al menos 3 paquetes oficiales: formulario, navbar, lista
+- [x] Paquetes oficiales: formulario, navbar, lista
 
-### v0.6 — Tests y robustez
-- [x] Tests completos para lexer, parser y generador
-- [ ] Manejo de edge cases en el compilador
-- [ ] CI/CD con GitHub Actions
+### v0.6 — Tests y robustez ✅
+- [x] 94 tests automatizados — lexer, parser y generador
+- [x] CI/CD con GitHub Actions
+- [x] Cobertura de palabras clave, indentación y generación HTML
 
-### v0.7 — Documentación web
+### v0.7 — Componentes y layouts
+- [ ] Sintaxis `componente` para componentes reutilizables
+- [ ] Sintaxis `layout` para estructuras compartidas
+- [ ] Paso de datos entre componentes
+
+### v0.8 — Documentación web
 - [ ] Web de documentación en telar.dev
 - [ ] Guías de inicio rápido
-- [ ] Referencia completa de sintaxis
+- [ ] Referencia completa de sintaxis con ejemplos interactivos
 
 ### v1.0 — Lanzamiento público
 - [ ] Estabilidad de sintaxis — sin breaking changes
