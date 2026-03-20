@@ -169,7 +169,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Al menos 3 paquetes oficiales: formulario, navbar, lista
 
 ### v0.6 — Tests y robustez
-- [ ] Tests completos para lexer, parser y generador
+- [x] Tests completos para lexer, parser y generador
 - [ ] Manejo de edge cases en el compilador
 - [ ] CI/CD con GitHub Actions
 

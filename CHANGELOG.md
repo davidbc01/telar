@@ -5,6 +5,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.6.0] - 2026-03-20
+- 94 tests automatizados - lexer (36), parser (25), generador (33)
+- Cobertura completa de palabras clave, indentación, errores y generación HTML
+
+---
+
 ## [0.5.2] - 2026-03-20
 
 ### Añadido
