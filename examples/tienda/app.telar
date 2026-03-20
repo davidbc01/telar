@@ -85,8 +85,3 @@ página login en "/entrar"
       mostrar "Correo o contraseña incorrectos"
 
   botón "¿Olvidaste tu contraseña?" ir a recuperarContraseña
-
-  código
-    console.log('Página de login cargada')
-    document.title = 'Entrar — MiTienda'
-  fin código
