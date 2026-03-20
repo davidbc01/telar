@@ -5,6 +5,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.5.2] - 2026-03-20
+
+### Añadido
+- Paquete oficial `telar-navbar` - barra de navegación reponsive
+- Paquete oficial `telar-lista` - lista de elementos con paginación
+
+---
+
 ## [0.5.1] - 2026-03-20
 
 ### Añadido

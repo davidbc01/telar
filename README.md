@@ -166,7 +166,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - [x] Palabra clave `usar` en el lenguaje
 - [x] Bloque `código` para JavaScript directo
 - [x] Comando `telar nuevo` para crear proyectos
-- [ ] Al menos 3 paquetes oficiales: formulario, navbar, lista
+- [x] Al menos 3 paquetes oficiales: formulario, navbar, lista
 
 ### v0.6 — Tests y robustez
 - [ ] Tests completos para lexer, parser y generador
