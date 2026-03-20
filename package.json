@@ -1,6 +1,6 @@
 {
   "name": "@davidbc01/telar",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Lenguaje de programación declarativo para la web, escrito en español",
   "main": "dist/index.js",
   "bin": {
