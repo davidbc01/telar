@@ -43,6 +43,25 @@ página NombrePagina en "/ruta"
 
 ---
 
+## Paquetes
+
+```telar
+# Instalar desde terminal
+telar añadir navbar
+
+# Usar en el código
+página inicio en "/"
+  usar navbar
+  título "Mi App"
+```
+
+**Paquetes oficiales:**
+- `telar añadir formulario` — formulario de contacto
+- `telar añadir navbar` — barra de navegación
+- `telar añadir lista` — lista de elementos
+
+---
+
 ## Mostrar datos
 
 ```telar
@@ -103,24 +122,25 @@ botón "Enviar" hacer enviarFormulario
 
 ---
 
+## Bloque de código directo
+
+Para JavaScript específico que Telar no cubre:
+
+```telar
+código
+  console.log('Hola desde JavaScript')
+  document.title = 'Mi página'
+fin código
+```
+
+---
+
 ## Optimización
 
 ```telar
 optimizar para móvil
 caché N minutos
 caché N horas
-```
-
----
-
-## Paquetes
-
-```telar
-# Instalar desde terminal
-telar añadir formulario
-
-# Próximamente en el código:
-usar formulario
 ```
 
 ---
@@ -145,6 +165,7 @@ datos Producto
   imagen: foto
 
 página inicio en "/"
+  usar navbar
   título "Bienvenido a MiTienda"
   descripción "Los mejores productos"
 

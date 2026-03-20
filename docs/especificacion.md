@@ -1,4 +1,4 @@
-# Especificación de Telar v0.4
+# Especificación de Telar v0.5
 
 > Este documento define qué es Telar, qué problema resuelve, cómo se ve el código
 > y cuál es la hoja de ruta. Es el documento fundacional del proyecto.
@@ -110,6 +110,32 @@ página inicio en "/"
   optimizar para móvil
 ```
 
+### Paquetes
+
+```telar
+# Instalar desde terminal
+telar añadir navbar
+
+# Usar en el código
+página inicio en "/"
+  usar navbar
+  título "Mi App"
+```
+
+### Bloque de código directo
+
+Para casos donde necesitas JavaScript específico:
+
+```telar
+página login en "/entrar"
+  título "Entrar"
+
+  código
+    console.log('Página de login cargada')
+    document.title = 'Entrar — Mi App'
+  fin código
+```
+
 ### Manejo de errores
 
 ```telar
@@ -146,12 +172,16 @@ El compilador toma un archivo `.telar` y produce un bundle listo para desplegar 
 - `si el usuario está conectado` → lee el estado de sesión del localStorage
 - `si falla` → muestra el mensaje de error y reintenta si se especifica
 - `hacer acción` → POST a `/api/accion/nombre` con feedback visual
+- `código ... fin código` → JavaScript directo envuelto en función anónima
 
 ---
 
 ## 5. CLI
 
 ```bash
+# Crear un proyecto nuevo
+telar nuevo mi-proyecto
+
 # Compilar a HTML + CSS + JS
 telar compilar app.telar
 telar compilar app.telar -o dist/
@@ -164,6 +194,8 @@ telar verificar app.telar
 
 # Gestionar paquetes
 telar añadir formulario
+telar añadir navbar
+telar añadir lista
 telar quitar formulario
 telar paquetes
 telar buscar <término>
@@ -183,6 +215,14 @@ telar añadir formulario
 
 Los paquetes se instalan en la carpeta `paquetes/` y se registran en `telar.paquetes.json`.
 
+### Paquetes oficiales
+
+| Paquete | Comando | Descripción |
+|---------|---------|-------------|
+| formulario | `telar añadir formulario` | Formulario de contacto reutilizable |
+| navbar | `telar añadir navbar` | Barra de navegación responsive |
+| lista | `telar añadir lista` | Lista de elementos con paginación |
+
 ---
 
 ## 7. Hoja de ruta
@@ -193,8 +233,8 @@ Los paquetes se instalan en la carpeta `paquetes/` y se registran en `telar.paqu
 | 0.2 | ✅ Completo | Generador JavaScript, CLI |
 | 0.3 | ✅ Completo | Live reload, extensión VS Code, errores visuales |
 | 0.4 | ✅ Completo | Gestor de paquetes |
-| 0.5 | 🔄 En desarrollo | Sintaxis `usar`, paquetes oficiales, `telar nuevo` |
-| 0.6 | 🟪 Pendiente | Tests completos, CI/CD |
+| 0.5 | ✅ Completo | Sintaxis `usar`, bloque `código`, `telar nuevo`, paquetes oficiales |
+| 0.6 | 🔄 En desarrollo | Tests completos, CI/CD |
 | 0.7 | 🟪 Pendiente | Documentación web en telar.dev |
 | 1.0 | 🟪 Pendiente | Lanzamiento público |
 
@@ -210,7 +250,8 @@ Los paquetes se instalan en la carpeta `paquetes/` y se registran en `telar.paqu
 | Errores claros | No | Parcial | Sí | Sí |
 | Optimización auto | No | Parcial | Parcial | Sí |
 | Gestor de paquetes | npm | npm | elm-package | telar añadir |
+| Escape hatch | JS directo | JS directo | Ports | bloque código |
 
 ---
 
-*Especificación v0.4 — Marzo 2026*
+*Especificación v0.5 — Marzo 2026*
