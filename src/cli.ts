@@ -83,6 +83,9 @@ switch (comando) {
     case 'buscar':
         comandoBuscar(args.slice(1))
         break
+    case 'nuevo':
+        comandoNuevo(args.slice(1))
+        break
     default:
         console.error(`\n✗  Comando desconocido: "${comando}"`)
         console.error(`   Usa "telar --ayuda" para ver los comandos disponibles\n`)
@@ -279,6 +282,89 @@ function comandoVerificar(args: string[]) {
         }
         process.exit(1)
     }
+}
+
+// --- Comando: nuevo ───────────────────────────────────────────────
+
+function comandoNuevo(args: string[]) {
+    if (args.length === 0) {
+        console.error('\n✗  Falta el nombre del proyecto')
+        console.error('   Ejemplo: telar nuevo mi-proyecto\n')
+        process.exit(1)
+    }
+
+    const nombre = args[0]
+    const carpeta = path.join(process.cwd(), nombre)
+
+    if (fs.existsSync(carpeta)) {
+        console.error(`\n✗  Ya existe una carpeta llamada "${nombre}"\n`)
+        process.exit(1)
+    }
+
+    console.log(`\nTelar — creando proyecto "${nombre}"...\n`)
+
+    // Crear estructura de carpetas
+    fs.mkdirSync(carpeta, { recursive: true })
+    fs.mkdirSync(path.join(carpeta, 'paquetes'), { recursive: true })
+
+    // Crear app.telar
+    fs.writeFileSync(path.join(carpeta, 'app.telar'), `# ${nombre}
+# Creado con Telar — telar.dev
+
+aplicación ${nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+  idioma español
+
+página inicio en "/"
+  título "Bienvenido a ${nombre}"
+  descripción "Mi primera aplicación con Telar"
+
+  si el usuario está conectado
+    mostrar "Hola, (usuario.nombre)"
+    botón "Mi cuenta" ir a cuenta
+  si no
+    botón "Empezar" ir a registro
+
+  optimizar para móvil
+`, 'utf-8')
+
+    // Crear telar.paquetes.json vacío
+    fs.writeFileSync(
+        path.join(carpeta, 'telar.paquetes.json'),
+        JSON.stringify([], null, 2),
+        'utf-8'
+    )
+
+    // Crear .gitignore
+    fs.writeFileSync(path.join(carpeta, '.gitignore'), `dist/
+paquetes/
+`, 'utf-8')
+
+    // Crear README
+    fs.writeFileSync(path.join(carpeta, 'README.md'), `# ${nombre}
+
+Proyecto creado con [Telar](https://github.com/davidbc01/telar).
+
+## Desarrollo
+
+\`\`\`bash
+telar servir app.telar
+\`\`\`
+
+## Compilar
+
+\`\`\`bash
+telar compilar app.telar
+\`\`\`
+`, 'utf-8')
+
+    console.log(`✓  app.telar`)
+    console.log(`✓  telar.paquetes.json`)
+    console.log(`✓  .gitignore`)
+    console.log(`✓  README.md`)
+    console.log(`\n✓  Proyecto "${nombre}" creado\n`)
+    console.log(`   Para empezar:\n`)
+    console.log(`   cd ${nombre}`)
+    console.log(`   telar servir app.telar\n`)
 }
 
 // ── Comandos: paquetes ────────────────────────────────────────
