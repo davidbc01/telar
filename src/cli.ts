@@ -14,7 +14,7 @@ import { Generador } from './generador'
 import { TelarError } from './tipos'
 import { instalarPaquete, listarPaquetes, eliminarPaquete, buscarPaquetes } from './paquetes'
 
-const VERSION = '0.4.0'
+const VERSION = '0.5.2'
 
 const AYUDA = `
   Telar v${VERSION} — Lenguaje de programación para la web
