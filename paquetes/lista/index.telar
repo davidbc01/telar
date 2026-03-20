@@ -1,0 +1,17 @@
+# Paquete: telar-lista
+# Lista de elementos con estilos y paginación para aplicaciones Telar
+
+página lista en "/lista"
+  título "Lista de elementos"
+
+  mostrar elementos recientes
+    máximo 10
+    ordenados por fecha
+    si falla
+      mostrar "No se pudieron cargar los elementos."
+      reintentar en 5 segundos
+
+  si hay resultados
+    mostrar "Total: (elementos.total) elementos"
+  si no
+    mostrar "No hay elementos todavía."

@@ -4,5 +4,17 @@
     "repo": "davidbc01/telar-formulario",
     "version": "master",
     "descripcion": ""
+  },
+  {
+    "nombre": "navbar",
+    "repo": "davidbc01/telar-navbar",
+    "version": "master",
+    "descripcion": "Barra de navegación para aplicaciones Telar"
+  },
+  {
+    "nombre": "lista",
+    "repo": "davidbc01/telar-lista",
+    "version": "master",
+    "descripcion": "Componente de lista para aplicaciones Telar"
   }
 ]

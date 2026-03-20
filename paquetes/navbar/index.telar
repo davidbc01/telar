@@ -1,0 +1,14 @@
+# Paquete: telar-navbar
+# Barra de navegación responsive para aplicaciones Telar
+
+página navbar en "/navbar"
+  título "Navegación"
+
+  si el usuario está conectado
+    botón "Inicio" ir a inicio
+    botón "Mi cuenta" ir a cuenta
+    botón "Salir" hacer cerrarSesion
+  si no
+    botón "Inicio" ir a inicio
+    botón "Entrar" ir a login
+    botón "Registrarse" ir a registro
