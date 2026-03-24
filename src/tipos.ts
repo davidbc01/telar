@@ -18,14 +18,15 @@ export enum TipoToken {
     Usar = "usar",
     Codigo = "codigo",
     FinCodigo = "fin_codigo",
-
+    Incluir = "incluir",
+ 
     // Palabras clave - contenido
     Titulo = "titulo",
     Descripcion = "descripcion",
     Mostrar = "mostrar",
     Boton = "boton",
     Campo = "campo",
-
+ 
     // Palabras clave - lógica
     Si = "si",
     SiNo = "si_no",
@@ -36,7 +37,7 @@ export enum TipoToken {
     Hay = "hay",
     Falla = "falla",
     Funciona = "funciona",
-
+ 
     // Palabras clave - modificadores
     Maximo = "maximo",
     Ordenados = "ordenados",
@@ -55,18 +56,20 @@ export enum TipoToken {
     Hacer = "hacer",
     Tipo = "tipo",
     Idioma = "idioma",
-
+    Estilos = "estilos",
+    Clase = "clase",
+ 
     // Valores
     Texto = "TEXTO", // "hola mundo"
     Numero = "NUMERO", // 42
     Nombre = "NOMBRE", // MiTienda, Producto...
     Identificador = "IDENTIFICADOR", // inicio, login...
-
+ 
     // Puntuación
     DosPuntos = ":",
     Mayor = ">",
     Igual = "=",
-
+ 
     // Especiales
     NuevaLinea = "NUEVA_LINEA",
     Indentacion = "INDENTACION",
@@ -74,7 +77,7 @@ export enum TipoToken {
     FinArchivo = "FIN_ARCHIVO",
     Desconocido = "DESCONOCIDO",
 }
-
+ 
 // Un token tiene tipo, valor literal, y su posición en el archivo
 export interface Token {
     tipo: TipoToken
@@ -82,12 +85,12 @@ export interface Token {
     linea: number
     columna: number
 }
-
-
+ 
+ 
 // --- NODOS DEL ÁRBOL (AST) ---
 // El parser convierte tokens en un árbol de nodos.
 // Cada nodo representa una pieza de la aplicación.
-
+ 
 export type Nodo =
     | NodoAplicacion
     | NodoPagina
@@ -104,17 +107,18 @@ export type Nodo =
     | NodoReintentar
     | NodoUsar
     | NodoCodigo
-
+ 
 // aplicación MiTienda
 export interface NodoAplicacion {
     tipo: "aplicacion"
     nombre: string
     idioma: string
+    estilos: string[]
     paginas: NodoPagina[]
     datos: NodoDatos[]
     linea: number
 }
-
+ 
 // página inicio en "/"
 export interface NodoPagina {
     tipo: "pagina"
@@ -123,7 +127,7 @@ export interface NodoPagina {
     hijos: Nodo[]
     linea: number
 }
-
+ 
 // datos Producto
 export interface NodoDatos {
     tipo: "datos"
@@ -131,7 +135,7 @@ export interface NodoDatos {
     campos: NodoCamposDatos[]
     linea: number
 }
-
+ 
 // nombre: texto
 export interface NodoCamposDatos {
     tipo: "campo_datos"
@@ -139,49 +143,54 @@ export interface NodoCamposDatos {
     tipoCampo: TipoDato
     linea: number
 }
-
+ 
 // título: "Bienvenido"
 export interface NodoTitulo {
     tipo: "titulo"
     texto: string
+    clase?: string
     linea: number
 }
-
+ 
 // descripción: "..."
 export interface NodoDescripcion {
     tipo: "descripcion"
     texto: string
+    clase?: string
     linea: number
 }
-
+ 
 // mostrar Producto recientes
 export interface NodoMostrar {
     tipo: "mostrar"
     modelo: string
     modificadores: ModificadorMostrar[]
+    clase?: string
     siFalla?: Nodo[]
     siFunciona?: Nodo[]
     linea: number
 }
-
+ 
 // botón "Entrar" ir a login
 export interface NodoBoton {
     tipo: "boton"
     texto: string
     accion: AccionBoton
     destino: string
+    clase?: string
     siFalla?: Nodo[]
     linea: number
 }
-
+ 
 // campo "Correo" tipo email
 export interface NodoCampo {
     tipo: "campo"
     etiqueta: string
     tipoCampo: TipoCampo
+    clase?: string
     linea: number
 }
-
+ 
 // si el usuario está conectado
 export interface NodoSi {
     tipo: "si"
@@ -190,14 +199,14 @@ export interface NodoSi {
     siNo?: Nodo[]
     linea: number
 }
-
+ 
 // optimizar para movil
 export interface NodoOptimizar {
     tipo: "optimizar"
     objetivo: "movil"
     linea: number
 }
-
+ 
 // caché 10 minutos
 export interface NodoCache {
     tipo: "cache"
@@ -205,31 +214,31 @@ export interface NodoCache {
     unidad: "minutos" | "horas" | "segundos"
     linea: number
 }
-
+ 
 // reintentar en 5 segundos
 export interface NodoReintentar {
     tipo: "reintentar"
     segundos: number
     linea: number
 }
-
+ 
 // usar formulario
 export interface NodoUsar {
     tipo: "usar"
     paquete: string
     linea: number
 }
-
+ 
 // código ... fin código
 export interface NodoCodigo {
     tipo: "codigo"
     contenido: string
     linea: number
 }
-
-
+ 
+ 
 // --- TIPOS AUXILIARES ---
-
+ 
 export type TipoDato =
     | "texto"
     | "número"
@@ -237,48 +246,48 @@ export type TipoDato =
     | "foto"
     | "verdad"
     | "lista"
-
+ 
 export type TipoCampo =
     | "texto"
     | "email"
     | "contraseña"
     | "numero"
     | "área de texto"
-
+ 
 export type AccionBoton =
     | "ir"
     | "hacer"
-
+ 
 export type ModificadorMostrar =
     | { tipo: "maximo"; cantidad: number }
     | { tipo: "ordenados"; campo: string }
     | { tipo: "filtrados"; campo: string; valor: string }
     | { tipo: "recientes" }
-
+ 
 export type Condicion =
     | { tipo: "usuario_conectado" }
     | { tipo: "usuario_admin" }
     | { tipo: "hay_resultados" }
     | { tipo: "campo_igual"; campo: string; valor: string }
     | { tipo: "campo_mayor"; campo: string; valor: number }
-
-
+ 
+ 
 // --- ERRORES ---
 // Los errores de Telar siempre tienen un mensaje en español
 // y una sugerencia de cómo arreglarlo.
-
+ 
 export interface ErrorTelar {
     mensaje: string // Qué salió mal
     sugerencia?: string // Cómo arreglarlo
     linea: number
     columna: number
 }
-
+ 
 export class TelarError extends Error {
     public readonly linea: number
     public readonly columna: number
     public readonly sugerencia?: string
-
+ 
     constructor(error: ErrorTelar) {
         super(error.mensaje)
         this.linea = error.linea
@@ -286,40 +295,40 @@ export class TelarError extends Error {
         this.sugerencia = error.sugerencia
         this.name = "TelarError"
     }
-
+ 
     // Formatea el error para mostrarlo en la terminal
     formatear(nombreArchivo: string, contenido?: string): string {
         const ubicacion = `${nombreArchivo}:${this.linea}:${this.columna}`
         let salida = `\n✗  ${ubicacion} — ${this.message}\n`
-
+ 
         if (contenido) {
             const lineas = contenido.split('\n')
             const inicio = Math.max(0, this.linea - 3)
             const fin = Math.min(lineas.length, this.linea + 2)
-
+ 
             salida += '\n'
-
+ 
             for (let i = inicio; i < fin; i++) {
                 const numLinea = i + 1
                 const esLineaError = numLinea === this.linea
                 const prefijo = esLineaError ? '→' : ' '
                 const num = String(numLinea).padStart(4)
-
+ 
                 salida += `  ${prefijo} ${num} │  ${lineas[i]}\n`
-
+ 
                 if (esLineaError) {
                     const espacios = ' '.repeat(this.columna + 7)
                     salida += `  ${espacios}^^^^^\n`
                 }
             }
-
+ 
             salida += '\n'
         }
-
+ 
         if (this.sugerencia) {
             salida += `  Sugerencia: ${this.sugerencia}\n`
         }
-
+ 
         return salida
     }
 }

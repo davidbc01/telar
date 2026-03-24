@@ -17,7 +17,7 @@ import { Errores } from './errores'
 export class Parser {
     private tokens: Token[]
     private posicion: number = 0
-
+ 
     constructor(tokens: Token[]) {
         this.tokens = tokens.filter(t =>
             t.tipo !== TipoToken.NuevaLinea
@@ -28,59 +28,67 @@ export class Parser {
         if (this.tokens.length === 0 || this.actual().tipo === TipoToken.FinArchivo) {
             throw new TelarError(Errores.archivoVacio())
         }
-
+ 
         if (this.actual().tipo !== TipoToken.Aplicacion) {
             throw new TelarError(
                 Errores.faltaAplicacion(this.actual().linea, this.actual().columna)
             )
         }
-
+ 
         return this.parsearAplicacion()
     }
-
+ 
     // ── aplicación MiTienda ─────────────────────────────────────
-
+ 
     private parsearAplicacion(): NodoAplicacion {
         const token = this.consumir(TipoToken.Aplicacion)
-
+ 
         if (this.actual().tipo !== TipoToken.Nombre) {
             throw new TelarError(
                 Errores.nombreAplicacion(this.actual().linea, this.actual().columna)
             )
         }
-
+ 
         const nombre = this.consumir(TipoToken.Nombre).valor
         let idioma = "español"
+        const estilos: string[] = []
         const paginas: NodoPagina[] = []
         const datos: NodoDatos[] = []
  
         // Leer hijos de la aplicación
         while (!this.finArchivo()) {
             const actual = this.actual()
-
+ 
             // Saltar tokens de indentación a nivel raíz
             if (actual.tipo === TipoToken.Indentacion || 
                 actual.tipo === TipoToken.FinIndentacion) {
                 this.avanzar()
                 continue
             }
-
+ 
             if (actual.tipo === TipoToken.Idioma) {
                 this.avanzar()
                 idioma = this.consumirIdentificador().valor
                 continue
             }
-
+ 
+            // estilos "https://cdn.tailwindcss.com"
+            if (actual.tipo === TipoToken.Estilos) {
+                this.avanzar()
+                estilos.push(this.consumir(TipoToken.Texto).valor)
+                continue
+            }
+ 
             if (actual.tipo === TipoToken.Datos) {
                 datos.push(this.parsearDatos())
                 continue
             }
-
+ 
             if (actual.tipo === TipoToken.Pagina) {
                 paginas.push(this.parsearPagina())
                 continue
             }
-
+ 
             this.avanzar()
         }
     
@@ -88,19 +96,20 @@ export class Parser {
             tipo: "aplicacion",
             nombre,
             idioma,
+            estilos,
             paginas,
             datos,
             linea: token.linea
         }
     }
-
+ 
   // ── datos Producto ──────────────────────────────────────────
-
+ 
     private parsearDatos(): NodoDatos {
         const token = this.consumir(TipoToken.Datos)
         const nombre = this.consumir(TipoToken.Nombre).valor
         const campos: NodoCamposDatos[] = []
-
+ 
         if (this.actual().tipo === TipoToken.Indentacion) {
             this.avanzar()
             let intentos = 0
@@ -114,7 +123,7 @@ export class Parser {
             }
             if (this.actual().tipo === TipoToken.FinIndentacion) this.avanzar()
         }
-
+ 
         return { tipo: "datos", nombre, campos, linea: token.linea }
     }
  
@@ -184,12 +193,12 @@ export class Parser {
  
     private parsearNodo(): Nodo | null {
         const actual = this.actual()
-
+ 
         if (actual.tipo === TipoToken.Indentacion || actual.tipo === TipoToken.FinIndentacion) {
             this.avanzar()
             return null
         }
-
+ 
         switch (actual.tipo) {
             case TipoToken.Titulo:      return this.parsearTitulo()
             case TipoToken.Descripcion: return this.parsearDescripcion()
@@ -212,14 +221,16 @@ export class Parser {
     private parsearTitulo(): NodoTitulo {
         const token = this.consumir(TipoToken.Titulo)
         const texto = this.consumir(TipoToken.Texto).valor
-        return { tipo: "titulo", texto, linea: token.linea }
+        const clase = this.leerClaseOpcional()
+        return { tipo: "titulo", texto, clase, linea: token.linea }
     }
  
     // descripción "..."
     private parsearDescripcion(): NodoDescripcion {
         const token = this.consumir(TipoToken.Descripcion)
         const texto = this.consumir(TipoToken.Texto).valor
-        return { tipo: "descripcion", texto, linea: token.linea }
+        const clase = this.leerClaseOpcional()
+        return { tipo: "descripcion", texto, clase, linea: token.linea }
     }
  
     // mostrar Producto recientes / mostrar producto.nombre
@@ -228,38 +239,39 @@ export class Parser {
         const modeloToken = this.actual()
         const modelo = modeloToken.valor
         this.avanzar()
-
+        const clase = this.leerClaseOpcional()
+ 
         const modificadores: ModificadorMostrar[] = []
         let siFalla: Nodo[] | undefined
         let siFunciona: Nodo[] | undefined
-
+ 
         // Los modificadores pueden venir directamente o en bloque indentado
         const leerModificadores = () => {
             while (!this.finArchivo()) {
                 const t = this.actual()
-
+ 
                 if (t.tipo === TipoToken.Indentacion) {
                     this.avanzar()
                     continue
                 }
-
+ 
                 if (t.tipo === TipoToken.FinIndentacion) {
                     break
                 }
-
+ 
                 if (t.tipo === TipoToken.Recientes) {
                     modificadores.push({ tipo: "recientes" })
                     this.avanzar()
                     continue
                 }
-
+ 
                 if (t.tipo === TipoToken.Maximo) {
                     this.avanzar()
                     const cantidad = parseInt(this.consumir(TipoToken.Numero).valor)
                     modificadores.push({ tipo: "maximo", cantidad })
                     continue
                 }
-
+ 
                 if (t.tipo === TipoToken.Ordenados) {
                     this.avanzar()
                     if (this.actual().tipo === TipoToken.Por) this.avanzar()
@@ -267,7 +279,7 @@ export class Parser {
                     modificadores.push({ tipo: "ordenados", campo })
                     continue
                 }
-
+ 
                 if (t.tipo === TipoToken.Filtrados) {
                     this.avanzar()
                     if (this.actual().tipo === TipoToken.Por) this.avanzar()
@@ -277,50 +289,51 @@ export class Parser {
                     modificadores.push({ tipo: "filtrados", campo, valor })
                     continue
                 }
-
+ 
                 if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Falla) {
                     this.avanzar()
                     this.avanzar()
                     siFalla = this.parsearBloqueIndentado()
                     continue
                 }
-
+ 
                 if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Funciona) {
                     this.avanzar()
                     this.avanzar()
                     siFunciona = this.parsearBloqueIndentado()
                     continue
                 }
-
+ 
                 break
             }
         }
-
+ 
         leerModificadores()
-
-        return { tipo: "mostrar", modelo, modificadores, siFalla, siFunciona, linea: token.linea }
+ 
+        return { tipo: "mostrar", modelo, modificadores, clase, siFalla, siFunciona, linea: token.linea }
     }
  
-    // botón "Entrar" ir a login
+    // botón "Entrar" clase "..." ir a login
     private parsearBoton(): NodoBoton {
         const token = this.consumir(TipoToken.Boton)
         const texto = this.consumir(TipoToken.Texto).valor
-
+        const clase = this.leerClaseOpcional()
+ 
         const accionToken = this.actual()
         if (accionToken.tipo !== TipoToken.Ir && accionToken.tipo !== TipoToken.Hacer) {
             throw new TelarError(
                 Errores.seEsperaba('"ir" o "hacer"', accionToken.valor, accionToken.linea, accionToken.columna)
             )
         }
-
+ 
         const accion = accionToken.tipo === TipoToken.Ir ? "ir" : "hacer"
         this.avanzar()
-
+ 
         // Saltar "a" si existe
         if (this.actual().valor === "a") this.avanzar()
-
+ 
         const destino = this.consumirIdentificador().valor
-
+ 
         // Leer bloque "si falla" opcional después del botón
         let siFalla: Nodo[] | undefined
         if (this.actual().tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Falla) {
@@ -328,8 +341,8 @@ export class Parser {
             this.avanzar() // falla
             siFalla = this.parsearBloque()
         }
-
-        return { tipo: "boton", texto, accion, destino, siFalla, linea: token.linea }
+ 
+        return { tipo: "boton", texto, accion, destino, clase, siFalla, linea: token.linea }
     }
  
     // campo "Correo" tipo email
@@ -339,8 +352,9 @@ export class Parser {
     
         this.consumir(TipoToken.Tipo)
         const tipoCampo = this.parsearTipoCampo()
+        const clase = this.leerClaseOpcional()
     
-        return { tipo: "campo", etiqueta, tipoCampo, linea: token.linea }
+        return { tipo: "campo", etiqueta, tipoCampo, clase, linea: token.linea }
     }
  
     private parsearTipoCampo(): TipoCampo {
@@ -376,7 +390,7 @@ export class Parser {
     // si el usuario está conectado / si hay resultados / si no
     private parsearSi(): NodoSi {
         const token = this.consumir(TipoToken.Si)
-
+ 
         // "si falla" — bloque de error
         if (this.actual().tipo === TipoToken.Falla) {
             this.avanzar()
@@ -388,7 +402,7 @@ export class Parser {
                 linea: token.linea
             }
         }
-
+ 
         // "si funciona" — bloque de éxito
         if (this.actual().tipo === TipoToken.Funciona) {
             this.avanzar()
@@ -426,10 +440,10 @@ export class Parser {
         
         return { tipo: "si", condicion, entonces, siNo, linea: token.linea }
     }
-
+ 
     private parsearCondicion(): Condicion {
         const t = this.actual()
-
+ 
         // si el usuario está conectado / si el usuario es administrador
         if (t.tipo === TipoToken.El || t.tipo === TipoToken.La) {
             this.avanzar()
@@ -451,7 +465,7 @@ export class Parser {
                 }
             }
         }
-
+ 
         // si hay resultados
         if (t.tipo === TipoToken.Hay) {
             this.avanzar()
@@ -460,7 +474,7 @@ export class Parser {
                 return { tipo: "hay_resultados" }
             }
         }
-
+ 
         // si producto.stock > 0
         if (t.tipo === TipoToken.Identificador) {
             const campo = t.valor
@@ -476,12 +490,12 @@ export class Parser {
                 return { tipo: "campo_igual", campo, valor }
             }
         }
-
+ 
         throw new TelarError(
             Errores.condicionDesconocida(t.valor, t.linea, t.columna)
         )
     }
-
+ 
     // optimizar para móvil
     private parsearOptimizar(): NodoOptimizar {
         const token = this.consumir(TipoToken.Optimizar)
@@ -489,7 +503,7 @@ export class Parser {
         if (this.actual().tipo === TipoToken.Movil) this.avanzar()
         return { tipo: "optimizar", objetivo: "movil", linea: token.linea }
     }
-
+ 
     // caché 10 minutos
     private parsearCache(): NodoCache {
         const token = this.consumir(TipoToken.Cache)
@@ -498,7 +512,7 @@ export class Parser {
         this.avanzar()
         return { tipo: "cache", cantidad, unidad, linea: token.linea }
     }
-
+ 
     // reintentar en 5 segundos
     private parsearReintentar(): NodoReintentar {
         const token = this.consumir(TipoToken.Reintentar)
@@ -507,14 +521,14 @@ export class Parser {
         if (this.actual().tipo === TipoToken.Segundos) this.avanzar()
         return { tipo: "reintentar", segundos, linea: token.linea }
     }
-
+ 
     // usar formulario
     private parsearUsar(): NodoUsar {
         const token = this.consumir(TipoToken.Usar)
         const paquete = this.consumirIdentificador().valor
         return { tipo: "usar", paquete, linea: token.linea }
     }
-
+ 
     // código ... fin código
     private parsearCodigo(): NodoCodigo {
         const token = this.actual()
@@ -522,51 +536,60 @@ export class Parser {
         this.avanzar()
         return { tipo: "codigo", contenido, linea: token.linea }
     }
-
+ 
     // ── Helpers ─────────────────────────────────────────────────
-
+ 
+    // Lee "clase \"...\"" si existe, si no devuelve undefined
+    private leerClaseOpcional(): string | undefined {
+        if (this.actual().tipo === TipoToken.Clase) {
+            this.avanzar()
+            return this.consumir(TipoToken.Texto).valor
+        }
+        return undefined
+    }
+ 
     private parsearBloque(): Nodo[] {
         return this.parsearBloqueIndentado()
     }
-
+ 
     private parsearBloqueIndentado(): Nodo[] {
         const nodos: Nodo[] = []
-
+ 
         if (this.actual().tipo !== TipoToken.Indentacion) {
             return nodos
         }
         this.avanzar() // consumir INDENTACION de apertura
-
+ 
         while (!this.finArchivo()) {
             const t = this.actual().tipo
-
+ 
             if (t === TipoToken.FinIndentacion) {
             this.avanzar() // consumir FIN_INDENTACION
             break          // siempre parar — un nivel, un bloque
             }
-
+ 
             if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.FinArchivo) {
             break
             }
-
+ 
             const nodo = this.parsearNodo()
             if (nodo) nodos.push(nodo)
         }
-
+ 
         return nodos
     }
-
+ 
     private parsearBloquePagina(): Nodo[] {
         const nodos: Nodo[] = []
-
+ 
         if (this.actual().tipo !== TipoToken.Indentacion) {
             return nodos
         }
         this.avanzar()
-
+ 
         while (!this.finArchivo()) {
             const t = this.actual().tipo
-
+ 
             if (t === TipoToken.FinIndentacion) {
                 this.avanzar()
                 // Si viene otro INDENTACION, es el mismo nivel de página — continuar
@@ -576,33 +599,18 @@ export class Parser {
                 }
                 break
             }
-
+ 
             if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.FinArchivo) {
                 break
             }
-
+ 
             const nodo = this.parsearNodo()
             if (nodo) nodos.push(nodo)
         }
-
+ 
         return nodos
     }
-
-    private esNivelRaiz(): boolean {
-        const t = this.actual().tipo
-        return t === TipoToken.Identificador
-    }
-
-    private esSiguientePagina(): boolean {
-        return this.actual().tipo === TipoToken.Pagina ||
-            this.actual().tipo === TipoToken.Datos ||
-            this.actual().tipo === TipoToken.FinArchivo
-    }
-
-    private esInstruccionNueva(): boolean {
-        return false
-    }
-
+ 
     private consumir(tipo: TipoToken): Token {
         const token = this.actual()
         if (token.tipo !== tipo) {
@@ -613,7 +621,7 @@ export class Parser {
         this.avanzar()
         return token
     }
-
+ 
     private consumirIdentificador(): Token {
         const token = this.actual()
         if (token.tipo !== TipoToken.Identificador && token.tipo !== TipoToken.Nombre) {
@@ -624,21 +632,21 @@ export class Parser {
         this.avanzar()
         return token
     }
-
+ 
     private actual(): Token {
         return this.tokens[this.posicion] ?? {
             tipo: TipoToken.FinArchivo, valor: "", linea: 0, columna: 0
         }
     }
-
+ 
     private siguiente(): Token | null {
         return this.tokens[this.posicion + 1] ?? null
     }
-
+ 
     private avanzar(): void {
         this.posicion++
     }
-
+ 
     private finArchivo(): boolean {
         return this.posicion >= this.tokens.length || this.actual().tipo === TipoToken.FinArchivo
     }
