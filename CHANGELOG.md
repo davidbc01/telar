@@ -5,6 +5,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.7.0] - 2026-03-23
+
+### Añadido
+- Directiva `incluir ruta` para proyectos multi-archivo — cada página y modelo en su propio `.telar`
+- Palabra clave `clase "..."` en títulos, descripciones, botones, campos y `mostrar` — compatible con CSS propio y Tailwind
+- Directiva `estilos "url"` en `app.telar` para cargar CSS o Tailwind desde CDN
+- `estilos.css` generado en la raíz del proyecto — editable libremente, Telar lo usa automáticamente
+- `telar nuevo` genera estructura completa con carpetas `paginas/`, `modelos/`, `componentes/` y páginas de ejemplo navegables
+- Live reload ahora vigila todos los archivos `.telar` y `.css` del proyecto, no solo `app.telar`
+- CSS base completamente renovado: tipografía Inter, variables CSS, modo oscuro automático, botones con hover y sombra, spinner de carga animado, responsive con `clamp`
+- Clases automáticas por nombre en el HTML generado (`boton-entrar`, `titulo-bienvenido`) para estilar desde CSS sin tocar el `.telar`
+
+### Corregido
+- `ir a inicio` ahora genera `href="/"` correctamente — el generador busca la ruta real en el AST en lugar de construirla del nombre
+- `mostrar "texto literal"` ya no envuelve el contenido en llaves `{}`
+- Navegación entre páginas funciona correctamente con nombres en camelCase (`ir a sobreNosotros` → `/sobre-nosotros`)
+
+---
+
 ## [0.6.0] - 2026-03-20
 - 94 tests automatizados - lexer (36), parser (25), generador (33)
 - Cobertura completa de palabras clave, indentación, errores y generación HTML
