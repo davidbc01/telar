@@ -103,6 +103,42 @@ botón "Texto" hacer acción
 
 ---
 
+## Diseños
+
+```telar
+diseño NombreDiseno
+  navbar
+    título "Mi App"
+  pie
+    descripción "..."
+```
+
+El contenido de cada página se inyecta automáticamente al final del diseño. Si hay un diseño declarado en la aplicación, se aplica por defecto a todas las páginas. Una página puede sobreescribirlo declarándolo explícitamente:
+
+```telar
+página contacto en "/contacto"
+  diseño NombreDiseno
+  título "Contacto"
+```
+
+---
+
+## Componentes
+
+```telar
+componente NombreComponente
+  mostrar item.propiedad
+```
+
+Se usan pasando un solo argumento con `con` — sin paréntesis ni parámetros posicionales. Dentro del componente, `item` referencia el argumento pasado:
+
+```telar
+página inicio en "/"
+  NombreComponente con producto
+```
+
+---
+
 ## Manejo de errores
 
 ```telar

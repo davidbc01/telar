@@ -123,6 +123,42 @@ botón "Entrar" clase "bg-indigo-600 text-white px-6 py-3 rounded-xl" ir a login
 
 ---
 
+## Diseños y componentes
+
+Un diseño envuelve el contenido de tus páginas — navbar, pie, lo que sea compartido. Si declaras uno, se aplica automáticamente a todas las páginas sin tener que hacer nada más:
+
+```telar
+diseño principal
+  navbar
+    título "Mi Tienda"
+  pie
+    descripción "© 2026 Mi Tienda"
+
+página inicio en "/"
+  título "Bienvenido"   # se inserta al final del diseño, automáticamente
+```
+
+Si una página necesita un diseño distinto, lo declara explícitamente:
+
+```telar
+página contacto en "/contacto"
+  diseño principal
+  título "Contacto"
+```
+
+Los componentes son piezas reutilizables sin paréntesis ni argumentos posicionales. Dentro del componente, accedes a las propiedades con `item.propiedad`:
+
+```telar
+componente TarjetaProducto
+  mostrar item.nombre
+  mostrar item.precio
+
+página inicio en "/"
+  TarjetaProducto con producto
+```
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -187,18 +223,19 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (94) + CI/CD | ✅ Completo |
+| Tests completos (101) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
-| Layouts y componentes reutilizables | 🟪 Pendiente |
+| Diseños y componentes reutilizables | ✅ Completo |
 | Rutas dinámicas con parámetros | 🟪 Pendiente |
 | Formularios con validación | 🟪 Pendiente |
 | Variables y estado local | 🟪 Pendiente |
 | Temas visuales | 🟪 Pendiente |
 | SEO y metadatos automáticos | 🟪 Pendiente |
-| Documentación web | 🟪 Pendiente |
+| Documentación escrita | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
+| Web oficial de Telar | 🟪 Pendiente |
 
 ---
 
@@ -241,10 +278,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Live reload en todos los archivos `.telar` y `.css`
 - CSS base mejorado con Inter, modo oscuro y variables
 
-### v0.8 — Layouts y componentes
-- Sintaxis `layout` para estructuras compartidas entre páginas
-- Sintaxis `componente` para elementos reutilizables
-- Paso de datos entre componentes
+### v0.8 — Diseños y componentes ✅
+- Sintaxis `diseño <nombre>` para estructuras compartidas entre páginas
+- Diseño por defecto aplicado automáticamente si existe uno declarado
+- Sintaxis `componente <Nombre>` para elementos reutilizables, sin paréntesis ni argumentos posicionales
+- Uso con `NombreComponente con argumento`, accediendo a propiedades vía `item.propiedad`
 
 ### v0.9 — Rutas dinámicas
 - Parámetros en URLs: `página detalle en "/producto/(id)"`
@@ -269,11 +307,10 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `og:image`, `og:title`, `twitter:card` automáticos
 - `sitemap.xml` y `robots.txt` generados sin configuración
 
-### v0.14 — Documentación web
-- Web en telar.dev
-- Guía de inicio rápido
+### v0.14 — Documentación escrita
+- Guía de inicio rápido en Markdown
 - Referencia completa de sintaxis
-- Playground online
+- Ejemplos comentados de proyectos reales
 
 ### v0.15 — Tests y estabilidad
 - Cobertura de rutas dinámicas, componentes, layouts
@@ -283,6 +320,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Sintaxis estable — sin breaking changes
 - Comunidad activa
 - Al menos un proyecto real construido con Telar
+
+### Después de v1.0 — Web oficial de Telar
+- Sitio en telar.dev con guía de inicio rápido y referencia de sintaxis
+- Playground online para escribir y compilar Telar desde el navegador
+- Showcase de proyectos reales construidos con el lenguaje
 
 ---
 

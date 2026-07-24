@@ -5,6 +5,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.8.0] - 2026-07-24
+
+### Añadido
+- Diseños reutilizables con `diseño <nombre>` — envuelven el contenido de las páginas
+- Diseño aplicado automáticamente a todas las páginas si hay uno declarado en la aplicación, sin necesidad de referenciarlo
+- Una página puede sobreescribir el diseño por defecto con `diseño <nombre>` explícito
+- Componentes reutilizables con `componente <Nombre>` — sin paréntesis ni argumentos posicionales
+- Uso de componentes con `NombreComponente con argumento`, accediendo a propiedades vía `item.propiedad`
+- 10 tests nuevos cubriendo diseños y componentes (101 tests en total)
+
+### Corregido
+- 3 tests del generador desactualizados desde antes de v0.7 (comprobaban HTML/CSS de una versión anterior sin clases automáticas ni variables CSS renombradas)
+
+---
+
 ## [0.7.0] - 2026-03-23
 
 ### Añadido
