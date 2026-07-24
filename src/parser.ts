@@ -9,7 +9,7 @@ import {
     NodoAplicacion, NodoPagina, NodoDatos, NodoCamposDatos,
     NodoTitulo, NodoDescripcion, NodoMostrar, NodoBoton,
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
-    NodoUsar, NodoCodigo,
+    NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
     Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion
 } from './tipos'
 import { Errores } from './errores'
@@ -54,6 +54,8 @@ export class Parser {
         const estilos: string[] = []
         const paginas: NodoPagina[] = []
         const datos: NodoDatos[] = []
+        const disenos: NodoDiseno[] = []
+        const componentes: NodoComponente[] = []
  
         // Leer hijos de la aplicación
         while (!this.finArchivo()) {
@@ -89,6 +91,18 @@ export class Parser {
                 continue
             }
  
+            // diseño principal
+            if (actual.tipo === TipoToken.Diseno) {
+                disenos.push(this.parsearDiseno())
+                continue
+            }
+ 
+            // componente TarjetaProducto
+            if (actual.tipo === TipoToken.Componente) {
+                componentes.push(this.parsearComponente())
+                continue
+            }
+ 
             this.avanzar()
         }
     
@@ -99,8 +113,36 @@ export class Parser {
             estilos,
             paginas,
             datos,
+            disenos,
+            componentes,
             linea: token.linea
         }
+    }
+ 
+    // ── diseño principal ────────────────────────────────────────
+ 
+    private parsearDiseno(): NodoDiseno {
+        const token = this.consumir(TipoToken.Diseno)
+        const nombre = this.consumirIdentificador().valor
+        const { hijos } = this.parsearBloquePagina()
+        return { tipo: "diseno", nombre, hijos, linea: token.linea }
+    }
+ 
+    // ── componente TarjetaProducto ──────────────────────────────
+ 
+    private parsearComponente(): NodoComponente {
+        const token = this.consumir(TipoToken.Componente)
+        const nombre = this.consumir(TipoToken.Nombre).valor
+        const hijos = this.parsearBloqueIndentado()
+        return { tipo: "componente", nombre, hijos, linea: token.linea }
+    }
+ 
+    // TarjetaProducto con producto
+    private parsearUsoComponente(): NodoUsoComponente {
+        const token = this.consumir(TipoToken.Nombre)
+        this.consumir(TipoToken.Con)
+        const argumento = this.consumirIdentificador().valor
+        return { tipo: "uso_componente", nombre: token.valor, argumento, linea: token.linea }
     }
  
   // ── datos Producto ──────────────────────────────────────────
@@ -185,8 +227,8 @@ export class Parser {
         const nombre = this.consumirIdentificador().valor
         this.consumir(TipoToken.En)
         const ruta = this.consumir(TipoToken.Texto).valor
-        const hijos = this.parsearBloquePagina()
-        return { tipo: "pagina", nombre, ruta, hijos, linea: token.linea }
+        const { hijos, diseno } = this.parsearBloquePagina()
+        return { tipo: "pagina", nombre, ruta, hijos, diseno, linea: token.linea }
     }
  
   // ── Nodos dentro de una página ──────────────────────────────
@@ -197,6 +239,11 @@ export class Parser {
         if (actual.tipo === TipoToken.Indentacion || actual.tipo === TipoToken.FinIndentacion) {
             this.avanzar()
             return null
+        }
+ 
+        // Uso de componente: NombreComponente con producto
+        if (actual.tipo === TipoToken.Nombre && this.siguiente()?.tipo === TipoToken.Con) {
+            return this.parsearUsoComponente()
         }
  
         switch (actual.tipo) {
@@ -568,7 +615,8 @@ export class Parser {
             break          // siempre parar — un nivel, un bloque
             }
  
-            if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.FinArchivo) {
+            if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.Diseno ||
+                t === TipoToken.Componente || t === TipoToken.FinArchivo) {
             break
             }
  
@@ -579,11 +627,16 @@ export class Parser {
         return nodos
     }
  
-    private parsearBloquePagina(): Nodo[] {
+    // Bloque de una página o de un diseño. A diferencia de parsearBloqueIndentado,
+    // permite continuar tras un FIN_INDENTACION si vuelve el mismo nivel (varios
+    // sub-bloques hermanos), y reconoce "diseño <nombre>" como una referencia,
+    // no como el inicio de una nueva declaración de diseño.
+    private parsearBloquePagina(): { hijos: Nodo[]; diseno?: string } {
         const nodos: Nodo[] = []
+        let diseno: string | undefined
  
         if (this.actual().tipo !== TipoToken.Indentacion) {
-            return nodos
+            return { hijos: nodos, diseno }
         }
         this.avanzar()
  
@@ -600,15 +653,23 @@ export class Parser {
                 break
             }
  
-            if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.FinArchivo) {
+            if (t === TipoToken.Pagina || t === TipoToken.Datos || t === TipoToken.Componente ||
+                t === TipoToken.FinArchivo) {
                 break
+            }
+ 
+            // diseño principal — referencia al diseño a usar, no una declaración
+            if (t === TipoToken.Diseno) {
+                this.avanzar()
+                diseno = this.consumirIdentificador().valor
+                continue
             }
  
             const nodo = this.parsearNodo()
             if (nodo) nodos.push(nodo)
         }
  
-        return nodos
+        return { hijos: nodos, diseno }
     }
  
     private consumir(tipo: TipoToken): Token {

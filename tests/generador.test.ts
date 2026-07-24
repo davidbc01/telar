@@ -59,7 +59,8 @@ describe("Generador — título y descripción", () => {
 
     it("genera h1 con el título", () => {
         const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "Bienvenido"`)
-        expect(resultado).toContain('<h1>Bienvenido</h1>')
+        expect(resultado).toContain('titulo-bienvenido')
+        expect(resultado).toContain('>Bienvenido</h1>')
     })
 
     it("usa el título en la etiqueta title", () => {
@@ -122,7 +123,7 @@ describe("Generador — botones", () => {
 
     it("botón tiene clase boton", () => {
         const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Entrar" ir a login`)
-        expect(resultado).toContain('class="boton"')
+        expect(resultado).toContain('boton boton-entrar')
     })
 
 })
@@ -226,13 +227,74 @@ describe("Generador — CSS base", () => {
     it("el CSS contiene variables CSS", () => {
         const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
         const css = archivos.find(a => a.nombre === "telar.css")!
-        expect(css.contenido).toContain('--color-primario')
+        expect(css.contenido).toContain('--primario')
     })
 
     it("el CSS contiene estilos responsivos", () => {
         const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
         const css = archivos.find(a => a.nombre === "telar.css")!
         expect(css.contenido).toContain('@media')
+    })
+
+})
+
+describe("Generador — diseños (v0.8)", () => {
+
+    it("aplica el diseño por defecto a una página que no lo declara", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ndiseño principal\n  título "Navbar"\n\npágina inicio en "/"\n  título "Inicio"`
+        )
+        expect(resultado).toContain('titulo-navbar')
+        expect(resultado).toContain('titulo-inicio')
+    })
+
+    it("el contenido de la página se inyecta después del diseño", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ndiseño principal\n  título "Navbar"\n\npágina inicio en "/"\n  título "Inicio"`
+        )
+        const posNavbar = resultado.indexOf('titulo-navbar')
+        const posInicio = resultado.indexOf('titulo-inicio')
+        expect(posNavbar).toBeGreaterThan(-1)
+        expect(posInicio).toBeGreaterThan(posNavbar)
+    })
+
+    it("una página puede declarar explícitamente su diseño", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ndiseño principal\n  título "Navbar"\n\npágina contacto en "/contacto"\n  diseño principal\n  título "Contacto"`
+        )
+        expect(resultado).toContain('titulo-navbar')
+        expect(resultado).toContain('titulo-contacto')
+    })
+
+    it("sin diseños declarados, la página se genera igual que antes", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).toContain('titulo-hola')
+    })
+
+})
+
+describe("Generador — componentes (v0.8)", () => {
+
+    it("expande el uso de un componente dentro de una página", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaProducto con producto`
+        )
+        expect(resultado).toContain('componente-tarjetaproducto')
+    })
+
+    it("sustituye item.propiedad por el argumento pasado", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaProducto con producto`
+        )
+        expect(resultado).toContain('producto.nombre')
+        expect(resultado).not.toContain('item.nombre')
+    })
+
+    it("un componente desconocido no rompe la compilación", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina inicio en "/"\n  TarjetaFantasma con producto`
+        )
+        expect(resultado).toContain('componente desconocido')
     })
 
 })

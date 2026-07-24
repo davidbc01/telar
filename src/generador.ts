@@ -15,7 +15,7 @@ import {
     NodoTitulo, NodoDescripcion, NodoMostrar,
     NodoBoton, NodoCampo, NodoSi,
     NodoOptimizar, NodoCache, NodoReintentar,
-    NodoUsar, NodoCodigo
+    NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente
 } from './tipos'
 import { GeneradorJS } from './generador-js'
 
@@ -74,7 +74,8 @@ export class Generador {
     private generarPagina(pagina: NodoPagina): string {
         const titulo = this.extraerTitulo(pagina) ?? this.app.nombre
         const descripcion = this.extraerDescripcion(pagina) ?? ''
-        const cuerpo = pagina.hijos.map(h => this.generarNodo(h)).join('\n')
+        const contenidoPagina = pagina.hijos.map(h => this.generarNodo(h)).join('\n')
+        const cuerpo = this.envolverEnDiseno(pagina, contenidoPagina)
         const tieneCache = pagina.hijos.some(h => h.tipo === 'cache')
         const esMovil = pagina.hijos.some(h => h.tipo === 'optimizar')
  
@@ -137,6 +138,9 @@ ${this.indentar(cuerpo, 4)}
             case 'reintentar':  return this.generarReintentar(nodo)
             case 'usar':        return this.generarUsar(nodo)
             case 'codigo':      return this.generarCodigo(nodo)
+            case 'uso_componente': return this.generarUsoComponente(nodo)
+            case 'diseno':      return ''
+            case 'componente':  return ''
             default:            return ''
         }
     }
@@ -246,6 +250,57 @@ ${nodo.contenido}
 </script>`
     }
  
+    // --- Diseños ---
+
+    // Envuelve el contenido de una página con el diseño que le corresponde.
+    // Prioridad: diseño declarado explícitamente en la página > primer
+    // diseño definido en la aplicación (por defecto) > sin diseño.
+    private envolverEnDiseno(pagina: NodoPagina, contenidoPagina: string): string {
+        const disenos = this.app.disenos ?? []
+        if (disenos.length === 0) return contenidoPagina
+
+        const nombreDiseno = pagina.diseno ?? disenos[0].nombre
+        const diseno = disenos.find(d => d.nombre === nombreDiseno)
+        if (!diseno) return contenidoPagina
+
+        const cuerpoDiseno = diseno.hijos.map(h => this.generarNodo(h)).join('\n')
+
+        // El contenido de la página se inyecta implícito, al final del diseño
+        return `${cuerpoDiseno}\n${contenidoPagina}`
+    }
+
+    // --- Componentes ---
+
+    // TarjetaProducto con producto
+    // Busca la definición del componente y genera su cuerpo sustituyendo
+    // cada referencia "item.propiedad" por "producto.propiedad".
+    private generarUsoComponente(nodo: NodoUsoComponente): string {
+        const componentes = this.app.componentes ?? []
+        const definicion = componentes.find(c => c.nombre === nodo.nombre)
+
+        if (!definicion) {
+            return `<!-- componente desconocido: ${nodo.nombre} -->`
+        }
+
+        const cuerpo = definicion.hijos
+            .map(h => this.generarNodo(this.sustituirItem(h, nodo.argumento)))
+            .join('\n')
+
+        return `<div class="componente componente-${this.slugify(definicion.nombre)}">
+${this.indentar(cuerpo, 4)}
+</div>`
+    }
+
+    // Sustituye "item.propiedad" por "<argumento>.propiedad" dentro de un nodo
+    // del cuerpo de un componente, antes de generarlo. Solo afecta a los
+    // nodos "mostrar" que acceden a un campo (mostrar item.nombre).
+    private sustituirItem(nodo: Nodo, argumento: string): Nodo {
+        if (nodo.tipo === 'mostrar' && nodo.modelo.startsWith('item.')) {
+            return { ...nodo, modelo: argumento + nodo.modelo.slice('item'.length) }
+        }
+        return nodo
+    }
+
     // --- CSS base ---
  
     private generarCSS(): string {

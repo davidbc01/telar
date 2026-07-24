@@ -19,6 +19,9 @@ export enum TipoToken {
     Codigo = "codigo",
     FinCodigo = "fin_codigo",
     Incluir = "incluir",
+    Diseno = "diseno",
+    Componente = "componente",
+    Con = "con",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -107,6 +110,9 @@ export type Nodo =
     | NodoReintentar
     | NodoUsar
     | NodoCodigo
+    | NodoDiseno
+    | NodoComponente
+    | NodoUsoComponente
  
 // aplicación MiTienda
 export interface NodoAplicacion {
@@ -116,6 +122,8 @@ export interface NodoAplicacion {
     estilos: string[]
     paginas: NodoPagina[]
     datos: NodoDatos[]
+    disenos: NodoDiseno[]
+    componentes: NodoComponente[]
     linea: number
 }
  
@@ -125,6 +133,34 @@ export interface NodoPagina {
     nombre: string
     ruta: string
     hijos: Nodo[]
+    diseno?: string // nombre del diseño a usar, si se sobreescribe explícitamente
+    linea: number
+}
+ 
+// diseño principal
+//   navbar ...
+//   pie ...
+export interface NodoDiseno {
+    tipo: "diseno"
+    nombre: string
+    hijos: Nodo[]
+    linea: number
+}
+ 
+// componente TarjetaProducto
+//   título item.nombre
+export interface NodoComponente {
+    tipo: "componente"
+    nombre: string
+    hijos: Nodo[]
+    linea: number
+}
+ 
+// TarjetaProducto con producto
+export interface NodoUsoComponente {
+    tipo: "uso_componente"
+    nombre: string
+    argumento: string
     linea: number
 }
  
