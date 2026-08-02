@@ -14,7 +14,19 @@ import { Generador } from './generador'
 import { TelarError } from './tipos'
 import { instalarPaquete, listarPaquetes, eliminarPaquete, buscarPaquetes } from './paquetes'
 
-const VERSION = '0.7.0'
+// La versión se lee de package.json en vez de duplicarse aquí a mano,
+// para no tener que recordar actualizarla en cada release.
+function leerVersion(): string {
+    try {
+        const rutaPkg = path.join(__dirname, '..', 'package.json')
+        const pkg = JSON.parse(fs.readFileSync(rutaPkg, 'utf-8'))
+        return pkg.version ?? 'desconocida'
+    } catch {
+        return 'desconocida'
+    }
+}
+
+const VERSION = leerVersion()
  
 const AYUDA = `
   Telar v${VERSION} — Lenguaje de programación para la web
