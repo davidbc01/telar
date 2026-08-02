@@ -3,8 +3,12 @@
   "version": "0.8.0",
   "description": "Lenguaje de programación declarativo para la web, escrito en español",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidbc01/telar.git"
+  },
   "bin": {
-    "telar": "./dist/cli.js"
+    "telar": "dist/cli.js"
   },
   "files": [
     "dist/",
