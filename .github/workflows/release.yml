@@ -1,0 +1,84 @@
+name: Release
+
+# Se dispara al pushear un tag con forma vX.Y.Z (ej. v0.8.0)
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write   # para crear la release en GitHub
+  id-token: write    # para el token OIDC de npm trusted publishing
+
+jobs:
+  release:
+    name: Release en GitHub y npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar tipos TypeScript
+        run: npm run lint
+
+      - name: Ejecutar tests
+        run: npm run test:run
+
+      - name: Compilar
+        run: npm run build
+
+      # El trusted publishing de npm requiere npm >= 11.5.1
+      - name: Actualizar npm
+        run: npm install -g npm@latest
+
+      - name: Extraer versión del tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # Saca del CHANGELOG.md solo la sección de esta versión,
+      # para usarla como descripción de la release en GitHub
+      - name: Extraer sección del CHANGELOG
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          awk -v ver="$VERSION" '
+            BEGIN { printing = 0 }
+            /^## \[/ {
+              if (printing) exit
+              if (index($0, "[" ver "]") > 0) { printing = 1; next }
+              next
+            }
+            printing { print }
+          ' CHANGELOG.md > changelog_entry.md
+
+          # Quitar líneas en blanco y el separador --- sueltos al final
+          while [ -s changelog_entry.md ] && { [ -z "$(tail -n1 changelog_entry.md)" ] || [ "$(tail -n1 changelog_entry.md)" = "---" ]; }; do
+            sed -i '$d' changelog_entry.md
+          done
+
+          # Si por lo que sea no encontró nada, que no falle la release en blanco
+          if [ ! -s changelog_entry.md ]; then
+            echo "Sin entrada en el CHANGELOG para $VERSION." > changelog_entry.md
+          fi
+
+      - name: Crear release en GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Telar ${{ github.ref_name }}"
+          body_path: changelog_entry.md
+          generate_release_notes: false
+
+      - name: Publicar en npm
+        run: npm publish --provenance --access public
+        
