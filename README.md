@@ -312,7 +312,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (181) + CI/CD | ✅ Completo |
+| Tests completos (191) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -323,6 +323,9 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Temas visuales | ✅ Completo |
 | SEO y metadatos automáticos | ✅ Completo |
 | Documentación escrita | ✅ Completo |
+| Tests del CLI + cobertura ampliada | ✅ Completo |
+| Gramática limpia (sin `tipo`/`filtrados por`/`hacer`) | ✅ Completo |
+| Componentes conectados a listas de datos reales | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
 | Web oficial de Telar | 🟪 Pendiente |
 
@@ -411,6 +414,18 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Cobertura de combinaciones diseño + rutas dinámicas + componentes
 - **Bug real corregido:** el CDN de Tailwind (`estilos "https://cdn.tailwindcss.com"`, el ejemplo destacado del propio README) generaba `<link rel="stylesheet">` en vez de `<script src="...">` — nunca había funcionado
 - 22 tests nuevos (181 en total)
+
+### v0.16 — Gramática más limpia ✅
+- Rediseño deliberado de la sintaxis antes de comprometerse a la estabilidad de v1.0: cada palabra clave tiene que aportar significado
+- `campo "X" tipo email` → `campo "X" email` — `tipo` no aportaba nada
+- `mostrar Modelo filtrados por id = parametro.id` → `mostrar Modelo según id = parametro.id`
+- `botón "X" hacer sumar/restar/cambiar tema/acción` → `suma` / `resta` / `alterna tema` / `acción` a secas — `hacer` era puro pegamento
+- De paso, dos paquetes locales (`formulario`, `lista`) tenían sintaxis que nunca fue real (un `si funciona` tras un botón que no existe, una interpolación de texto que Telar nunca ha soportado) — corregidos
+
+### v0.17 — Componentes conectados a listas reales ✅
+- `mostrar Modelo ... con NombreComponente` — antes, los componentes y las listas de datos eran dos sistemas que nunca se hablaban entre sí
+- Cada `item.propiedad` del componente se rellena con el valor real de cada elemento de la lista, no con texto fijo
+- Probado de extremo a extremo con un DOM real y datos simulados
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes
