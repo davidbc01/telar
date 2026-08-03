@@ -1,8 +1,14 @@
 # Ejemplo: Tienda online
-# Muestra una tienda con listado de productos, detalle y carrito.
+#
+# Listado de productos, detalle con ruta dinámica, un selector de cantidad
+# con estado local, y un botón para alternar el tema. Como el del blog,
+# este archivo compila tal cual — pruébalo:
+#
+#   telar compilar app.telar
 
 aplicación MiTienda
   idioma español
+  dominio "https://mitienda.example.com"
 
 datos Producto
   nombre: texto
@@ -11,77 +17,56 @@ datos Producto
   descripción: texto
   stock: número
 
-datos Pedido
-  productos: lista de Producto
-  total: número
-  estado: texto
+diseño principal
+  navbar
+    título "MiTienda"
+  pie
+    descripción "© 2026 MiTienda"
 
-# Página de inicio 
-
+# Página de inicio: catálogo + botón para alternar el tema visual
 página inicio en "/"
-  usar formulario
+  imagen "https://mitienda.example.com/portada.jpg"
   título "Bienvenido a MiTienda"
   descripción "Los mejores productos al mejor precio"
 
+  botón "🌙 Cambiar tema" hacer cambiar tema
+
   mostrar Producto recientes
     máximo 8
-    ordenados por fecha
+    ordenados por precio
     si falla
       mostrar "No se pudieron cargar los productos."
       reintentar en 10 segundos
 
-  si el usuario está conectado
-    mostrar "Hola, (usuario.nombre)"
-    botón "Mi cuenta" ir a cuenta
-    botón "Mi carrito" ir a carrito
-  si no
-    botón "Entrar" ir a login
-    botón "Registrarse" ir a registro
-
   optimizar para móvil
   caché 5 minutos
 
-# Detalle de producto
-
+# Detalle de producto — ruta dinámica, con un selector de cantidad que
+# vive enteramente en el navegador (no hace ninguna petición al sumar o
+# restar, solo actualiza lo que se ve en pantalla)
 página detalle en "/producto/(id)"
-  título "(producto.nombre)"
+  diseño principal
+  título "Producto"
 
-  mostrar producto.imagen
-  mostrar producto.nombre
-  mostrar producto.precio
-  mostrar producto.descripción
+  mostrar Producto filtrados por id = parametro.id
 
-  si producto.stock > 0
-    botón "Añadir al carrito" hacer añadirAlCarrito
-  si no
-    mostrar "Sin stock — avísame cuando llegue"
-    botón "Avisarme" hacer suscribirStock
+  variable cantidad = 1
+  texto cantidad
+  botón "+" hacer sumar cantidad
+  botón "−" hacer restar cantidad
 
-  optimizar para móvil
+  botón "Añadir al carrito" hacer añadirAlCarrito
+    si falla
+      mostrar "No se pudo añadir. Inténtalo de nuevo."
 
-# Carrito
-
-página carrito en "/carrito"
-  título "Tu carrito"
-
-  si hay resultados
-    mostrar pedido.productos
-    mostrar "Total: (pedido.total) €"
-    botón "Finalizar compra" ir a pago
-  si no
-    mostrar "Tu carrito está vacío"
-    botón "Ver productos" ir a inicio
-
-# Login
-
+# Login, con validación real en ambos campos
 página login en "/entrar"
+  diseño principal
   título "Entrar"
 
-  campo "Correo electrónico" tipo email
-  campo "Contraseña" tipo contraseña
+  campo "Correo electrónico" tipo email requerido
+  campo "Contraseña" tipo contraseña requerido mínimo 8
 
   botón "Entrar" hacer iniciarSesion
     si falla
       mostrar "Correo o contraseña incorrectos"
-
-  botón "¿Olvidaste tu contraseña?" ir a recuperarContraseña

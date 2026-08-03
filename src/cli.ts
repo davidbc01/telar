@@ -460,14 +460,14 @@ function comandoNuevo(args: string[]) {
     }
  
     const nombre = args[0]
-    const carpeta = path.join(process.cwd(), nombre)
+    const carpeta = path.resolve(process.cwd(), nombre)
  
     if (fs.existsSync(carpeta)) {
         console.error(`\n✗  Ya existe una carpeta llamada "${nombre}"\n`)
         process.exit(1)
     }
  
-    const nombrePascal = nombre
+    const nombrePascal = path.basename(nombre)
         .split(/[-_]/)
         .map(p => p.charAt(0).toUpperCase() + p.slice(1))
         .join('')

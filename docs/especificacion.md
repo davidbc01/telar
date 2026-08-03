@@ -1,7 +1,9 @@
-# Especificación de Telar v0.5
+# Especificación de Telar
 
-> Este documento define qué es Telar, qué problema resuelve, cómo se ve el código
-> y cuál es la hoja de ruta. Es el documento fundacional del proyecto.
+> Este documento define qué es Telar, qué problema resuelve y cómo se ve el código.
+> Es el documento fundacional del proyecto. Para el estado actual y la hoja de ruta
+> con el detalle de cada versión, consulta el [README](../README.md#hoja-de-ruta) —
+> se mantiene ahí para no duplicar la misma información en dos sitios.
 
 ---
 
@@ -227,16 +229,7 @@ Los paquetes se instalan en la carpeta `paquetes/` y se registran en `telar.paqu
 
 ## 7. Hoja de ruta
 
-| Versión | Estado | Objetivo |
-|---------|--------|----------|
-| 0.1 | ✅ Completo | Lexer, parser, generador HTML |
-| 0.2 | ✅ Completo | Generador JavaScript, CLI |
-| 0.3 | ✅ Completo | Live reload, extensión VS Code, errores visuales |
-| 0.4 | ✅ Completo | Gestor de paquetes |
-| 0.5 | ✅ Completo | Sintaxis `usar`, bloque `código`, `telar nuevo`, paquetes oficiales |
-| 0.6 | 🔄 En desarrollo | Tests completos, CI/CD |
-| 0.7 | 🟪 Pendiente | Documentación web en telar.dev |
-| 1.0 | 🟪 Pendiente | Lanzamiento público |
+Se mantiene en el [README](../README.md#hoja-de-ruta), con el detalle de cada versión — para no tener dos fuentes de verdad desincronizadas.
 
 ---
 
@@ -254,4 +247,4 @@ Los paquetes se instalan en la carpeta `paquetes/` y se registran en `telar.paqu
 
 ---
 
-*Especificación v0.5 — Marzo 2026*
+*Documento fundacional de Telar — actualizado en agosto de 2026.*

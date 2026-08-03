@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.14.0] - 2026-08-03
+
+### Añadido
+- `docs/inicio-rapido.md` — guía de inicio rápido, de instalación a primera web interactiva en 5 minutos
+- Enlaces a la guía desde el README (instalación y sección de contribuir)
+
+### Corregido
+- `examples/blog/app.telar` y `examples/tienda/app.telar` reescritos por completo. Los anteriores usaban sintaxis que nunca existió en el compilador (interpolación `"(variable.campo)"`, `filtrados por` con un valor que no era literal ni `parametro.X`) y no compilaban. Los nuevos están verificados compilando de verdad, línea por línea
+- `telar nuevo` no respetaba rutas absolutas: `path.join` trataba una ruta como `/tmp/proyecto` como un segmento relativo más, creando el proyecto silenciosamente en el sitio equivocado (`<cwd>/tmp/proyecto`). Ahora usa `path.resolve`
+- En ese mismo caso, el nombre de la aplicación generado incluía la ruta completa en vez de solo el nombre de la carpeta, produciendo un `app.telar` inválido. Ahora se deriva del `path.basename`
+- `docs/especificacion.md` actualizado: quitada la cabecera "v0.5" y la tabla de roadmap duplicada y desincronizada del README — ahora apunta al README como única fuente de verdad para el estado del proyecto
+
+---
+
 ## [0.13.0] - 2026-08-03
 
 ### Añadido

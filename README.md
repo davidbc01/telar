@@ -49,6 +49,8 @@ npm install
 npx ts-node src/cli.ts nuevo mi-proyecto
 ```
 
+👉 ¿Primera vez? La **[guía de inicio rápido](./docs/inicio-rapido.md)** te lleva de cero a tu primera web interactiva en 5 minutos.
+
 ---
 
 ## Uso
@@ -309,7 +311,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Variables y estado local | ✅ Completo |
 | Temas visuales | ✅ Completo |
 | SEO y metadatos automáticos | ✅ Completo |
-| Documentación escrita | 🟪 Pendiente |
+| Documentación escrita | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
 | Web oficial de Telar | 🟪 Pendiente |
 
@@ -387,10 +389,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `imagen "url"` — se muestra en la página y, si es la primera de esa página, se usa también como imagen para compartir en redes
 - Las rutas dinámicas (`/producto/(id)`) se excluyen del sitemap automáticamente
 
-### v0.14 — Documentación escrita
-- Guía de inicio rápido en Markdown
-- Referencia completa de sintaxis
-- Ejemplos comentados de proyectos reales
+### v0.14 — Documentación escrita ✅
+- `docs/inicio-rapido.md` — guía de 5 minutos, de instalación a primera web interactiva
+- `docs/sintaxis.md` — referencia completa (ya se mantenía al día desde v0.8)
+- `examples/blog/` y `examples/tienda/` — reescritos desde cero: los anteriores usaban sintaxis que nunca existió y ni siquiera compilaban. Los nuevos sí, verificado
+- De paso, dos bugs reales de `telar nuevo`: no respetaba rutas absolutas (creaba el proyecto en el sitio equivocado sin avisar) y generaba un nombre de aplicación inválido en ese caso
 
 ### v0.15 — Tests y estabilidad
 - Cobertura de rutas dinámicas, componentes, layouts
@@ -420,9 +423,10 @@ Telar no pretende reemplazar el inglés como lengua franca de la programación. 
 
 El proyecto está en sus primeras fases. La contribución más valiosa ahora mismo es **probar la sintaxis**:
 
-1. Lee la [especificación](./docs/especificacion.md)
-2. Intenta escribir tu caso de uso real en Telar
-3. Abre un issue con lo que se sintió forzado o incómodo
+1. Sigue la [guía de inicio rápido](./docs/inicio-rapido.md) (5 minutos, de cero a tu primera web)
+2. Lee la [especificación](./docs/especificacion.md) y la [referencia de sintaxis](./docs/sintaxis.md)
+3. Intenta escribir tu caso de uso real en Telar
+4. Abre un issue con lo que se sintió forzado o incómodo
 
 Toda la discusión de diseño del lenguaje ocurre en [Issues](../../issues).
 

@@ -1,61 +1,65 @@
 # Ejemplo: Blog personal
-# Un blog sencillo con listado de artículos y página de detalle.
+#
+# Un blog con listado de artículos, página de detalle con ruta dinámica,
+# y un formulario de contacto con validación. Cada línea de este archivo
+# es sintaxis real de Telar — compílalo tú mismo para comprobarlo:
+#
+#   telar compilar app.telar
 
 aplicación MiBlog
   idioma español
+  dominio "https://miblog.example.com"
+  tema oscuro
 
+# El modelo describe la forma de los datos. Telar no incluye un backend —
+# espera que tú sirvas estos datos en /api/articulo (ver "El problema" en
+# el README para entender esta decisión de diseño).
 datos Articulo
   título: texto
   contenido: texto
   fecha: fecha
   autor: texto
-  etiquetas: lista de texto
 
-# Página principal
+# Un diseño se aplica automáticamente a todas las páginas que no
+# declaren uno propio — aquí lo usan todas.
+diseño principal
+  navbar
+    título "Mi Blog"
+  pie
+    descripción "© 2026 Mi Blog — hecho con Telar"
 
+# Página principal: lista de artículos
 página inicio en "/"
   título "Mi Blog"
-  descripción "Artículos sobre tecnología y diseño"
+  descripción "Artículos sobre tecnología y diseño, sin relleno"
 
   mostrar Articulo recientes
     máximo 10
     ordenados por fecha
     si falla
       mostrar "No se pudieron cargar los artículos."
+      reintentar en 10 segundos
 
-  optimizar para móvil
-  caché 30 minutos
-
-# Detalle de artículo
-
+# Detalle de un artículo — ruta dinámica. Un único archivo compilado
+# (articulo-id.html) atiende cualquier /articulo/<lo-que-sea>; el id real
+# se lee de la URL en el navegador y se usa para pedir el artículo exacto.
 página articulo en "/articulo/(id)"
-  título "(articulo.título)"
-  descripción "(articulo.contenido primeras 200 letras)"
+  diseño principal
+  título "Artículo"
+  mostrar Articulo filtrados por id = parametro.id
 
-  mostrar articulo.título
-  mostrar articulo.fecha
-  mostrar articulo.autor
-  mostrar articulo.contenido
-  mostrar articulo.etiquetas
-
-  mostrar "Artículos relacionados"
-    filtrados por etiquetas = articulo.etiquetas
-    máximo 3
-
-  optimizar para móvil
-  caché 1 hora
-
-# Página de contacto
-
+# Contacto, con validación real: si el correo no es válido o falta el
+# mensaje, el navegador bloquea el envío antes de llegar a hacer ninguna
+# petición.
 página contacto en "/contacto"
+  diseño principal
   título "Contacto"
+  descripción "¿Alguna pregunta? Escríbeme."
 
-  campo "Tu nombre" tipo texto
-  campo "Tu correo" tipo email
-  campo "Mensaje" tipo área de texto
+  campo "Tu nombre" tipo texto requerido
+  campo "Tu correo" tipo email requerido
+  campo "Mensaje" tipo área de texto requerido máximo 500 caracteres
 
-  botón "Enviar" hacer enviarMensaje
+  botón "Enviar" hacer enviar
     si falla
-      mostrar "No se pudo enviar. Intenta de nuevo."
-    si funciona
-      mostrar "Mensaje enviado. Te respondo pronto."
+      mostrar "No se pudo enviar. Inténtalo de nuevo."
