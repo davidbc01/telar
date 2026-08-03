@@ -50,6 +50,28 @@ const Telar = {
         }
     },
 
+    // Aplicar el tema guardado en localStorage, si el usuario ya lo cambió
+    // alguna vez. Si no hay nada guardado, se respeta el que trae el HTML
+    // (fijado en app.telar, o "automático" si no se declaró ninguno).
+    iniciarTema() {
+        try {
+            const guardado = localStorage.getItem('telar_tema')
+            if (guardado === 'oscuro' || guardado === 'claro') {
+                document.documentElement.setAttribute('data-tema', guardado)
+            }
+        } catch (e) {}
+    },
+
+    // Alternar entre tema oscuro y claro, y recordarlo entre visitas
+    alternarTema() {
+        const actual = document.documentElement.getAttribute('data-tema')
+        const nuevo = actual === 'oscuro' ? 'claro' : 'oscuro'
+        document.documentElement.setAttribute('data-tema', nuevo)
+        try {
+            localStorage.setItem('telar_tema', nuevo)
+        } catch (e) {}
+    },
+
     // Comprobar condiciones
     evaluar(condicion) {
         switch (condicion) {
@@ -354,7 +376,7 @@ async function cargar${modelo}() {
     // Una función por cada botón con acción "hacer"
 
     private generarAcciones(): string {
-        const acciones = new Map<string, { operacion?: 'sumar' | 'restar'; variable?: string }>()
+        const acciones = new Map<string, { operacion?: 'sumar' | 'restar' | 'cambiar_tema'; variable?: string }>()
     
         for (const pagina of this.app.paginas) {
             this.extraerAcciones(pagina.hijos, acciones)
@@ -362,11 +384,13 @@ async function cargar${modelo}() {
     
         if (acciones.size === 0) return ''
     
-        const funciones = Array.from(acciones.entries()).map(([accion, info]) =>
-            info.operacion && info.variable
-                ? this.generarAccionVariable(accion, info.operacion, info.variable)
-                : this.generarAccionAPI(accion)
-        )
+        const funciones = Array.from(acciones.entries()).map(([accion, info]) => {
+            if (info.operacion === 'cambiar_tema') return this.generarAccionTema(accion)
+            if (info.operacion && info.variable) {
+                return this.generarAccionVariable(accion, info.operacion, info.variable)
+            }
+            return this.generarAccionAPI(accion)
+        })
     
         const listeners = Array.from(acciones.keys()).map(accion =>
             `  document.querySelector('[data-accion="${accion}"]')
@@ -390,6 +414,16 @@ ${listeners.join('\n')}
 function ${accion}() {
     Telar.estado.${variable} = Telar.estado.${variable} ${delta}
     Telar.actualizarVariable('${variable}')
+}`
+    }
+
+    // Acción incorporada: alterna entre tema oscuro y claro, y lo recuerda
+    // entre visitas — sin llamar a ninguna API
+    private generarAccionTema(accion: string): string {
+        return `
+// Acción: ${accion} (alterna el tema visual, sin API)
+function ${accion}() {
+    Telar.alternarTema()
 }`
     }
 
@@ -423,7 +457,7 @@ async function ${accion}() {
 
     private extraerAcciones(
         nodos: Nodo[],
-        mapa: Map<string, { operacion?: 'sumar' | 'restar'; variable?: string }>
+        mapa: Map<string, { operacion?: 'sumar' | 'restar' | 'cambiar_tema'; variable?: string }>
     ) {
         for (const nodo of nodos) {
             if (nodo.tipo === 'boton' && nodo.accion === 'hacer') {
@@ -451,7 +485,7 @@ async function ${accion}() {
             p.hijos.some(h => h.tipo === 'boton' && (h as NodoBoton).accion === 'hacer')
         )
     
-        const llamadas: string[] = ['  Telar.iniciarSesion();']
+        const llamadas: string[] = ['  Telar.iniciarSesion();', '  Telar.iniciarTema();']
     
         if (tieneCondiciones) llamadas.push('  aplicarCondiciones();')
         if (tieneAcciones) llamadas.push('  registrarAcciones();')

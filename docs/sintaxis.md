@@ -204,6 +204,31 @@ Pendiente para una versión futura: variables compartidas a nivel de aplicación
 
 ---
 
+## Temas visuales
+
+A nivel de aplicación, en `app.telar`:
+
+```telar
+aplicación MiApp
+  tema oscuro
+```
+
+- Sin declarar `tema`, Telar sigue el sistema operativo del visitante (comportamiento igual que antes de v0.12)
+- `tema oscuro` fija el tema oscuro para toda la web, sin importar el sistema operativo
+- `tema claro` fija el tema claro de la misma forma
+
+Botón opcional para que el usuario lo cambie en vivo:
+
+```telar
+botón "Cambiar tema" hacer cambiar tema
+```
+
+Alterna entre oscuro y claro en el navegador y lo recuerda entre visitas con `localStorage` — no llama a ninguna API. Se puede combinar con cualquiera de los dos temas fijos: el botón sobreescribe el valor inicial, y la próxima visita respeta lo último elegido.
+
+Pendiente para una versión futura: colores de tema totalmente personalizados, más allá de los presets oscuro/claro.
+
+---
+
 ## Manejo de errores
 
 ```telar

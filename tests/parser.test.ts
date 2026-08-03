@@ -342,3 +342,29 @@ describe("Parser — variables y estado local (v0.11)", () => {
     })
 
 })
+
+describe("Parser — temas visuales (v0.12)", () => {
+
+    it("sin declarar tema, la app usa automático", () => {
+        const arbol = parsear(`aplicación MiApp`)
+        expect(arbol.tema).toBe("automatico")
+    })
+
+    it("parsea tema oscuro", () => {
+        const arbol = parsear(`aplicación MiApp\n  tema oscuro`)
+        expect(arbol.tema).toBe("oscuro")
+    })
+
+    it("parsea tema claro", () => {
+        const arbol = parsear(`aplicación MiApp\n  tema claro`)
+        expect(arbol.tema).toBe("claro")
+    })
+
+    it("un botón hacer cambiar tema guarda la operación cambiar_tema", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Cambiar" hacer cambiar tema`)
+        const boton = arbol.paginas[0].hijos[0] as any
+        expect(boton.operacion).toBe("cambiar_tema")
+        expect(boton.destino).toBe("cambiar_tema")
+    })
+
+})

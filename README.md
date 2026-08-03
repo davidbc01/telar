@@ -203,6 +203,20 @@ página contador en "/"
 
 ---
 
+## Temas visuales
+
+```telar
+aplicación MiApp
+  tema oscuro
+
+página inicio en "/"
+  botón "🌙 Cambiar tema" hacer cambiar tema
+```
+
+Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que siempre). `tema oscuro` o `tema claro` lo fija para toda la web, sin importar el sistema operativo. El botón `hacer cambiar tema` es opcional y se puede combinar con cualquiera de los dos: alterna en vivo y lo recuerda entre visitas con `localStorage`, sin llamar a ninguna API.
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -267,7 +281,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (137) + CI/CD | ✅ Completo |
+| Tests completos (147) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -275,7 +289,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Rutas dinámicas con parámetros | ✅ Completo |
 | Formularios con validación | ✅ Completo |
 | Variables y estado local | ✅ Completo |
-| Temas visuales | 🟪 Pendiente |
+| Temas visuales | ✅ Completo |
 | SEO y metadatos automáticos | 🟪 Pendiente |
 | Documentación escrita | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
@@ -343,9 +357,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `texto cuenta` — muestra el valor y se actualiza sola
 - `botón "Sumar" hacer sumar cuenta` / `hacer restar cuenta` — acciones incorporadas que mutan la variable sin llamar a ninguna API
 
-### v0.12 — Temas visuales
-- `tema oscuro`, `tema claro`
-- Tema personalizado con variables declaradas en `app.telar`
+### v0.12 — Temas visuales ✅
+- `tema oscuro` / `tema claro` en `app.telar`, fijo para toda la web
+- Sin declarar tema, sigue el sistema operativo automáticamente (comportamiento igual que antes de v0.12)
+- `botón "X" hacer cambiar tema` — alterna en vivo, recordado entre visitas con `localStorage`
+- Colores de tema totalmente personalizados (más allá de oscuro/claro) quedan para una versión futura
 
 ### v0.13 — SEO y metadatos
 - `og:image`, `og:title`, `twitter:card` automáticos

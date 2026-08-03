@@ -70,6 +70,7 @@ const PALABRAS_CLAVE: Record<string, TipoToken> = {
     "minimo": TipoToken.Minimo,
     "variable": TipoToken.Variable,
     "texto": TipoToken.PalabraTexto,
+    "tema": TipoToken.Tema,
 }
  
 export class Lexer {

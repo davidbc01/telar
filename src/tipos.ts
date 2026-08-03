@@ -26,6 +26,7 @@ export enum TipoToken {
     Minimo = "minimo",
     Variable = "variable",
     PalabraTexto = "palabra_texto",
+    Tema = "tema",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -130,6 +131,7 @@ export interface NodoAplicacion {
     datos: NodoDatos[]
     disenos: NodoDiseno[]
     componentes: NodoComponente[]
+    tema: "automatico" | "oscuro" | "claro"
     linea: number
 }
  
@@ -236,7 +238,7 @@ export interface NodoBoton {
     texto: string
     accion: AccionBoton
     destino: string
-    operacion?: "sumar" | "restar" // acción incorporada sobre una variable de página
+    operacion?: "sumar" | "restar" | "cambiar_tema" // acción incorporada sobre una variable de página, o el tema visual
     variable?: string
     clase?: string
     siFalla?: Nodo[]

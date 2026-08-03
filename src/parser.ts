@@ -57,6 +57,7 @@ export class Parser {
         const datos: NodoDatos[] = []
         const disenos: NodoDiseno[] = []
         const componentes: NodoComponente[] = []
+        let tema: "automatico" | "oscuro" | "claro" = "automatico"
  
         // Leer hijos de la aplicación
         while (!this.finArchivo()) {
@@ -72,6 +73,16 @@ export class Parser {
             if (actual.tipo === TipoToken.Idioma) {
                 this.avanzar()
                 idioma = this.consumirIdentificador().valor
+                continue
+            }
+ 
+            // tema oscuro / tema claro / tema automático
+            if (actual.tipo === TipoToken.Tema) {
+                this.avanzar()
+                const valor = this.consumirIdentificador().valor.toLowerCase()
+                if (valor === "oscuro" || valor === "claro") {
+                    tema = valor
+                }
                 continue
             }
  
@@ -116,6 +127,7 @@ export class Parser {
             datos,
             disenos,
             componentes,
+            tema,
             linea: token.linea
         }
     }
@@ -418,7 +430,7 @@ export class Parser {
         const primeraPalabra = this.consumirIdentificador().valor
 
         let destino = primeraPalabra
-        let operacion: "sumar" | "restar" | undefined
+        let operacion: "sumar" | "restar" | "cambiar_tema" | undefined
         let variable: string | undefined
 
         // hacer sumar cuenta / hacer restar cuenta — acciones incorporadas
@@ -427,6 +439,13 @@ export class Parser {
             operacion = primeraPalabra
             variable = this.consumirIdentificador().valor
             destino = `${operacion}_${variable}`
+        }
+
+        // hacer cambiar tema — alterna entre tema oscuro/claro en el navegador
+        if (accion === "hacer" && primeraPalabra === "cambiar" && this.actual().tipo === TipoToken.Tema) {
+            this.avanzar()
+            operacion = "cambiar_tema"
+            destino = "cambiar_tema"
         }
  
         // Leer bloque "si falla" opcional después del botón

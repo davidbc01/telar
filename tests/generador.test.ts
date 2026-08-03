@@ -457,3 +457,45 @@ describe("Generador — variables y estado local (v0.11)", () => {
     })
 
 })
+
+describe("Generador — temas visuales (v0.12)", () => {
+
+    it("sin tema declarado, el html no lleva data-tema", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).not.toContain('data-tema')
+    })
+
+    it("tema oscuro genera data-tema=oscuro en el html", () => {
+        const resultado = html(`aplicación MiApp\n  tema oscuro\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).toContain('<html lang="es" data-tema="oscuro">')
+    })
+
+    it("tema claro genera data-tema=claro en el html", () => {
+        const resultado = html(`aplicación MiApp\n  tema claro\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).toContain('<html lang="es" data-tema="claro">')
+    })
+
+    it("el CSS incluye la variante fija para html[data-tema=oscuro]", () => {
+        const archivos = compilar(`aplicación MiApp\n  tema oscuro\n\npágina inicio en "/"\n  título "Hola"`)
+        const css = archivos.find(a => a.nombre === 'telar.css')!
+        expect(css.contenido).toContain('html[data-tema="oscuro"]')
+    })
+
+    it("el runtime JS incluye iniciarTema y alternarTema", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('iniciarTema()')
+        expect(js.contenido).toContain('alternarTema()')
+    })
+
+    it("un botón hacer cambiar tema no llama a ninguna API", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina inicio en "/"\n  botón "Cambiar" hacer cambiar tema`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function cambiar_tema()')
+        expect(js.contenido).toContain('Telar.alternarTema()')
+        expect(js.contenido).not.toContain("fetch('/api/accion/cambiar_tema'")
+    })
+
+})

@@ -5,6 +5,23 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.12.0] - 2026-08-03
+
+### Añadido
+- `tema oscuro` / `tema claro` en `app.telar` — fija el tema para toda la web, sin importar el sistema operativo
+- Sin declarar tema, se mantiene el comportamiento automático anterior (sigue el sistema operativo del visitante)
+- `botón "X" hacer cambiar tema` — acción incorporada que alterna el tema en vivo en el navegador
+- El tema elegido por el usuario se recuerda entre visitas con `localStorage`, sin llamar a ninguna API
+- `Telar.iniciarTema()` y `Telar.alternarTema()` en el runtime JS generado
+- CSS con los 3 modos resueltos: automático (`@media` + `:not([data-tema="claro"])`), y fijo (`html[data-tema="oscuro"]` / `html[data-tema="claro"]`)
+- 10 tests nuevos cubriendo temas visuales (147 tests en total)
+- Probado de extremo a extremo con un DOM real (jsdom): tema fijo inicial, alternado en vivo, y persistencia simulando una nueva visita
+
+### Notas
+- Colores de tema totalmente personalizados (más allá de oscuro/claro) quedan para una versión futura
+
+---
+
 ## [0.11.0] - 2026-08-03
 
 ### Añadido

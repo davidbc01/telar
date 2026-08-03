@@ -113,9 +113,11 @@ export class Generador {
         const enlaceCSS = (this.app.estilos ?? []).length === 0
             ? `    <link rel="stylesheet" href="telar.css">`
             : ''
+
+        const atributoTema = this.app.tema === 'automatico' ? '' : ` data-tema="${this.app.tema}"`
  
         return `<!DOCTYPE html>
-<html lang="es">
+<html lang="es"${atributoTema}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -630,8 +632,10 @@ input[aria-invalid="true"]:focus, textarea[aria-invalid="true"]:focus {
  
 /* ── Modo oscuro ── */
  
+/* ── Modo oscuro (automático, según el sistema operativo) ── */
+
 @media (prefers-color-scheme: dark) {
-    :root {
+    html:not([data-tema="claro"]) {
         --texto:         #f3f4f6;
         --texto-suave:   #9ca3af;
         --fondo:         #0f1117;
@@ -639,8 +643,24 @@ input[aria-invalid="true"]:focus, textarea[aria-invalid="true"]:focus {
         --borde:         #2d3148;
         --primario-light:#1e1640;
     }
-    input, textarea, select { background: #1a1d27; }
+    html:not([data-tema="claro"]) input,
+    html:not([data-tema="claro"]) textarea,
+    html:not([data-tema="claro"]) select { background: #1a1d27; }
 }
+
+/* ── Tema fijado explícitamente (app.telar o alternado por el usuario) ── */
+
+html[data-tema="oscuro"] {
+    --texto:         #f3f4f6;
+    --texto-suave:   #9ca3af;
+    --fondo:         #0f1117;
+    --superficie:    #1a1d27;
+    --borde:         #2d3148;
+    --primario-light:#1e1640;
+}
+html[data-tema="oscuro"] input,
+html[data-tema="oscuro"] textarea,
+html[data-tema="oscuro"] select { background: #1a1d27; }
 `
     }
  
