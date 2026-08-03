@@ -5,7 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
-## [0.18.0] - 2026-08-03
+## [0.19.0] - 2026-08-04
+
+### Añadido
+- `telar servir app.telar -p <puerto>` — puerto configurable (antes fijo a 3000, sin alternativa)
+- `tests/cli-servir.test.ts` — primera cobertura automática de `telar servir`: 7 tests de integración con peticiones HTTP reales contra el servidor real (rutas estáticas, rutas dinámicas combinadas con estáticas, 404, content-type de CSS/JS, inyección del script de live reload, y recompilación real al modificar un archivo `.telar`)
+- `comandoServir` ahora exportado y devuelve un objeto con el servidor y un método `cerrar()`, para poder levantarlo y pararlo limpiamente desde tests sin depender de `SIGINT`
+- 7 tests nuevos (205 en total)
+
+---
+
+## [0.18.0] - 2026-08-04
 
 ### Añadido
 - Validación semántica de referencias: `diseño X` o `NombreComponente con Y` (o `mostrar ... con X`) donde `X`/`NombreComponente` no existe ahora es un **error de compilación**, con las opciones realmente declaradas en la sugerencia

@@ -68,6 +68,7 @@ telar compilar app.telar -o dist/
 
 # Servir en el navegador con live reload
 telar servir app.telar
+telar servir app.telar -p 3050   # en otro puerto, si el 3000 está ocupado
 
 # Gestionar paquetes
 telar añadir formulario
@@ -314,7 +315,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (198) + CI/CD | ✅ Completo |
+| Tests completos (205) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -329,6 +330,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Gramática limpia (sin `tipo`/`filtrados por`/`hacer`) | ✅ Completo |
 | Componentes conectados a listas de datos reales | ✅ Completo |
 | Validación semántica (diseños/componentes inexistentes) | ✅ Completo |
+| Tests de integración de `telar servir` | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
 | Web oficial de Telar | 🟪 Pendiente |
 
@@ -434,6 +436,10 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Referenciar un `diseño` o `componente` que no existe (típicamente un typo) ahora es un **error de compilación**, con las opciones válidas declaradas en la sugerencia
 - Antes compilaba en silencio: el diseño simplemente no se aplicaba, o el componente generaba un comentario HTML invisible en la práctica
 - La validación cubre páginas, diseños, y bloques `si`/`si no` anidados
+
+### v0.19 — Tests de `telar servir` ✅
+- Antes, el servidor de desarrollo (rutas dinámicas, live reload, recompilación al vuelo) solo se había verificado a mano toda la sesión — ahora tiene 7 tests de integración con peticiones HTTP reales
+- `telar servir app.telar -p 3050` — puerto configurable, útil si el 3000 está ocupado o para correr varias instancias
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

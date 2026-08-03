@@ -37,7 +37,7 @@ const AYUDA = `
   Comandos:
     compilar  <archivo.telar>               Compila a HTML + CSS + JS
     compilar  <archivo.telar> -o <carpeta>  Especifica carpeta de salida
-    servir    <archivo.telar>               Compila y sirve en localhost
+    servir    <archivo.telar> [-p <puerto>] Compila y sirve en localhost (puerto 3000 por defecto)
     verificar <archivo.telar>               Verifica la sintaxis sin compilar
     nuevo     <nombre>                      Crea un proyecto nuevo
     añadir    <paquete>                     Instala un paquete
@@ -216,10 +216,14 @@ export function comandoCompilar(args: string[]) {
  
 // ── Comando: servir ───────────────────────────────────────────
  
-function comandoServir(args: string[]) {
+export function comandoServir(args: string[]) {
     const { archivo, salida } = parsearArgs(args, '.telar-tmp')
-    const puerto = 3000
-    const puertoWS = 3001
+
+    const indicePuerto = args.indexOf('-p')
+    const puerto = indicePuerto !== -1 && args[indicePuerto + 1]
+        ? parseInt(args[indicePuerto + 1])
+        : 3000
+    const puertoWS = puerto + 1
  
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
     const resultado = compilar(archivo)
@@ -414,6 +418,21 @@ function comandoServir(args: string[]) {
         fs.rmSync(salida, { recursive: true, force: true })
         process.exit(0)
     })
+
+    // Devuelto para que los tests puedan cerrar todo limpiamente sin
+    // pasar por SIGINT (que mataría el propio proceso de test)
+    return {
+        servidor,
+        wsServer,
+        puerto,
+        puertoWS,
+        cerrar() {
+            for (const w of watchers) w.close()
+            wsServer.close()
+            servidor.close()
+            fs.rmSync(salida, { recursive: true, force: true })
+        }
+    }
 }
  
 // ── Comando: verificar ────────────────────────────────────────
