@@ -499,3 +499,69 @@ describe("Generador — temas visuales (v0.12)", () => {
     })
 
 })
+
+describe("Generador — SEO y metadatos (v0.13)", () => {
+
+    it("genera meta og:title y og:description automáticamente", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Bienvenido"\n  descripción "Una tienda genial"`
+        )
+        expect(resultado).toContain('property="og:title" content="Bienvenido"')
+        expect(resultado).toContain('property="og:description" content="Una tienda genial"')
+        expect(resultado).toContain('name="twitter:title" content="Bienvenido"')
+    })
+
+    it("sin dominio declarado, no hay og:url ni sitemap/robots", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        const html = archivos[0].contenido
+        expect(html).not.toContain('og:url')
+        expect(archivos.find(a => a.nombre === 'sitemap.xml')).toBeUndefined()
+        expect(archivos.find(a => a.nombre === 'robots.txt')).toBeUndefined()
+    })
+
+    it("con dominio declarado, genera og:url absoluta", () => {
+        const resultado = html(
+            `aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina contacto en "/contacto"\n  título "Contacto"`
+        )
+        expect(resultado).toContain('property="og:url" content="https://mitienda.com/contacto"')
+    })
+
+    it("una imagen se renderiza en el HTML y se usa como og:image", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"\n  imagen "https://x.com/foto.jpg"`
+        )
+        expect(resultado).toContain('<img src="https://x.com/foto.jpg"')
+        expect(resultado).toContain('property="og:image" content="https://x.com/foto.jpg"')
+        expect(resultado).toContain('name="twitter:card" content="summary_large_image"')
+    })
+
+    it("sin imagen, twitter:card es summary (no summary_large_image)", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).toContain('name="twitter:card" content="summary"')
+    })
+
+    it("con dominio, genera sitemap.xml con las páginas estáticas", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina inicio en "/"\n  título "Hola"\n\npágina contacto en "/contacto"\n  título "Contacto"`
+        )
+        const sitemap = archivos.find(a => a.nombre === 'sitemap.xml')!
+        expect(sitemap.contenido).toContain('<loc>https://mitienda.com</loc>')
+        expect(sitemap.contenido).toContain('<loc>https://mitienda.com/contacto</loc>')
+    })
+
+    it("las rutas dinámicas no aparecen en el sitemap", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`
+        )
+        const sitemap = archivos.find(a => a.nombre === 'sitemap.xml')!
+        expect(sitemap.contenido).not.toContain('producto')
+    })
+
+    it("con dominio, genera robots.txt apuntando al sitemap", () => {
+        const archivos = compilar(`aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina inicio en "/"\n  título "Hola"`)
+        const robots = archivos.find(a => a.nombre === 'robots.txt')!
+        expect(robots.contenido).toContain('Allow: /')
+        expect(robots.contenido).toContain('Sitemap: https://mitienda.com/sitemap.xml')
+    })
+
+})

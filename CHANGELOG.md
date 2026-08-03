@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.13.0] - 2026-08-03
+
+### Añadido
+- `og:title`, `og:description`, `og:image`, `twitter:card` (y demás etiquetas Twitter) generados automáticamente en cada página a partir de título/descripción/imagen — sin configuración
+- `dominio "https://..."` en `app.telar` — habilita `og:url` con URL absoluta, `sitemap.xml` y `robots.txt`
+- `imagen "url"` — nuevo elemento de página: se renderiza como `<img>` visible y, si es la primera de la página, se usa también como imagen para compartir en redes
+- Las rutas dinámicas (`/producto/(id)`) se excluyen automáticamente del sitemap
+- 12 tests nuevos cubriendo SEO y metadatos (159 tests en total)
+
+### Corregido
+- Un modelo de datos con un campo llamado igual que una palabra reservada (ej. `imagen: foto`) desincronizaba el parseo de todos los campos siguientes. El parser ahora reconoce un campo de datos por llevar `:` detrás, no por el tipo exacto de token — más robusto también ante futuras palabras reservadas
+
+---
+
 ## [0.12.0] - 2026-08-03
 
 ### Añadido

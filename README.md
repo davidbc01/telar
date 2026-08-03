@@ -217,6 +217,24 @@ Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que s
 
 ---
 
+## SEO y metadatos
+
+```telar
+aplicación MiTienda
+  dominio "https://mitienda.com"
+
+página inicio en "/"
+  imagen "https://mitienda.com/img/portada.jpg"
+  título "Bienvenido a Mi Tienda"
+  descripción "La mejor tienda online de zapatillas"
+```
+
+Cada página genera automáticamente sus etiquetas `og:title`, `og:description`, `twitter:card` y similares a partir del título y la descripción — sin nada que configurar. `imagen "url"` se muestra en la página como una imagen normal y, si es la primera de esa página, se usa también como `og:image`/`twitter:image`.
+
+Declarar `dominio` en `app.telar` añade dos cosas más: `og:url` con la URL absoluta real de cada página, y dos archivos nuevos generados en la raíz — `sitemap.xml` y `robots.txt`, listos para subir tal cual. Las rutas dinámicas (`/producto/(id)`) se excluyen del sitemap automáticamente, porque no representan una URL real.
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -281,7 +299,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (147) + CI/CD | ✅ Completo |
+| Tests completos (159) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -290,7 +308,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Formularios con validación | ✅ Completo |
 | Variables y estado local | ✅ Completo |
 | Temas visuales | ✅ Completo |
-| SEO y metadatos automáticos | 🟪 Pendiente |
+| SEO y metadatos automáticos | ✅ Completo |
 | Documentación escrita | 🟪 Pendiente |
 | Lanzamiento público | 🟪 Pendiente |
 | Web oficial de Telar | 🟪 Pendiente |
@@ -363,9 +381,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `botón "X" hacer cambiar tema` — alterna en vivo, recordado entre visitas con `localStorage`
 - Colores de tema totalmente personalizados (más allá de oscuro/claro) quedan para una versión futura
 
-### v0.13 — SEO y metadatos
-- `og:image`, `og:title`, `twitter:card` automáticos
-- `sitemap.xml` y `robots.txt` generados sin configuración
+### v0.13 — SEO y metadatos ✅
+- `og:title`, `og:description`, `og:image`, `twitter:card` automáticos a partir de título/descripción/imagen — sin configuración
+- `dominio "https://..."` en `app.telar` habilita `og:url` absoluta, `sitemap.xml` y `robots.txt`
+- `imagen "url"` — se muestra en la página y, si es la primera de esa página, se usa también como imagen para compartir en redes
+- Las rutas dinámicas (`/producto/(id)`) se excluyen del sitemap automáticamente
 
 ### v0.14 — Documentación escrita
 - Guía de inicio rápido en Markdown

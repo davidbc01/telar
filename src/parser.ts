@@ -10,7 +10,7 @@ import {
     NodoTitulo, NodoDescripcion, NodoMostrar, NodoBoton,
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
-    NodoVariable, NodoTextoVariable,
+    NodoVariable, NodoTextoVariable, NodoImagen,
     Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion
 } from './tipos'
 import { Errores } from './errores'
@@ -58,6 +58,7 @@ export class Parser {
         const disenos: NodoDiseno[] = []
         const componentes: NodoComponente[] = []
         let tema: "automatico" | "oscuro" | "claro" = "automatico"
+        let dominio: string | undefined
  
         // Leer hijos de la aplicación
         while (!this.finArchivo()) {
@@ -83,6 +84,13 @@ export class Parser {
                 if (valor === "oscuro" || valor === "claro") {
                     tema = valor
                 }
+                continue
+            }
+
+            // dominio "https://mitienda.com"
+            if (actual.tipo === TipoToken.Dominio) {
+                this.avanzar()
+                dominio = this.consumir(TipoToken.Texto).valor
                 continue
             }
  
@@ -128,6 +136,7 @@ export class Parser {
             disenos,
             componentes,
             tema,
+            dominio,
             linea: token.linea
         }
     }
@@ -183,15 +192,16 @@ export class Parser {
     }
  
     private parsearCampoDatos(): NodoCamposDatos | null {
-        // Saltar tokens que no son campos
-        if (this.actual().tipo !== TipoToken.Identificador) {
+        // Un campo de datos es cualquier palabra seguida de ":" — incluso si
+        // esa palabra coincide con una palabra reservada en otro contexto
+        // (ej. un modelo con un campo llamado "imagen" o "texto")
+        if (this.siguiente()?.tipo !== TipoToken.DosPuntos) {
             this.avanzar()
             return null
         }
     
-        const nombreToken = this.consumirIdentificador()
-    
-        if (this.actual().tipo !== TipoToken.DosPuntos) return null
+        const nombreToken = this.actual()
+        this.avanzar()
         this.consumir(TipoToken.DosPuntos)
     
         const tipoDato = this.parsearTipoDato()
@@ -280,6 +290,7 @@ export class Parser {
             case TipoToken.Codigo:      return this.parsearCodigo()
             case TipoToken.Variable:    return this.parsearVariable()
             case TipoToken.PalabraTexto: return this.parsearTextoVariable()
+            case TipoToken.Imagen:      return this.parsearImagen()
             default:
             this.avanzar()
             return null
@@ -309,6 +320,14 @@ export class Parser {
         const nombre = this.consumirIdentificador().valor
         const clase = this.leerClaseOpcional()
         return { tipo: "texto_variable", nombre, clase, linea: token.linea }
+    }
+
+    // imagen "https://.../foto.jpg"
+    private parsearImagen(): NodoImagen {
+        const token = this.consumir(TipoToken.Imagen)
+        const url = this.consumir(TipoToken.Texto).valor
+        const clase = this.leerClaseOpcional()
+        return { tipo: "imagen", url, clase, linea: token.linea }
     }
  
     // descripción "..."

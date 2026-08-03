@@ -27,6 +27,8 @@ export enum TipoToken {
     Variable = "variable",
     PalabraTexto = "palabra_texto",
     Tema = "tema",
+    Imagen = "imagen",
+    Dominio = "dominio",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -120,6 +122,7 @@ export type Nodo =
     | NodoUsoComponente
     | NodoVariable
     | NodoTextoVariable
+    | NodoImagen
  
 // aplicación MiTienda
 export interface NodoAplicacion {
@@ -132,6 +135,7 @@ export interface NodoAplicacion {
     disenos: NodoDiseno[]
     componentes: NodoComponente[]
     tema: "automatico" | "oscuro" | "claro"
+    dominio?: string // "https://mitienda.com" — para SEO: sitemap.xml, robots.txt, og:url
     linea: number
 }
  
@@ -185,6 +189,15 @@ export interface NodoVariable {
 export interface NodoTextoVariable {
     tipo: "texto_variable"
     nombre: string
+    clase?: string
+    linea: number
+}
+
+// imagen "https://.../foto.jpg" — se muestra en la página y, si es la
+// primera de la página, se usa también como og:image / twitter:image
+export interface NodoImagen {
+    tipo: "imagen"
+    url: string
     clase?: string
     linea: number
 }

@@ -368,3 +368,35 @@ describe("Parser — temas visuales (v0.12)", () => {
     })
 
 })
+
+describe("Parser — SEO y metadatos (v0.13)", () => {
+
+    it("sin declarar dominio, queda indefinido", () => {
+        const arbol = parsear(`aplicación MiApp`)
+        expect(arbol.dominio).toBeUndefined()
+    })
+
+    it("parsea el dominio de la aplicación", () => {
+        const arbol = parsear(`aplicación MiApp\n  dominio "https://mitienda.com"`)
+        expect(arbol.dominio).toBe("https://mitienda.com")
+    })
+
+    it("parsea una imagen en una página", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  imagen "https://mitienda.com/foto.jpg"`)
+        const imagen = arbol.paginas[0].hijos[0] as any
+        expect(imagen.tipo).toBe("imagen")
+        expect(imagen.url).toBe("https://mitienda.com/foto.jpg")
+    })
+
+    it("un modelo puede tener un campo llamado 'imagen' sin romper el parseo", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ndatos Producto\n  nombre: texto\n  imagen: foto\n  precio: número`
+        )
+        const campos = arbol.datos[0].campos
+        expect(campos.length).toBe(3)
+        expect(campos[1].nombre).toBe("imagen")
+        expect(campos[1].tipoCampo).toBe("foto")
+        expect(campos[2].nombre).toBe("precio")
+    })
+
+})

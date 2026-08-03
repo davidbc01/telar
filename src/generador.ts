@@ -16,7 +16,7 @@ import {
     NodoBoton, NodoCampo, NodoSi,
     NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
-    NodoVariable, NodoTextoVariable
+    NodoVariable, NodoTextoVariable, NodoImagen
 } from './tipos'
 import { GeneradorJS } from './generador-js'
 
@@ -76,10 +76,38 @@ export class Generador {
             nombre: 'telar.js',
             contenido: generadorJS.generar()
         })
- 
+
+        // ── SEO: sitemap.xml y robots.txt ──────────────────────
+        // Solo se generan si hay un dominio declarado (dominio "https://...")
+        // porque un sitemap sin URLs absolutas no es válido.
+        if (this.app.dominio) {
+            archivos.push({ nombre: 'sitemap.xml', contenido: this.generarSitemap() })
+            archivos.push({ nombre: 'robots.txt', contenido: this.generarRobots() })
+        }
+
         return archivos
     }
- 
+
+    // Rutas dinámicas (ej. /producto/(id)) se excluyen del sitemap: no
+    // representan una URL real, sino una plantilla con infinitas variantes.
+    private generarSitemap(): string {
+        const dominio = this.app.dominio!.replace(/\/$/, '')
+        const urls = this.app.paginas
+            .filter(p => p.parametros.length === 0)
+            .map(p => {
+                const url = `${dominio}${p.ruta === '/' ? '' : p.ruta}`
+                return `    <url>\n        <loc>${this.escapar(url)}</loc>\n    </url>`
+            })
+            .join('\n')
+
+        return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
+    }
+
+    private generarRobots(): string {
+        const dominio = this.app.dominio!.replace(/\/$/, '')
+        return `User-agent: *\nAllow: /\n\nSitemap: ${dominio}/sitemap.xml\n`
+    }
+
     // --- Página completa ---
  
     private generarPagina(pagina: NodoPagina): string {
@@ -115,6 +143,26 @@ export class Generador {
             : ''
 
         const atributoTema = this.app.tema === 'automatico' ? '' : ` data-tema="${this.app.tema}"`
+
+        // ── SEO: Open Graph y Twitter Card ─────────────────────
+        // Automáticos a partir de título/descripción; la imagen es la
+        // primera "imagen" declarada en la página, si hay alguna.
+        const primeraImagen = pagina.hijos.find(h => h.tipo === 'imagen') as NodoImagen | undefined
+        const urlPagina = this.app.dominio
+            ? `${this.app.dominio.replace(/\/$/, '')}${pagina.ruta === '/' ? '' : pagina.ruta}`
+            : null
+
+        const metaOG = [
+            `    <meta property="og:type" content="website">`,
+            `    <meta property="og:title" content="${this.escapar(titulo)}">`,
+            descripcion ? `    <meta property="og:description" content="${this.escapar(descripcion)}">` : '',
+            urlPagina ? `    <meta property="og:url" content="${this.escapar(urlPagina)}">` : '',
+            primeraImagen ? `    <meta property="og:image" content="${this.escapar(primeraImagen.url)}">` : '',
+            `    <meta name="twitter:card" content="${primeraImagen ? 'summary_large_image' : 'summary'}">`,
+            `    <meta name="twitter:title" content="${this.escapar(titulo)}">`,
+            descripcion ? `    <meta name="twitter:description" content="${this.escapar(descripcion)}">` : '',
+            primeraImagen ? `    <meta name="twitter:image" content="${this.escapar(primeraImagen.url)}">` : ''
+        ].filter(Boolean).join('\n')
  
         return `<!DOCTYPE html>
 <html lang="es"${atributoTema}>
@@ -123,6 +171,7 @@ export class Generador {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${this.escapar(titulo)}</title>
     ${descripcion ? `<meta name="description" content="${this.escapar(descripcion)}">` : ''}
+${metaOG}
     ${tieneCache ? '<meta http-equiv="Cache-Control" content="max-age=600">' : ''}
     ${esMovil ? '<meta name="mobile-web-app-capable" content="yes">' : ''}
 ${enlaceCSS}
@@ -157,6 +206,7 @@ ${this.indentar(cuerpo, 4)}
             case 'componente':  return ''
             case 'variable':    return ''
             case 'texto_variable': return this.generarTextoVariable(nodo)
+            case 'imagen':      return this.generarImagen(nodo)
             default:            return ''
         }
     }
@@ -176,6 +226,11 @@ ${this.indentar(cuerpo, 4)}
         const valorInicial = declaracion?.valorInicial ?? 0
 
         return `<span ${this.claseHTML(`texto texto-${this.slugify(nodo.nombre)}`, nodo.clase)} data-variable="${nodo.nombre}">${valorInicial}</span>`
+    }
+
+    private generarImagen(nodo: NodoImagen): string {
+        const alt = this.extraerTitulo(this.paginaActual!) ?? ''
+        return `<img src="${this.escapar(nodo.url)}" alt="${this.escapar(alt)}" ${this.claseHTML('imagen', nodo.clase)}>`
     }
  
     private generarDescripcion(nodo: NodoDescripcion): string {

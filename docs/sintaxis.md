@@ -229,6 +229,32 @@ Pendiente para una versión futura: colores de tema totalmente personalizados, m
 
 ---
 
+## SEO y metadatos
+
+A nivel de aplicación, en `app.telar`:
+
+```telar
+aplicación MiTienda
+  dominio "https://mitienda.com"
+```
+
+Declarar `dominio` habilita `og:url` con la URL absoluta de cada página, y genera dos archivos nuevos en la raíz del proyecto compilado: `sitemap.xml` y `robots.txt`. Sin `dominio`, esos dos archivos no se generan (un sitemap sin URLs absolutas no es válido), pero el resto de metadatos sí.
+
+`og:title`, `og:description`, `twitter:card`, `twitter:title` y `twitter:description` se generan automáticamente en cada página a partir de `título` y `descripción` — sin nada que declarar.
+
+Imagen, a nivel de página:
+
+```telar
+página inicio en "/"
+  imagen "https://mitienda.com/img/foto.jpg"
+```
+
+`imagen "url"` se renderiza como un `<img>` normal en la página (con el título de la página como texto alternativo). Si es la primera imagen declarada en esa página, además se usa como `og:image` y `twitter:image`, y el `twitter:card` pasa de `summary` a `summary_large_image` automáticamente.
+
+El `sitemap.xml` incluye todas las páginas estáticas. Las rutas dinámicas (`/producto/(id)`) se excluyen automáticamente, porque no representan una URL real sino una plantilla.
+
+---
+
 ## Manejo de errores
 
 ```telar
