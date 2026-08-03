@@ -165,6 +165,39 @@ describe("Parser — campos", () => {
         expect(campo.tipoCampo).toBe("contraseña")
     })
 
+    it("un campo sin modificadores no es requerido y no tiene límites", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.requerido).toBe(false)
+        expect(campo.minimo).toBeUndefined()
+        expect(campo.maximo).toBeUndefined()
+    })
+
+    it("parsea campo requerido", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email requerido`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.requerido).toBe(true)
+    })
+
+    it("parsea campo con mínimo de caracteres", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña mínimo 8 caracteres`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.minimo).toBe(8)
+    })
+
+    it("parsea campo con máximo de caracteres", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" tipo texto máximo 50 caracteres`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.maximo).toBe(50)
+    })
+
+    it("combina requerido y mínimo en el mismo campo", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña requerido mínimo 8`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.requerido).toBe(true)
+        expect(campo.minimo).toBe(8)
+    })
+
 })
 
 describe("Parser — condicionales", () => {

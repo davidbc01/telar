@@ -173,6 +173,19 @@ página detalle en "/producto/(id)"
 
 ---
 
+## Formularios con validación
+
+```telar
+página registro en "/registro"
+  campo "Email" tipo email requerido
+  campo "Contraseña" tipo contraseña requerido mínimo 8
+  botón "Registrarse" hacer registrar
+```
+
+`requerido`, `mínimo N` y `máximo N` generan los atributos HTML5 correspondientes (`required`, `minlength`, `maxlength`) y un mensaje de error visible por campo. Al pulsar un botón `hacer`, Telar valida todos los campos de la página antes de enviar nada — si algo no es válido, no se llega a hacer la petición. Si todo es correcto, los valores reales del formulario se envían como JSON a `/api/accion/<nombre>`.
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -237,13 +250,13 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (111) + CI/CD | ✅ Completo |
+| Tests completos (123) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
 | Diseños y componentes reutilizables | ✅ Completo |
 | Rutas dinámicas con parámetros | ✅ Completo |
-| Formularios con validación | 🟪 Pendiente |
+| Formularios con validación | ✅ Completo |
 | Variables y estado local | 🟪 Pendiente |
 | Temas visuales | 🟪 Pendiente |
 | SEO y metadatos automáticos | 🟪 Pendiente |
@@ -303,10 +316,10 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Acceso al parámetro con `mostrar Modelo filtrados por campo = parametro.nombre`
 - `telar servir` resuelve rutas dinámicas en tiempo real, no solo archivos estáticos
 
-### v0.10 — Formularios con validación
-- `campo requerido`, `campo validar email`
-- Mensajes de error por campo
-- Estado de envío: cargando, éxito, error
+### v0.10 — Formularios con validación ✅
+- `campo requerido`, `campo mínimo N [caracteres]`, `campo máximo N [caracteres]`
+- Mensajes de error por campo, mostrados junto al campo inválido
+- Los botones `hacer` ahora validan los campos antes de enviar, y envían sus valores reales en el POST (antes no se enviaba nada)
 
 ### v0.11 — Variables y estado local
 - `variable contador = 0`

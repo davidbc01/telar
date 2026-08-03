@@ -107,6 +107,37 @@ const Telar = {
         return null
     },
 
+    // Validar todos los campos con nombre de la página (required, minlength,
+    // maxlength, type=email...). Marca los errores visualmente y devuelve
+    // true solo si todos los campos son válidos.
+    validarCampos() {
+        let valido = true
+        document.querySelectorAll('input[name], textarea[name]').forEach(campo => {
+            const errorEl = document.getElementById(\`\${campo.id}-error\`)
+            if (!campo.checkValidity()) {
+                valido = false
+                campo.setAttribute('aria-invalid', 'true')
+                if (errorEl) {
+                    errorEl.textContent = campo.validationMessage
+                    errorEl.removeAttribute('hidden')
+                }
+            } else {
+                campo.removeAttribute('aria-invalid')
+                if (errorEl) errorEl.setAttribute('hidden', '')
+            }
+        })
+        return valido
+    },
+
+    // Recoger los valores de todos los campos con nombre en un objeto plano
+    recogerCampos() {
+        const datos = {}
+        document.querySelectorAll('input[name], textarea[name]').forEach(campo => {
+            datos[campo.name] = campo.value
+        })
+        return datos
+    },
+
     // Mostrar error en un contenedor
     mostrarError(contenedor, mensaje) {
         const errorEl = contenedor.querySelector('.error')
@@ -307,9 +338,15 @@ async function ${accion}() {
     const boton = document.querySelector('[data-accion="${accion}"]')
     const errorEl = boton?.nextElementSibling
 
+    if (!Telar.validarCampos()) return
+
     try {
         if (boton) boton.disabled = true
-        const res = await fetch('/api/accion/${accion}', { method: 'POST' })
+        const res = await fetch('/api/accion/${accion}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Telar.recogerCampos())
+        })
         if (!res.ok) throw new Error()
         // Acción completada — redirigir o actualizar según contexto
     } catch (error) {

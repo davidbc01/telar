@@ -343,3 +343,59 @@ describe("Generador — rutas dinámicas (v0.9)", () => {
     })
 
 })
+
+describe("Generador — validación de formularios (v0.10)", () => {
+
+    it("un campo tipo contraseña genera type=password en HTML (no 'contraseña')", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña`)
+        expect(resultado).toContain('type="password"')
+        expect(resultado).not.toContain('type="contraseña"')
+    })
+
+    it("campo requerido genera el atributo required", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email requerido`)
+        expect(resultado).toContain('required')
+    })
+
+    it("campo con mínimo genera minlength", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña mínimo 8`
+        )
+        expect(resultado).toContain('minlength="8"')
+    })
+
+    it("campo con máximo genera maxlength", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" tipo texto máximo 50`)
+        expect(resultado).toContain('maxlength="50"')
+    })
+
+    it("un campo sin modificadores no genera atributos de validación", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        expect(resultado).not.toContain('required')
+        expect(resultado).not.toContain('minlength')
+        expect(resultado).not.toContain('maxlength')
+    })
+
+    it("cada campo tiene un contenedor de mensaje de error", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        expect(resultado).toContain('class="campo-error"')
+        expect(resultado).toContain('id="correo-error"')
+    })
+
+    it("el runtime JS incluye validarCampos y recogerCampos", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('validarCampos()')
+        expect(js.contenido).toContain('recogerCampos()')
+    })
+
+    it("un botón hacer valida y envía los campos en el POST", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email requerido\n  botón "Entrar" hacer entrar`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('if (!Telar.validarCampos()) return')
+        expect(js.contenido).toContain('body: JSON.stringify(Telar.recogerCampos())')
+    })
+
+})

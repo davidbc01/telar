@@ -211,18 +211,33 @@ ${this.indentar(cuerpo, 4)}
     private generarCampo(nodo: NodoCampo): string {
         const id = this.textoAId(nodo.etiqueta)
         const tipo = nodo.tipoCampo === 'área de texto' ? null : nodo.tipoCampo
+        const tipoHTML = tipo === 'contraseña' ? 'password' : tipo
         const claseInput = nodo.clase ?? ''
- 
+
+        const atributosValidacion = [
+            nodo.requerido ? 'required' : '',
+            nodo.minimo != null ? `minlength="${nodo.minimo}"` : '',
+            nodo.maximo != null ? `maxlength="${nodo.maximo}"` : ''
+        ].filter(Boolean).join(' ')
+
+        const mensajeError = `<p class="campo-error" id="${id}-error" hidden></p>`
+
         if (!tipo) {
             return `<div class="campo-grupo">
     <label for="${id}">${this.escapar(nodo.etiqueta)}</label>
-    <textarea id="${id}" name="${id}" rows="4"${claseInput ? ` class="${claseInput}"` : ''}></textarea>
+    <textarea id="${id}" name="${id}" rows="4"${claseInput ? ` class="${claseInput}"` : ''} ${atributosValidacion}></textarea>
+    ${mensajeError}
 </div>`
         }
- 
+
+        const autocomplete = tipo === 'email' ? 'autocomplete="email"'
+                            : tipo === 'contraseña' ? 'autocomplete="current-password"'
+                            : ''
+
         return `<div class="campo-grupo">
     <label for="${id}">${this.escapar(nodo.etiqueta)}</label>
-    <input type="${tipo}" id="${id}" name="${id}" ${tipo === 'email' ? 'autocomplete="email"' : ''}${claseInput ? ` class="${claseInput}"` : ''}>
+    <input type="${tipoHTML}" id="${id}" name="${id}" ${autocomplete}${claseInput ? ` class="${claseInput}"` : ''} ${atributosValidacion}>
+    ${mensajeError}
 </div>`
     }
  
@@ -480,6 +495,21 @@ input:focus, textarea:focus, select:focus {
 textarea {
     resize: vertical;
     min-height: 100px;
+}
+ 
+input[aria-invalid="true"], textarea[aria-invalid="true"] {
+    border-color: var(--error);
+}
+ 
+input[aria-invalid="true"]:focus, textarea[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(239,68,68,.15);
+}
+ 
+.campo-error {
+    color: var(--error);
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
 }
  
 /* ── Tarjetas / Secciones ── */

@@ -22,6 +22,8 @@ export enum TipoToken {
     Diseno = "diseno",
     Componente = "componente",
     Con = "con",
+    Requerido = "requerido",
+    Minimo = "minimo",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -225,6 +227,9 @@ export interface NodoCampo {
     etiqueta: string
     tipoCampo: TipoCampo
     clase?: string
+    requerido: boolean
+    minimo?: number
+    maximo?: number
     linea: number
 }
  

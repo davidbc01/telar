@@ -5,7 +5,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
-## [0.9.0] - 2026-08-03
+## [0.10.0] - 2026-08-03
+
+### Añadido
+- Validación de campos: `campo requerido`, `campo mínimo N [caracteres]`, `campo máximo N [caracteres]` — se pueden combinar en cualquier orden
+- Atributos HTML5 nativos generados automáticamente (`required`, `minlength`, `maxlength`)
+- Mensaje de error visible por campo, junto a cada campo inválido
+- `Telar.validarCampos()` y `Telar.recogerCampos()` en el runtime JS generado
+- 13 tests nuevos cubriendo validación de formularios (123 tests en total)
+
+### Corregido
+- Los botones `hacer` nunca enviaban los valores del formulario en el POST — la petición siempre iba vacía. Ahora se envían como JSON, validados antes de enviar
+- `campo tipo contraseña` generaba `type="contraseña"`, que no es un tipo válido de HTML5; el navegador lo trataba como texto plano y las contraseñas nunca se ocultaban. Ahora genera `type="password"` correctamente
+
+---
+
+## [0.9.0] - 2026-08-02
 
 ### Añadido
 - Rutas dinámicas: `página detalle en "/producto/(id)"` — segmentos entre paréntesis se extraen como parámetros

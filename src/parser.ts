@@ -416,8 +416,45 @@ export class Parser {
         this.consumir(TipoToken.Tipo)
         const tipoCampo = this.parsearTipoCampo()
         const clase = this.leerClaseOpcional()
+
+        let requerido = false
+        let minimo: number | undefined
+        let maximo: number | undefined
+
+        while (true) {
+            const t = this.actual()
+
+            if (t.tipo === TipoToken.Requerido) {
+                this.avanzar()
+                requerido = true
+                continue
+            }
+
+            if (t.tipo === TipoToken.Minimo) {
+                this.avanzar()
+                minimo = parseInt(this.consumir(TipoToken.Numero).valor)
+                this.saltarPalabraOpcional('caracteres')
+                continue
+            }
+
+            if (t.tipo === TipoToken.Maximo) {
+                this.avanzar()
+                maximo = parseInt(this.consumir(TipoToken.Numero).valor)
+                this.saltarPalabraOpcional('caracteres')
+                continue
+            }
+
+            break
+        }
     
-        return { tipo: "campo", etiqueta, tipoCampo, clase, linea: token.linea }
+        return { tipo: "campo", etiqueta, tipoCampo, clase, requerido, minimo, maximo, linea: token.linea }
+    }
+
+    // Salta una palabra suelta y opcional (ej. "caracteres" en "mínimo 8 caracteres")
+    private saltarPalabraOpcional(palabra: string) {
+        if (this.actual().valor?.toLowerCase() === palabra) {
+            this.avanzar()
+        }
     }
  
     private parsearTipoCampo(): TipoCampo {

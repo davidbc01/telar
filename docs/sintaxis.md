@@ -93,6 +93,29 @@ si no
 
 ---
 
+## Campos de formulario
+
+```telar
+campo "Etiqueta" tipo texto
+campo "Etiqueta" tipo email
+campo "Etiqueta" tipo contraseña
+campo "Etiqueta" tipo área de texto
+```
+
+Con validación (v0.10):
+
+```telar
+campo "Email" tipo email requerido
+campo "Contraseña" tipo contraseña requerido mínimo 8
+campo "Nombre" tipo texto máximo 50 caracteres
+```
+
+`requerido`, `mínimo N` y `máximo N` se pueden combinar en el mismo campo, en cualquier orden, y generan los atributos HTML5 nativos (`required`, `minlength`, `maxlength`). La palabra `caracteres` tras el número es opcional — solo estilística. Cada campo genera automáticamente un contenedor de mensaje de error, visible cuando el campo no es válido.
+
+Un botón `hacer` valida todos los campos de la página antes de enviar la petición — si alguno falla, no se llega a hacer la llamada. Si todo es válido, se envían los valores reales del formulario como JSON a `/api/accion/<nombre>`.
+
+---
+
 ## Botones y navegación
 
 ```telar
