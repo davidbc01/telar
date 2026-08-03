@@ -51,7 +51,7 @@ export enum TipoToken {
     // Palabras clave - modificadores
     Maximo = "maximo",
     Ordenados = "ordenados",
-    Segun = "segun",
+    Donde = "donde",
     Por = "por",
     Recientes = "recientes",
     Para = "para",

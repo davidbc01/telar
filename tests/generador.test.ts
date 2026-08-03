@@ -328,7 +328,7 @@ describe("Generador — rutas dinámicas (v0.9)", () => {
 
     it("conecta filtrados_parametro con Telar.parametroActual en el cargador", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto según id = parametro.id`
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto donde id = parametro.id`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain("filtroCampo: 'id'")
@@ -337,7 +337,7 @@ describe("Generador — rutas dinámicas (v0.9)", () => {
 
     it("conecta filtrados con valor literal en el cargador", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto según categoria = "ropa"`
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto donde categoria = "ropa"`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain("filtroCampo: 'categoria'")

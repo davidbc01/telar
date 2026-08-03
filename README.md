@@ -182,7 +182,7 @@ Un segmento entre paréntesis en la ruta se convierte en un parámetro. `telar s
 ```telar
 página detalle en "/producto/(id)"
   título "Detalle del producto"
-  mostrar Producto según id = parametro.id
+  mostrar Producto donde id = parametro.id
 ```
 
 `GET /producto/42` y `GET /producto/999` sirven el mismo `producto-id.html`; el `id` real se lee de la URL y se usa para pedir `/api/producto?id=42` a tu backend. Tu API tiene que soportar ese filtro — Telar solo genera la petición, no el servidor de datos.
@@ -383,7 +383,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.9 — Rutas dinámicas ✅
 - Parámetros en URLs: `página detalle en "/producto/(id)"`
-- Acceso al parámetro con `mostrar Modelo según campo = parametro.nombre`
+- Acceso al parámetro con `mostrar Modelo donde campo = parametro.nombre`
 - `telar servir` resuelve rutas dinámicas en tiempo real, no solo archivos estáticos
 
 ### v0.10 — Formularios con validación ✅
@@ -423,7 +423,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 ### v0.16 — Gramática más limpia ✅
 - Rediseño deliberado de la sintaxis antes de comprometerse a la estabilidad de v1.0: cada palabra clave tiene que aportar significado
 - `campo "X" tipo email` → `campo "X" email` — `tipo` no aportaba nada
-- `mostrar Modelo filtrados por id = parametro.id` → `mostrar Modelo según id = parametro.id`
+- `mostrar Modelo filtrados por id = parametro.id` → `mostrar Modelo donde id = parametro.id`
 - `botón "X" hacer sumar/restar/cambiar tema/acción` → `suma` / `resta` / `alterna tema` / `acción` a secas — `hacer` era puro pegamento
 - De paso, dos paquetes locales (`formulario`, `lista`) tenían sintaxis que nunca fue real (un `si funciona` tras un botón que no existe, una interpolación de texto que Telar nunca ha soportado) — corregidos
 
@@ -440,6 +440,9 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 ### v0.19 — Tests de `telar servir` ✅
 - Antes, el servidor de desarrollo (rutas dinámicas, live reload, recompilación al vuelo) solo se había verificado a mano toda la sesión — ahora tiene 7 tests de integración con peticiones HTTP reales
 - `telar servir app.telar -p 3050` — puerto configurable, útil si el 3000 está ocupado o para correr varias instancias
+
+### v0.20 — Último ajuste de sintaxis ✅
+- `según campo = valor` → `donde campo = valor`, el mismo patrón que `WHERE` en SQL — "según" sonaba a prosa justo al lado del operador `=`
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

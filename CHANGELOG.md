@@ -5,6 +5,23 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.20.0] - 2026-08-04
+
+### Cambiado — último ajuste de sintaxis antes de v1.0
+
+`según` → `donde`, en el modificador de `mostrar`:
+
+```telar
+mostrar Producto según id = parametro.id     # antes
+mostrar Producto donde id = parametro.id     # ahora
+```
+
+Motivo: "según" es una palabra de prosa ("according to"), y sonaba raro justo al lado del operador `=`. "donde" es el mismo patrón que `WHERE` en SQL — una palabra clave reconocible, no una preposición conversacional. Con este cambio, la mezcla de prosa + símbolos que quedaba en la sintaxis queda resuelta.
+
+Ejemplos, tests (205) y documentación migrados y verificados compilando.
+
+---
+
 ## [0.19.0] - 2026-08-04
 
 ### Añadido

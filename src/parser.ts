@@ -440,12 +440,12 @@ export class Parser {
                     continue
                 }
  
-                if (t.tipo === TipoToken.Segun) {
+                if (t.tipo === TipoToken.Donde) {
                     this.avanzar()
                     const campo = this.consumirIdentificador().valor
                     if (this.actual().tipo === TipoToken.Igual) this.avanzar()
 
-                    // según id = parametro.id  →  valor viene de la ruta dinámica
+                    // donde id = parametro.id  →  valor viene de la ruta dinámica
                     if (this.actual().tipo === TipoToken.Identificador &&
                         this.actual().valor.startsWith('parametro.')) {
                         const parametro = this.consumirIdentificador().valor.slice('parametro.'.length)

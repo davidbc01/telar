@@ -70,7 +70,7 @@ mostrar NombreModelo recientes
 mostrar NombreModelo recientes
   máximo 10
   ordenados por campo
-  según campo = "valor"
+  donde campo = "valor"
 ```
 
 ---
@@ -178,14 +178,14 @@ Un segmento entre paréntesis en la ruta se convierte en parámetro:
 
 ```telar
 página detalle en "/producto/(id)"
-  mostrar Producto según id = parametro.id
+  mostrar Producto donde id = parametro.id
 ```
 
-`parametro.<nombre>` referencia el valor real de la URL en tiempo de ejecución. Se puede usar dentro de un modificador `según`, junto al ya existente valor literal:
+`parametro.<nombre>` referencia el valor real de la URL en tiempo de ejecución. Se puede usar dentro de un modificador `donde`, junto al ya existente valor literal:
 
 ```telar
-mostrar Producto según categoria = "ropa"     # valor fijo
-mostrar Producto según id = parametro.id      # valor de la URL
+mostrar Producto donde categoria = "ropa"     # valor fijo
+mostrar Producto donde id = parametro.id      # valor de la URL
 ```
 
 `telar servir` resuelve estas rutas en tiempo real: una sola página compilada (`producto-id.html`) atiende cualquier `/producto/<lo-que-sea>`. Requiere que tu API en `/api/<modelo>` soporte el filtro correspondiente como query param.

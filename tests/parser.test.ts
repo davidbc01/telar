@@ -274,7 +274,7 @@ describe("Parser — rutas dinámicas (v0.9)", () => {
 
     it("filtrados con valor literal sigue funcionando (compatibilidad)", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto según categoria = "ropa"`
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto donde categoria = "ropa"`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.modificadores[0]).toEqual({ tipo: "filtrados", campo: "categoria", valor: "ropa" })
@@ -282,7 +282,7 @@ describe("Parser — rutas dinámicas (v0.9)", () => {
 
     it("filtrados con parametro.X genera filtrados_parametro", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto según id = parametro.id`
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto donde id = parametro.id`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.modificadores[0]).toEqual({ tipo: "filtrados_parametro", campo: "id", parametro: "id" })
