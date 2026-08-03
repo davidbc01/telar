@@ -15,7 +15,8 @@ import {
     NodoTitulo, NodoDescripcion, NodoMostrar,
     NodoBoton, NodoCampo, NodoSi,
     NodoOptimizar, NodoCache, NodoReintentar,
-    NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente
+    NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
+    NodoVariable, NodoTextoVariable
 } from './tipos'
 import { GeneradorJS } from './generador-js'
 
@@ -36,6 +37,7 @@ export function rutaANombre(ruta: string): string {
 export class Generador {
     private app: NodoAplicacion
     private dirProyecto: string  // ← NUEVO: para buscar estilos.css local
+    private paginaActual: NodoPagina | null = null  // contexto para resolver variables
  
     constructor(app: NodoAplicacion, dirProyecto: string = process.cwd()) {
         this.app = app
@@ -81,6 +83,7 @@ export class Generador {
     // --- Página completa ---
  
     private generarPagina(pagina: NodoPagina): string {
+        this.paginaActual = pagina
         const titulo = this.extraerTitulo(pagina) ?? this.app.nombre
         const descripcion = this.extraerDescripcion(pagina) ?? ''
         const contenidoPagina = pagina.hijos.map(h => this.generarNodo(h)).join('\n')
@@ -150,6 +153,8 @@ ${this.indentar(cuerpo, 4)}
             case 'uso_componente': return this.generarUsoComponente(nodo)
             case 'diseno':      return ''
             case 'componente':  return ''
+            case 'variable':    return ''
+            case 'texto_variable': return this.generarTextoVariable(nodo)
             default:            return ''
         }
     }
@@ -157,6 +162,18 @@ ${this.indentar(cuerpo, 4)}
     private generarTitulo(nodo: NodoTitulo): string {
         const slug = this.slugify(nodo.texto)
         return `<h1 ${this.claseHTML(`titulo titulo-${slug}`, nodo.clase)}>${this.escapar(nodo.texto)}</h1>`
+    }
+
+    // texto cuenta — muestra el valor inicial de la variable en el HTML
+    // (la lectura/escritura en vivo la hace el JS vía data-variable)
+    private generarTextoVariable(nodo: NodoTextoVariable): string {
+        const declaracion = this.paginaActual?.hijos.find(
+            h => h.tipo === 'variable' && h.nombre === nodo.nombre
+        ) as NodoVariable | undefined
+
+        const valorInicial = declaracion?.valorInicial ?? 0
+
+        return `<span ${this.claseHTML(`texto texto-${this.slugify(nodo.nombre)}`, nodo.clase)} data-variable="${nodo.nombre}">${valorInicial}</span>`
     }
  
     private generarDescripcion(nodo: NodoDescripcion): string {

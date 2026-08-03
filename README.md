@@ -186,6 +186,23 @@ página registro en "/registro"
 
 ---
 
+## Variables y estado local
+
+```telar
+página contador en "/"
+  variable cuenta = 0
+
+  título "Contador"
+  texto cuenta
+
+  botón "Sumar" hacer sumar cuenta
+  botón "Restar" hacer restar cuenta
+```
+
+`variable` declara estado local a la página, sin llamar a ninguna API. `texto cuenta` muestra el valor y se actualiza sola cada vez que cambia. `hacer sumar <variable>` / `hacer restar <variable>` son acciones incorporadas — todo pasa en el navegador, al hacer clic, sin red de por medio. Las variables a nivel de aplicación (compartidas entre páginas) y la asignación de valores arbitrarios con `hacer` quedan para una versión futura.
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -250,14 +267,14 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (123) + CI/CD | ✅ Completo |
+| Tests completos (137) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
 | Diseños y componentes reutilizables | ✅ Completo |
 | Rutas dinámicas con parámetros | ✅ Completo |
 | Formularios con validación | ✅ Completo |
-| Variables y estado local | 🟪 Pendiente |
+| Variables y estado local | ✅ Completo |
 | Temas visuales | 🟪 Pendiente |
 | SEO y metadatos automáticos | 🟪 Pendiente |
 | Documentación escrita | 🟪 Pendiente |
@@ -321,10 +338,10 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Mensajes de error por campo, mostrados junto al campo inválido
 - Los botones `hacer` ahora validan los campos antes de enviar, y envían sus valores reales en el POST (antes no se enviaba nada)
 
-### v0.11 — Variables y estado local
-- `variable contador = 0`
-- `al hacer clic incrementar contador`
-- `mostrar contador`
+### v0.11 — Variables y estado local ✅
+- `variable cuenta = 0` — estado local por página
+- `texto cuenta` — muestra el valor y se actualiza sola
+- `botón "Sumar" hacer sumar cuenta` / `hacer restar cuenta` — acciones incorporadas que mutan la variable sin llamar a ninguna API
 
 ### v0.12 — Temas visuales
 - `tema oscuro`, `tema claro`

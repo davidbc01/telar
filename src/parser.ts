@@ -10,6 +10,7 @@ import {
     NodoTitulo, NodoDescripcion, NodoMostrar, NodoBoton,
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
+    NodoVariable, NodoTextoVariable,
     Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion
 } from './tipos'
 import { Errores } from './errores'
@@ -265,6 +266,8 @@ export class Parser {
             case TipoToken.Reintentar:  return this.parsearReintentar()
             case TipoToken.Usar:        return this.parsearUsar()
             case TipoToken.Codigo:      return this.parsearCodigo()
+            case TipoToken.Variable:    return this.parsearVariable()
+            case TipoToken.PalabraTexto: return this.parsearTextoVariable()
             default:
             this.avanzar()
             return null
@@ -277,6 +280,23 @@ export class Parser {
         const texto = this.consumir(TipoToken.Texto).valor
         const clase = this.leerClaseOpcional()
         return { tipo: "titulo", texto, clase, linea: token.linea }
+    }
+
+    // variable cuenta = 0
+    private parsearVariable(): NodoVariable {
+        const token = this.consumir(TipoToken.Variable)
+        const nombre = this.consumirIdentificador().valor
+        this.consumir(TipoToken.Igual)
+        const valorInicial = parseInt(this.consumir(TipoToken.Numero).valor)
+        return { tipo: "variable", nombre, valorInicial, linea: token.linea }
+    }
+
+    // texto cuenta
+    private parsearTextoVariable(): NodoTextoVariable {
+        const token = this.consumir(TipoToken.PalabraTexto)
+        const nombre = this.consumirIdentificador().valor
+        const clase = this.leerClaseOpcional()
+        return { tipo: "texto_variable", nombre, clase, linea: token.linea }
     }
  
     // descripción "..."
@@ -395,7 +415,19 @@ export class Parser {
         // Saltar "a" si existe
         if (this.actual().valor === "a") this.avanzar()
  
-        const destino = this.consumirIdentificador().valor
+        const primeraPalabra = this.consumirIdentificador().valor
+
+        let destino = primeraPalabra
+        let operacion: "sumar" | "restar" | undefined
+        let variable: string | undefined
+
+        // hacer sumar cuenta / hacer restar cuenta — acciones incorporadas
+        // que modifican una variable de la página, sin llamar a ninguna API
+        if (accion === "hacer" && (primeraPalabra === "sumar" || primeraPalabra === "restar")) {
+            operacion = primeraPalabra
+            variable = this.consumirIdentificador().valor
+            destino = `${operacion}_${variable}`
+        }
  
         // Leer bloque "si falla" opcional después del botón
         let siFalla: Nodo[] | undefined
@@ -405,7 +437,7 @@ export class Parser {
             siFalla = this.parsearBloque()
         }
  
-        return { tipo: "boton", texto, accion, destino, clase, siFalla, linea: token.linea }
+        return { tipo: "boton", texto, accion, destino, operacion, variable, clase, siFalla, linea: token.linea }
     }
  
     // campo "Correo" tipo email

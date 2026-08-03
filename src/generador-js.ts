@@ -186,10 +186,40 @@ const Telar = {
     // Reintentar una operación después de N segundos
     reintentar(fn, segundos) {
         setTimeout(fn, segundos * 1000)
+    },
+
+    // Actualizar en pantalla todos los elementos que muestran esta variable
+    actualizarVariable(nombre) {
+        document.querySelectorAll(\`[data-variable="\${nombre}"]\`).forEach(el => {
+            el.textContent = Telar.estado[nombre]
+        })
     }
 };
 
-${this.generarTablaRutas()}`
+${this.generarTablaRutas()}
+
+${this.generarEstadoInicial()}`
+    }
+
+    // --- Variables y estado local (v0.11) ---
+    // Estado inicial de todas las variables de página, compartido en un solo
+    // objeto global — no hay colisión real porque cada página compilada solo
+    // contiene en el DOM los elementos de sus propias variables.
+
+    private generarEstadoInicial(): string {
+        const variables: { nombre: string; valorInicial: number }[] = []
+        for (const pagina of this.app.paginas) {
+            for (const nodo of pagina.hijos) {
+                if (nodo.tipo === 'variable') {
+                    variables.push({ nombre: nodo.nombre, valorInicial: nodo.valorInicial })
+                }
+            }
+        }
+
+        if (variables.length === 0) return 'Telar.estado = {};'
+
+        const entradas = variables.map(v => `    ${v.nombre}: ${v.valorInicial}`)
+        return `Telar.estado = {\n${entradas.join(',\n')}\n};`
     }
 
     // --- Rutas dinámicas ---
@@ -324,7 +354,7 @@ async function cargar${modelo}() {
     // Una función por cada botón con acción "hacer"
 
     private generarAcciones(): string {
-        const acciones = new Set<string>()
+        const acciones = new Map<string, { operacion?: 'sumar' | 'restar'; variable?: string }>()
     
         for (const pagina of this.app.paginas) {
             this.extraerAcciones(pagina.hijos, acciones)
@@ -332,7 +362,39 @@ async function cargar${modelo}() {
     
         if (acciones.size === 0) return ''
     
-        const funciones = Array.from(acciones).map(accion => `
+        const funciones = Array.from(acciones.entries()).map(([accion, info]) =>
+            info.operacion && info.variable
+                ? this.generarAccionVariable(accion, info.operacion, info.variable)
+                : this.generarAccionAPI(accion)
+        )
+    
+        const listeners = Array.from(acciones.keys()).map(accion =>
+            `  document.querySelector('[data-accion="${accion}"]')
+            ?.addEventListener('click', ${accion});`
+        )
+    
+        return `${funciones.join('\n')}
+    
+// Registrar listeners de acciones
+function registrarAcciones() {
+${listeners.join('\n')}
+}`
+    }
+
+    // Acción incorporada: suma o resta 1 a una variable de página y actualiza
+    // en pantalla todos los elementos que la muestran — sin llamar a ninguna API
+    private generarAccionVariable(accion: string, operacion: 'sumar' | 'restar', variable: string): string {
+        const delta = operacion === 'sumar' ? '+ 1' : '- 1'
+        return `
+// Acción: ${accion} (variable de página, sin API)
+function ${accion}() {
+    Telar.estado.${variable} = Telar.estado.${variable} ${delta}
+    Telar.actualizarVariable('${variable}')
+}`
+    }
+
+    private generarAccionAPI(accion: string): string {
+        return `
 // Acción: ${accion}
 async function ${accion}() {
     const boton = document.querySelector('[data-accion="${accion}"]')
@@ -356,29 +418,20 @@ async function ${accion}() {
     } finally {
         if (boton) boton.disabled = false
     }
-}`)
-    
-        const listeners = Array.from(acciones).map(accion =>
-            `  document.querySelector('[data-accion="${accion}"]')
-            ?.addEventListener('click', ${accion});`
-        )
-    
-        return `${funciones.join('\n')}
-    
-// Registrar listeners de acciones
-function registrarAcciones() {
-${listeners.join('\n')}
 }`
     }
 
-    private extraerAcciones(nodos: Nodo[], set: Set<string>) {
+    private extraerAcciones(
+        nodos: Nodo[],
+        mapa: Map<string, { operacion?: 'sumar' | 'restar'; variable?: string }>
+    ) {
         for (const nodo of nodos) {
             if (nodo.tipo === 'boton' && nodo.accion === 'hacer') {
-                set.add(nodo.destino)
+                mapa.set(nodo.destino, { operacion: nodo.operacion, variable: nodo.variable })
             }
             if (nodo.tipo === 'si') {
-                this.extraerAcciones(nodo.entonces, set)
-                if (nodo.siNo) this.extraerAcciones(nodo.siNo, set)
+                this.extraerAcciones(nodo.entonces, mapa)
+                if (nodo.siNo) this.extraerAcciones(nodo.siNo, mapa)
             }
         }
     }

@@ -24,6 +24,8 @@ export enum TipoToken {
     Con = "con",
     Requerido = "requerido",
     Minimo = "minimo",
+    Variable = "variable",
+    PalabraTexto = "palabra_texto",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -115,6 +117,8 @@ export type Nodo =
     | NodoDiseno
     | NodoComponente
     | NodoUsoComponente
+    | NodoVariable
+    | NodoTextoVariable
  
 // aplicación MiTienda
 export interface NodoAplicacion {
@@ -164,6 +168,22 @@ export interface NodoUsoComponente {
     tipo: "uso_componente"
     nombre: string
     argumento: string
+    linea: number
+}
+
+// variable cuenta = 0
+export interface NodoVariable {
+    tipo: "variable"
+    nombre: string
+    valorInicial: number
+    linea: number
+}
+
+// texto cuenta  (muestra el valor de una variable; se actualiza sola)
+export interface NodoTextoVariable {
+    tipo: "texto_variable"
+    nombre: string
+    clase?: string
     linea: number
 }
  
@@ -216,6 +236,8 @@ export interface NodoBoton {
     texto: string
     accion: AccionBoton
     destino: string
+    operacion?: "sumar" | "restar" // acción incorporada sobre una variable de página
+    variable?: string
     clase?: string
     siFalla?: Nodo[]
     linea: number

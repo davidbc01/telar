@@ -399,3 +399,61 @@ describe("Generador — validación de formularios (v0.10)", () => {
     })
 
 })
+
+describe("Generador — variables y estado local (v0.11)", () => {
+
+    it("texto <variable> muestra el valor inicial en el HTML", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  texto cuenta`)
+        expect(resultado).toContain('data-variable="cuenta"')
+        expect(resultado).toContain('>0<')
+    })
+
+    it("una variable con valor inicial distinto de cero se refleja en el HTML", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  variable vidas = 3\n  texto vidas`)
+        expect(resultado).toContain('>3<')
+    })
+
+    it("la declaración variable no genera HTML visible", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0`)
+        expect(resultado).not.toContain('variable')
+    })
+
+    it("Telar.estado incluye todas las variables de la app", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0`)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('Telar.estado = {')
+        expect(js.contenido).toContain('cuenta: 0')
+    })
+
+    it("sin variables, Telar.estado es un objeto vacío", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('Telar.estado = {};')
+    })
+
+    it("botón hacer sumar X genera una función sin llamada a fetch", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Sumar" hacer sumar cuenta`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function sumar_cuenta()')
+        expect(js.contenido).toContain('Telar.estado.cuenta = Telar.estado.cuenta + 1')
+        expect(js.contenido).toContain("Telar.actualizarVariable('cuenta')")
+        expect(js.contenido).not.toContain("fetch('/api/accion/sumar_cuenta'")
+    })
+
+    it("botón hacer restar X resta 1 en vez de sumar", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Restar" hacer restar cuenta`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('Telar.estado.cuenta = Telar.estado.cuenta - 1')
+    })
+
+    it("un botón hacer normal (no sumar/restar) sigue llamando a la API", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Guardar" hacer guardar`)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("fetch('/api/accion/guardar'")
+    })
+
+})

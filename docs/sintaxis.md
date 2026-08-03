@@ -182,6 +182,28 @@ mostrar Producto filtrados por id = parametro.id      # valor de la URL
 
 ---
 
+## Variables y estado local
+
+```telar
+variable cuenta = 0
+texto cuenta
+```
+
+`variable` declara estado local a la página, con un valor numérico inicial. `texto <nombre>` lo muestra en pantalla y se actualiza sola cuando el valor cambia — no hace falta recargar nada.
+
+Acciones incorporadas para modificar una variable, sin llamar a ninguna API:
+
+```telar
+botón "Sumar" hacer sumar cuenta
+botón "Restar" hacer restar cuenta
+```
+
+Cada clic suma o resta 1 a la variable y refresca en pantalla todos los `texto` que la muestren. Esto es distinto de un botón `hacer <accion>` normal, que sí hace una petición POST a `/api/accion/<accion>`.
+
+Pendiente para una versión futura: variables compartidas a nivel de aplicación (no solo por página), y asignar cualquier valor con `hacer` (no solo sumar/restar 1).
+
+---
+
 ## Manejo de errores
 
 ```telar

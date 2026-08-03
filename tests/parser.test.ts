@@ -289,3 +289,56 @@ describe("Parser — rutas dinámicas (v0.9)", () => {
     })
 
 })
+
+describe("Parser — variables y estado local (v0.11)", () => {
+
+    it("parsea una variable con valor inicial", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0`)
+        const variable = arbol.paginas[0].hijos[0] as any
+        expect(variable.tipo).toBe("variable")
+        expect(variable.nombre).toBe("cuenta")
+        expect(variable.valorInicial).toBe(0)
+    })
+
+    it("parsea una variable con valor inicial distinto de cero", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  variable vidas = 3`)
+        const variable = arbol.paginas[0].hijos[0] as any
+        expect(variable.valorInicial).toBe(3)
+    })
+
+    it("parsea texto <variable> como referencia a mostrar", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  texto cuenta`)
+        const textoVariable = arbol.paginas[0].hijos[1] as any
+        expect(textoVariable.tipo).toBe("texto_variable")
+        expect(textoVariable.nombre).toBe("cuenta")
+    })
+
+    it("un botón hacer sumar X guarda la operación y la variable", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Sumar" hacer sumar cuenta`
+        )
+        const boton = arbol.paginas[0].hijos[1] as any
+        expect(boton.accion).toBe("hacer")
+        expect(boton.operacion).toBe("sumar")
+        expect(boton.variable).toBe("cuenta")
+        expect(boton.destino).toBe("sumar_cuenta")
+    })
+
+    it("un botón hacer restar X guarda la operación y la variable", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Restar" hacer restar cuenta`
+        )
+        const boton = arbol.paginas[0].hijos[1] as any
+        expect(boton.operacion).toBe("restar")
+        expect(boton.variable).toBe("cuenta")
+    })
+
+    it("un botón hacer con una acción normal no lleva operación ni variable", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Guardar" hacer guardar`)
+        const boton = arbol.paginas[0].hijos[0] as any
+        expect(boton.destino).toBe("guardar")
+        expect(boton.operacion).toBeUndefined()
+        expect(boton.variable).toBeUndefined()
+    })
+
+})

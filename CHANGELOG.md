@@ -5,6 +5,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.11.0] - 2026-08-03
+
+### Añadido
+- Variables de página con estado local: `variable cuenta = 0`
+- `texto cuenta` — muestra el valor y se actualiza sola cuando cambia
+- Acciones incorporadas `hacer sumar <variable>` / `hacer restar <variable>` — modifican el estado directamente en el navegador, sin llamar a ninguna API
+- `Telar.estado` y `Telar.actualizarVariable()` en el runtime JS generado
+- 14 tests nuevos cubriendo variables y estado local (137 tests en total)
+- Probado de extremo a extremo con un DOM real (jsdom): clics simulados confirmando que el contador se actualiza correctamente en pantalla
+
+### Notas
+- Las variables son locales a la página, no compartidas a nivel de aplicación — queda para una versión futura
+- `hacer sumar`/`hacer restar` solo suman o restan 1; asignar valores arbitrarios queda para una versión futura
+
+---
+
 ## [0.10.0] - 2026-08-03
 
 ### Añadido
