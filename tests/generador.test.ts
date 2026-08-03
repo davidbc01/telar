@@ -667,3 +667,61 @@ describe("Generador — combinaciones diseño + rutas dinámicas + componentes (
     })
 
 })
+
+describe("Generador — componente como plantilla de lista (mostrar ... con X)", () => {
+
+    const codigoBase = `aplicación MiApp
+
+componente TarjetaProducto
+  mostrar item.nombre
+  mostrar item.precio
+
+página inicio en "/"
+  mostrar Producto recientes
+    máximo 8
+    con TarjetaProducto`
+
+    it("genera una función plantilla_X en el JS runtime", () => {
+        const archivos = compilar(codigoBase)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function plantilla_TarjetaProducto(item)')
+    })
+
+    it("la plantilla usa interpolación real ${item.propiedad}, no texto fijo", () => {
+        const archivos = compilar(codigoBase)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('${item.nombre}')
+        expect(js.contenido).toContain('${item.precio}')
+    })
+
+    it("renderizarLista recibe la función de plantilla al cargar la lista", () => {
+        const archivos = compilar(codigoBase)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("Telar.renderizarLista(contenedor, datos, 'Producto', plantilla_TarjetaProducto)")
+    })
+
+    it("sin 'con', renderizarLista no recibe plantilla (usa el genérico de siempre)", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    máximo 8`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("Telar.renderizarLista(contenedor, datos, 'Producto')")
+    })
+
+    it("no genera función de plantilla para componentes que no se usan con 'con'", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ncomponente SinUsar\n  mostrar item.x\n\npágina inicio en "/"\n  mostrar Producto recientes`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).not.toContain('function plantilla_SinUsar')
+    })
+
+    it("referenciar un componente inexistente con 'con' no rompe la compilación", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con NoExiste`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function plantilla_NoExiste(item)')
+    })
+
+})

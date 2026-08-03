@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.17.0] - 2026-08-04
+
+### Añadido
+- `mostrar Modelo ... con NombreComponente` — conecta por fin los componentes con listas de datos reales. Antes, `componente` y `mostrar Modelo recientes` eran dos sistemas que nunca se hablaban entre sí: las listas mostraban todos los campos sin control de diseño, y los componentes solo servían sueltos, sin datos reales detrás
+- Cada `item.propiedad` dentro de un componente usado así se convierte en una interpolación real (`${item.propiedad}`), rellenada en el navegador con el valor de cada elemento — no texto fijo
+- 9 tests nuevos, incluida una prueba de extremo a extremo con un DOM real y datos simulados vía `fetch`, confirmando que se ven los valores reales (191 tests en total)
+
+### Nota
+Sin `con NombreComponente`, `mostrar Modelo recientes` se comporta exactamente igual que antes — este cambio es puramente aditivo.
+
+---
+
 ## [0.16.0] - 2026-08-04
 
 ### ⚠️ Breaking change — sintaxis más limpia antes de v1.0

@@ -349,6 +349,7 @@ export class Parser {
         const modificadores: ModificadorMostrar[] = []
         let siFalla: Nodo[] | undefined
         let siFunciona: Nodo[] | undefined
+        let componentePlantilla: string | undefined
  
         // Los modificadores pueden venir directamente o en bloque indentado
         const leerModificadores = () => {
@@ -403,6 +404,12 @@ export class Parser {
                     continue
                 }
  
+                if (t.tipo === TipoToken.Con) {
+                    this.avanzar()
+                    componentePlantilla = this.consumir(TipoToken.Nombre).valor
+                    continue
+                }
+
                 if (t.tipo === TipoToken.Si && this.siguiente()?.tipo === TipoToken.Falla) {
                     this.avanzar()
                     this.avanzar()
@@ -423,7 +430,7 @@ export class Parser {
  
         leerModificadores()
  
-        return { tipo: "mostrar", modelo, modificadores, clase, siFalla, siFunciona, linea: token.linea }
+        return { tipo: "mostrar", modelo, modificadores, clase, componentePlantilla, siFalla, siFunciona, linea: token.linea }
     }
  
     // botón "Entrar" clase "..." ir a login

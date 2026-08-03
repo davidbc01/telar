@@ -160,6 +160,16 @@ página inicio en "/"
   NombreComponente con producto
 ```
 
+Un componente también sirve como plantilla de una lista real completa, con `mostrar ... con`:
+
+```telar
+mostrar Producto recientes
+  máximo 8
+  con TarjetaProducto
+```
+
+A diferencia del uso anterior (`NombreComponente con producto`, donde `item.propiedad` es texto fijo sustituido en tiempo de compilación), aquí `item.propiedad` se convierte en una interpolación real: por cada producto que llegue de `/api/producto`, la plantilla se rellena con sus datos reales, uno por uno. Sin `con`, `mostrar Modelo recientes` sigue funcionando como antes — muestra todos los campos de cada elemento sin control de diseño.
+
 ---
 
 ## Rutas dinámicas

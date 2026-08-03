@@ -241,6 +241,7 @@ export interface NodoMostrar {
     modelo: string
     modificadores: ModificadorMostrar[]
     clase?: string
+    componentePlantilla?: string // "con TarjetaProducto" — plantilla por elemento de la lista
     siFalla?: Nodo[]
     siFunciona?: Nodo[]
     linea: number

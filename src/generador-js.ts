@@ -12,9 +12,11 @@ import {
 
 export class GeneradorJS {
     private app: NodoAplicacion
+    private plantillas: Record<string, string>
 
-    constructor(app: NodoAplicacion) {
+    constructor(app: NodoAplicacion, plantillas: Record<string, string> = {}) {
         this.app = app
+        this.plantillas = plantillas
     }
 
     generar(): string {
@@ -22,6 +24,7 @@ export class GeneradorJS {
 
         secciones.push(this.generarRuntime())
         secciones.push(this.generarCondiciones())
+        secciones.push(this.generarFuncionesPlantilla())
         secciones.push(this.generarCargadores())
         secciones.push(this.generarAcciones())
         secciones.push(this.generarInit())
@@ -172,7 +175,7 @@ const Telar = {
     },
 
     // Renderizar lista de items
-    renderizarLista(contenedor, items, modelo) {
+    renderizarLista(contenedor, items, modelo, plantilla) {
         const cargandoEl = contenedor.querySelector('.cargando')
         const errorEl = contenedor.querySelector('.error')
         if (cargandoEl) cargandoEl.style.display = 'none'
@@ -190,7 +193,7 @@ const Telar = {
         items.forEach(item => {
             const li = document.createElement('li')
             li.className = 'telar-item'
-            li.innerHTML = this.renderizarItem(item, modelo)
+            li.innerHTML = plantilla ? plantilla(item) : this.renderizarItem(item, modelo)
             lista.appendChild(li)
         })
 
@@ -305,6 +308,39 @@ ${lineas.join('\n')}
     // --- Cargadores de datos ---
     // Una función async por cada "mostrar Modelo"
 
+    // --- Plantillas de componente para listas (mostrar ... con X) ---
+    // Solo genera función para los componentes realmente usados así —
+    // no todos los que existan en la app, para no meter código muerto.
+
+    private generarFuncionesPlantilla(): string {
+        const usados = new Set<string>()
+        for (const pagina of this.app.paginas) {
+            for (const nodo of pagina.hijos) {
+                if (nodo.tipo === 'mostrar' && nodo.componentePlantilla) {
+                    usados.add(nodo.componentePlantilla)
+                }
+            }
+        }
+
+        if (usados.size === 0) return ''
+
+        const funciones = Array.from(usados).map(nombre => {
+            const html = this.plantillas[nombre]
+            if (!html) {
+                return `// La plantilla "${nombre}" se referenció con "con" pero el componente no existe
+function plantilla_${nombre}(item) { return ''; }`
+            }
+            return `// Plantilla del componente ${nombre}, una por elemento de la lista
+function plantilla_${nombre}(item) {
+    return \`
+${html}
+\`
+}`
+        })
+
+        return funciones.join('\n\n')
+    }
+
     private generarCargadores(): string {
         const cargadores: string[] = []
     
@@ -357,6 +393,8 @@ ${lineas.join('\n')}
             ? siFallaMsg.texto
             : 'Error al cargar los datos'
     
+        const argPlantilla = nodo.componentePlantilla ? `, plantilla_${nodo.componentePlantilla}` : ''
+
         return `// Cargar ${modelo}
 async function cargar${modelo}() {
     const contenedor = document.querySelector('[data-modelo="${modelo}"]')
@@ -364,7 +402,7 @@ async function cargar${modelo}() {
 
     try {
         const datos = await Telar.cargar('${modelo}', { ${opciones.join(', ')} })
-        Telar.renderizarLista(contenedor, datos, '${modelo}')
+        Telar.renderizarLista(contenedor, datos, '${modelo}'${argPlantilla})
     } catch (error) {
         Telar.mostrarError(contenedor, '${mensajeError}')
         ${reintentarJS}

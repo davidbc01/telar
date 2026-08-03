@@ -71,7 +71,8 @@ export class Generador {
             })
         }
  
-        const generadorJS = new GeneradorJS(this.app)
+        const plantillas = this.generarPlantillasComponentes()
+        const generadorJS = new GeneradorJS(this.app, plantillas)
         archivos.push({
             nombre: 'telar.js',
             contenido: generadorJS.generar()
@@ -398,6 +399,32 @@ ${this.indentar(cuerpo, 4)}
             return { ...nodo, modelo: argumento + nodo.modelo.slice('item'.length) }
         }
         return nodo
+    }
+
+    // --- Plantillas de componente para listas dinámicas (mostrar ... con X) ---
+    // A diferencia de sustituirItem (que fija un texto en tiempo de
+    // compilación), aquí "item.propiedad" se deja como interpolación
+    // ${item.propiedad}, para que el runtime JS la rellene con el valor
+    // real de cada elemento de la lista, uno por uno.
+
+    generarPlantillasComponentes(): Record<string, string> {
+        const plantillas: Record<string, string> = {}
+        for (const componente of this.app.componentes ?? []) {
+            const cuerpo = componente.hijos
+                .map(h => this.generarNodoPlantilla(h))
+                .join('\n')
+            plantillas[componente.nombre] =
+                `<div class="componente componente-${this.slugify(componente.nombre)}">\n${this.indentar(cuerpo, 4)}\n</div>`
+        }
+        return plantillas
+    }
+
+    private generarNodoPlantilla(nodo: Nodo): string {
+        if (nodo.tipo === 'mostrar' && nodo.modelo.startsWith('item.')) {
+            const propiedad = nodo.modelo.slice('item.'.length)
+            return `<p ${this.claseHTML('campo', nodo.clase)}>\${item.${propiedad}}</p>`
+        }
+        return this.generarNodo(nodo)
     }
 
     // --- CSS base ---

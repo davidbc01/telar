@@ -159,6 +159,17 @@ página inicio en "/"
   TarjetaProducto con producto
 ```
 
+Y se pueden usar como plantilla de una lista real, para que cada elemento se vea con tu diseño en vez del genérico "campo: valor":
+
+```telar
+página inicio en "/"
+  mostrar Producto recientes
+    máximo 8
+    con TarjetaProducto
+```
+
+`con TarjetaProducto` conecta el componente a los datos reales que llegan de `/api/producto` — cada `item.propiedad` se rellena con el valor real de cada producto, uno por uno, no con texto fijo.
+
 ---
 
 ## Rutas dinámicas

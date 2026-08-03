@@ -369,6 +369,33 @@ describe("Parser — temas visuales (v0.12)", () => {
 
 })
 
+describe("Parser — mostrar con componente como plantilla", () => {
+
+    it("sin 'con', componentePlantilla queda indefinido", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes`)
+        const mostrar = arbol.paginas[0].hijos[0] as any
+        expect(mostrar.componentePlantilla).toBeUndefined()
+    })
+
+    it("parsea mostrar Modelo con NombreComponente", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con TarjetaProducto`
+        )
+        const mostrar = arbol.paginas[0].hijos[0] as any
+        expect(mostrar.componentePlantilla).toBe("TarjetaProducto")
+    })
+
+    it("con se puede combinar con otros modificadores en cualquier orden", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    máximo 8\n    con TarjetaProducto\n    ordenados por precio`
+        )
+        const mostrar = arbol.paginas[0].hijos[0] as any
+        expect(mostrar.componentePlantilla).toBe("TarjetaProducto")
+        expect(mostrar.modificadores).toHaveLength(3)
+    })
+
+})
+
 describe("Parser — SEO y metadatos (v0.13)", () => {
 
     it("sin declarar dominio, queda indefinido", () => {
