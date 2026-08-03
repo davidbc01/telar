@@ -379,7 +379,7 @@ describe("Parser — mostrar con componente como plantilla", () => {
 
     it("parsea mostrar Modelo con NombreComponente", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con TarjetaProducto`
+            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con TarjetaProducto`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.componentePlantilla).toBe("TarjetaProducto")
@@ -387,11 +387,63 @@ describe("Parser — mostrar con componente como plantilla", () => {
 
     it("con se puede combinar con otros modificadores en cualquier orden", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    máximo 8\n    con TarjetaProducto\n    ordenados por precio`
+            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    máximo 8\n    con TarjetaProducto\n    ordenados por precio`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.componentePlantilla).toBe("TarjetaProducto")
         expect(mostrar.modificadores).toHaveLength(3)
+    })
+
+})
+
+describe("Parser — validación semántica de referencias", () => {
+
+    it("un diseño existente no da error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ndiseño principal\n  título "Nav"\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )).not.toThrow()
+    })
+
+    it("un diseño que no existe lanza un error con las opciones disponibles", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ndiseño principal\n  título "Nav"\n\npágina inicio en "/"\n  diseño principa\n  título "Inicio"`
+        )).toThrow(/La página usa "diseño principa" pero no existe ningún diseño/)
+    })
+
+    it("sin ningún diseño declarado, referenciar uno también da error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )).toThrow(/no existe ningún diseño/)
+    })
+
+    it("un componente existente (uso directo) no da error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta\n  mostrar item.nombre\n\npágina inicio en "/"\n  Tarjeta con producto`
+        )).not.toThrow()
+    })
+
+    it("un componente inexistente (uso directo) lanza un error con las opciones disponibles", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaX con producto`
+        )).toThrow(/"TarjetaX con \.\.\." usa un componente que no existe/)
+    })
+
+    it("un componente inexistente como plantilla de mostrar lanza error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con NoExiste`
+        )).toThrow(/componente que no existe/)
+    })
+
+    it("valida referencias también dentro de un diseño, no solo en páginas", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ndiseño principal\n  ComponenteFantasma con algo\n\npágina inicio en "/"\n  título "Inicio"`
+        )).toThrow(/componente que no existe/)
+    })
+
+    it("valida referencias dentro de un bloque si/si no", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  si el usuario está conectado\n    ComponenteFantasma con algo`
+        )).toThrow(/componente que no existe/)
     })
 
 })

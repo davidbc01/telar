@@ -36,7 +36,61 @@ export class Parser {
             )
         }
  
-        return this.parsearAplicacion()
+        const app = this.parsearAplicacion()
+        this.validarReferencias(app)
+        return app
+    }
+
+    // Detecta referencias a diseños y componentes que no existen — antes
+    // esto compilaba en silencio (el diseño simplemente no se aplicaba, o
+    // el componente generaba un comentario HTML fácil de no ver nunca).
+    // Ahora es un error de compilación, con las opciones válidas a mano.
+    private validarReferencias(app: NodoAplicacion) {
+        const nombresDisenos = app.disenos.map(d => d.nombre)
+        const nombresComponentes = app.componentes.map(c => c.nombre)
+
+        for (const pagina of app.paginas) {
+            if (pagina.diseno && !nombresDisenos.includes(pagina.diseno)) {
+                throw new TelarError(
+                    Errores.disenoNoExiste(pagina.diseno, nombresDisenos, pagina.linea, 1)
+                )
+            }
+            this.validarNodosHijos(pagina.hijos, nombresComponentes)
+        }
+
+        for (const diseno of app.disenos) {
+            this.validarNodosHijos(diseno.hijos, nombresComponentes)
+        }
+    }
+
+    private validarNodosHijos(hijos: Nodo[], nombresComponentes: string[]) {
+        for (const nodo of hijos) {
+            if (nodo.tipo === 'uso_componente' && !nombresComponentes.includes(nodo.nombre)) {
+                throw new TelarError(
+                    Errores.componenteNoExiste(nodo.nombre, nombresComponentes, nodo.linea, 1)
+                )
+            }
+
+            if (nodo.tipo === 'mostrar' && nodo.componentePlantilla &&
+                !nombresComponentes.includes(nodo.componentePlantilla)) {
+                throw new TelarError(
+                    Errores.componentePlantillaNoExiste(nodo.componentePlantilla, nombresComponentes, nodo.linea, 1)
+                )
+            }
+
+            // Recorrer bloques anidados (si/si no, si falla, si funciona)
+            if (nodo.tipo === 'si') {
+                this.validarNodosHijos(nodo.entonces, nombresComponentes)
+                if (nodo.siNo) this.validarNodosHijos(nodo.siNo, nombresComponentes)
+            }
+            if (nodo.tipo === 'mostrar') {
+                if (nodo.siFalla) this.validarNodosHijos(nodo.siFalla, nombresComponentes)
+                if (nodo.siFunciona) this.validarNodosHijos(nodo.siFunciona, nombresComponentes)
+            }
+            if (nodo.tipo === 'boton' && nodo.siFalla) {
+                this.validarNodosHijos(nodo.siFalla, nombresComponentes)
+            }
+        }
     }
  
     // ── aplicación MiTienda ─────────────────────────────────────

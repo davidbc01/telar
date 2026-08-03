@@ -95,4 +95,33 @@ export const Errores = {
         linea,
         columna,
     }),
+
+    // --- Validación semántica ---
+
+    disenoNoExiste: (nombre: string, disponibles: string[], linea: number, columna: number): ErrorTelar => ({
+        mensaje: `La página usa "diseño ${nombre}" pero no existe ningún diseño con ese nombre`,
+        sugerencia: disponibles.length > 0
+            ? `¿Quisiste decir "diseño ${disponibles[0]}"? Diseños declarados: ${disponibles.join(', ')}`
+            : `No hay ningún "diseño" declarado en la aplicación`,
+        linea,
+        columna,
+    }),
+
+    componenteNoExiste: (nombre: string, disponibles: string[], linea: number, columna: number): ErrorTelar => ({
+        mensaje: `"${nombre} con ..." usa un componente que no existe`,
+        sugerencia: disponibles.length > 0
+            ? `Componentes declarados: ${disponibles.join(', ')}`
+            : `No hay ningún "componente" declarado en la aplicación`,
+        linea,
+        columna,
+    }),
+
+    componentePlantillaNoExiste: (nombre: string, disponibles: string[], linea: number, columna: number): ErrorTelar => ({
+        mensaje: `"mostrar ... con ${nombre}" usa un componente que no existe`,
+        sugerencia: disponibles.length > 0
+            ? `Componentes declarados: ${disponibles.join(', ')}`
+            : `No hay ningún "componente" declarado en la aplicación`,
+        linea,
+        columna,
+    }),
 }

@@ -293,11 +293,10 @@ describe("Generador — componentes (v0.8)", () => {
         expect(resultado).not.toContain('item.nombre')
     })
 
-    it("un componente desconocido no rompe la compilación", () => {
-        const resultado = html(
+    it("un componente desconocido ahora es un error de compilación (antes compilaba en silencio)", () => {
+        expect(() => html(
             `aplicación MiApp\n\npágina inicio en "/"\n  TarjetaFantasma con producto`
-        )
-        expect(resultado).toContain('componente desconocido')
+        )).toThrow(/componente que no existe/)
     })
 
 })
@@ -642,11 +641,10 @@ describe("Generador — combinaciones diseño + rutas dinámicas + componentes (
         expect(resultado).not.toContain('titulo-diseno-a')
     })
 
-    it("si una página referencia un diseño que no existe, no rompe la compilación", () => {
-        const resultado = html(
+    it("si una página referencia un diseño que no existe, ahora es un error de compilación", () => {
+        expect(() => html(
             `aplicación MiApp\n\npágina inicio en "/"\n  diseño queNoExiste\n  título "Inicio"`
-        )
-        expect(resultado).toContain('titulo-inicio')
+        )).toThrow(/no existe ningún diseño/)
     })
 
     it("un diseño se aplica también a páginas con ruta dinámica", () => {
@@ -716,12 +714,10 @@ página inicio en "/"
         expect(js.contenido).not.toContain('function plantilla_SinUsar')
     })
 
-    it("referenciar un componente inexistente con 'con' no rompe la compilación", () => {
-        const archivos = compilar(
+    it("referenciar un componente inexistente con 'con' ahora es un error de compilación", () => {
+        expect(() => compilar(
             `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con NoExiste`
-        )
-        const js = archivos.find(a => a.nombre === 'telar.js')!
-        expect(js.contenido).toContain('function plantilla_NoExiste(item)')
+        )).toThrow(/componente que no existe/)
     })
 
 })

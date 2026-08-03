@@ -170,6 +170,8 @@ página inicio en "/"
 
 `con TarjetaProducto` conecta el componente a los datos reales que llegan de `/api/producto` — cada `item.propiedad` se rellena con el valor real de cada producto, uno por uno, no con texto fijo.
 
+Si escribes mal el nombre de un diseño o un componente, Telar lo detecta al compilar (`telar verificar` o `telar compilar`) y te dice cuáles están declarados de verdad — antes de v0.18 esto compilaba en silencio y el error solo se notaba mirando la web ya en el navegador.
+
 ---
 
 ## Rutas dinámicas
@@ -312,7 +314,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (191) + CI/CD | ✅ Completo |
+| Tests completos (198) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -326,6 +328,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Tests del CLI + cobertura ampliada | ✅ Completo |
 | Gramática limpia (sin `tipo`/`filtrados por`/`hacer`) | ✅ Completo |
 | Componentes conectados a listas de datos reales | ✅ Completo |
+| Validación semántica (diseños/componentes inexistentes) | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
 | Web oficial de Telar | 🟪 Pendiente |
 
@@ -426,6 +429,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `mostrar Modelo ... con NombreComponente` — antes, los componentes y las listas de datos eran dos sistemas que nunca se hablaban entre sí
 - Cada `item.propiedad` del componente se rellena con el valor real de cada elemento de la lista, no con texto fijo
 - Probado de extremo a extremo con un DOM real y datos simulados
+
+### v0.18 — Validación semántica ✅
+- Referenciar un `diseño` o `componente` que no existe (típicamente un typo) ahora es un **error de compilación**, con las opciones válidas declaradas en la sugerencia
+- Antes compilaba en silencio: el diseño simplemente no se aplicaba, o el componente generaba un comentario HTML invisible en la práctica
+- La validación cubre páginas, diseños, y bloques `si`/`si no` anidados
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

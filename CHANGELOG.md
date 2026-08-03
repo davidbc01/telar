@@ -5,6 +5,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.18.0] - 2026-08-03
+
+### Añadido
+- Validación semántica de referencias: `diseño X` o `NombreComponente con Y` (o `mostrar ... con X`) donde `X`/`NombreComponente` no existe ahora es un **error de compilación**, con las opciones realmente declaradas en la sugerencia
+- La validación recorre páginas, diseños, y bloques `si`/`si no`/`si falla`/`si funciona` anidados
+- 8 tests nuevos dedicados a la validación (198 en total)
+
+### Corregido
+- Antes, un typo en un nombre de diseño o componente compilaba en silencio: el diseño simplemente no se aplicaba, o el componente generaba un comentario HTML (`<!-- componente desconocido: X -->`) que nadie mira nunca en la práctica. Ahora `telar verificar` y `telar compilar` lo detectan de inmediato
+- 3 tests que probaban a propósito el comportamiento silencioso anterior, actualizados para reflejar el nuevo comportamiento (error en vez de compilación silenciosa)
+
+---
+
 ## [0.17.0] - 2026-08-04
 
 ### Añadido
