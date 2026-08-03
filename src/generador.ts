@@ -24,6 +24,15 @@ export interface ArchivoGenerado {
     contenido: string
 }
 
+// "/producto/(id)" -> "producto-id.html"  (el nombre del archivo compilado
+// es el mismo sin importar el valor real del parámetro — la resolución
+// del id pasa en el navegador, no en tiempo de compilación)
+export function rutaANombre(ruta: string): string {
+    if (ruta === '/') return 'index.html'
+    const rutaSinParametros = ruta.replace(/\(([a-zA-Z_][a-zA-Z0-9_]*)\)/g, '$1')
+    return rutaSinParametros.replace(/^\//, '').replace(/\//g, '-') + '.html'
+}
+
 export class Generador {
     private app: NodoAplicacion
     private dirProyecto: string  // ← NUEVO: para buscar estilos.css local
@@ -37,7 +46,7 @@ export class Generador {
         const archivos: ArchivoGenerado[] = []
  
         for (const pagina of this.app.paginas) {
-            const nombreArchivo = this.rutaANombre(pagina.ruta)
+            const nombreArchivo = rutaANombre(pagina.ruta)
             const contenido = this.generarPagina(pagina)
             archivos.push({ nombre: nombreArchivo, contenido })
         }
@@ -645,12 +654,6 @@ textarea {
         const nodo = pagina.hijos.find(h => h.tipo === 'descripcion') as NodoDescripcion | undefined
         return nodo?.texto ?? null
     }
- 
-    private rutaANombre(ruta: string): string {
-        if (ruta === '/') return 'index.html'
-        return ruta.replace(/^\//, '').replace(/\//g, '-') + '.html'
-    }
- 
     private textoAId(texto: string): string {
         return texto.toLowerCase()
             .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')

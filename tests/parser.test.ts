@@ -221,3 +221,38 @@ describe("Parser — paquetes y código", () => {
     })
 
 })
+
+describe("Parser — rutas dinámicas (v0.9)", () => {
+
+    it("una página estática no tiene parámetros", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(arbol.paginas[0].parametros).toEqual([])
+    })
+
+    it("extrae un parámetro de la ruta", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`)
+        expect(arbol.paginas[0].parametros).toEqual(["id"])
+    })
+
+    it("extrae varios parámetros de la ruta", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina detalle en "/(categoria)/(id)"\n  título "Detalle"`)
+        expect(arbol.paginas[0].parametros).toEqual(["categoria", "id"])
+    })
+
+    it("filtrados con valor literal sigue funcionando (compatibilidad)", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto filtrados por categoria = "ropa"`
+        )
+        const mostrar = arbol.paginas[0].hijos[0] as any
+        expect(mostrar.modificadores[0]).toEqual({ tipo: "filtrados", campo: "categoria", valor: "ropa" })
+    })
+
+    it("filtrados con parametro.X genera filtrados_parametro", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto filtrados por id = parametro.id`
+        )
+        const mostrar = arbol.paginas[0].hijos[0] as any
+        expect(mostrar.modificadores[0]).toEqual({ tipo: "filtrados_parametro", campo: "id", parametro: "id" })
+    })
+
+})

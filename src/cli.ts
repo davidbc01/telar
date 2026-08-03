@@ -10,8 +10,8 @@ import * as path from 'path'
 import * as http from 'http'
 import { Lexer } from './lexer'
 import { Parser } from './parser'
-import { Generador } from './generador'
-import { TelarError } from './tipos'
+import { Generador, rutaANombre } from './generador'
+import { TelarError, NodoPagina } from './tipos'
 import { instalarPaquete, listarPaquetes, eliminarPaquete, buscarPaquetes } from './paquetes'
 
 // La versión se lee de package.json en vez de duplicarse aquí a mano,
@@ -192,8 +192,9 @@ function comandoCompilar(args: string[]) {
  
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
  
-    const archivos = compilar(archivo)
-    if (!archivos) process.exit(1)
+    const resultado = compilar(archivo)
+    if (!resultado) process.exit(1)
+    const { archivos } = resultado
  
     if (!fs.existsSync(salida)) {
         fs.mkdirSync(salida, { recursive: true })
@@ -216,17 +217,39 @@ function comandoServir(args: string[]) {
     const puertoWS = 3001
  
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
-    const archivos = compilar(archivo)
-    if (!archivos) process.exit(1)
+    const resultado = compilar(archivo)
+    if (!resultado) process.exit(1)
  
     if (!fs.existsSync(salida)) {
         fs.mkdirSync(salida, { recursive: true })
     }
  
+    // Rutas dinámicas activas (ej. /producto/(id)) — se reconstruye en
+    // cada recompilación, ya que páginas nuevas pueden añadir o quitar rutas
+    let rutasDinamicas: { patron: RegExp; archivo: string }[] = []
+ 
+    function construirRutasDinamicas(paginas: NodoPagina[]) {
+        rutasDinamicas = paginas
+            .filter(p => p.parametros.length > 0)
+            .map(p => ({
+                patron: paginaARegex(p.ruta),
+                archivo: rutaANombre(p.ruta)
+            }))
+    }
+ 
+    // "/producto/(id)" -> /^\/producto\/([^/]+)$/
+    function paginaARegex(ruta: string): RegExp {
+        const escapada = ruta
+            .replace(/[.*+?^${}|[\]\\/]/g, '\\$&')
+            .replace(/\(([a-zA-Z_][a-zA-Z0-9_]*)\)/g, '([^/]+)')
+        return new RegExp(`^${escapada}$`)
+    }
+ 
     function recompilarYEscribir() {
         const nuevos = compilar(archivo)
         if (!nuevos) return false
-        for (const f of nuevos) {
+        construirRutasDinamicas(nuevos.paginas)
+        for (const f of nuevos.archivos) {
             let contenido = f.contenido
             if (f.nombre.endsWith('.html')) {
                 contenido = contenido.replace(
@@ -339,22 +362,38 @@ function comandoServir(args: string[]) {
         const rutaArchivo = path.join(salida, urlPath)
  
         if (fs.existsSync(rutaArchivo)) {
-            const ext = path.extname(rutaArchivo)
-            const tipo = ext === '.html' ? 'text/html; charset=utf-8'
-                        : ext === '.css'  ? 'text/css; charset=utf-8'
-                        : ext === '.js'   ? 'application/javascript'
-                        : 'text/plain'
-            res.writeHead(200, { 'Content-Type': tipo })
-            res.end(fs.readFileSync(rutaArchivo))
-        } else {
-            res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' })
-            res.end(`
-                <h1>404 — Página no encontrada</h1>
-                <p>No existe: ${urlPath}</p>
-                <a href="/">Volver al inicio</a>
-            `)
+            servirArchivo(res, rutaArchivo)
+            return
         }
+ 
+        // No hay archivo estático literal — probar contra rutas dinámicas
+        // (ej. la petición real es /producto/42 y la página compilada es
+        // producto-id.html, generada a partir de "/producto/(id)")
+        const rutaSinExt = req.url?.split('?')[0] ?? '/'
+        const coincidencia = rutasDinamicas.find(r => r.patron.test(rutaSinExt))
+ 
+        if (coincidencia) {
+            servirArchivo(res, path.join(salida, coincidencia.archivo))
+            return
+        }
+ 
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(`
+            <h1>404 — Página no encontrada</h1>
+            <p>No existe: ${urlPath}</p>
+            <a href="/">Volver al inicio</a>
+        `)
     })
+ 
+    function servirArchivo(res: http.ServerResponse, rutaArchivo: string) {
+        const ext = path.extname(rutaArchivo)
+        const tipo = ext === '.html' ? 'text/html; charset=utf-8'
+                    : ext === '.css'  ? 'text/css; charset=utf-8'
+                    : ext === '.js'   ? 'application/javascript'
+                    : 'text/plain'
+        res.writeHead(200, { 'Content-Type': tipo })
+        res.end(fs.readFileSync(rutaArchivo))
+    }
  
     servidor.listen(puerto, () => {
         console.log(`✓  Compilación completada`)
@@ -771,7 +810,7 @@ function compilar(rutaArchivo: string) {
  
         const dirProyecto = path.dirname(path.resolve(rutaArchivo))
         const generador = new Generador(arbol, dirProyecto)
-        return generador.generar()
+        return { archivos: generador.generar(), paginas: arbol.paginas }
  
     } catch (error) {
         if (error instanceof TelarError) {

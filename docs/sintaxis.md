@@ -139,6 +139,26 @@ página inicio en "/"
 
 ---
 
+## Rutas dinámicas
+
+Un segmento entre paréntesis en la ruta se convierte en parámetro:
+
+```telar
+página detalle en "/producto/(id)"
+  mostrar Producto filtrados por id = parametro.id
+```
+
+`parametro.<nombre>` referencia el valor real de la URL en tiempo de ejecución. Se puede usar dentro de un modificador `filtrados por`, junto al ya existente valor literal:
+
+```telar
+mostrar Producto filtrados por categoria = "ropa"     # valor fijo
+mostrar Producto filtrados por id = parametro.id      # valor de la URL
+```
+
+`telar servir` resuelve estas rutas en tiempo real: una sola página compilada (`producto-id.html`) atiende cualquier `/producto/<lo-que-sea>`. Requiere que tu API en `/api/<modelo>` soporte el filtro correspondiente como query param.
+
+---
+
 ## Manejo de errores
 
 ```telar

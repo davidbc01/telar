@@ -134,6 +134,7 @@ export interface NodoPagina {
     ruta: string
     hijos: Nodo[]
     diseno?: string // nombre del diseño a usar, si se sobreescribe explícitamente
+    parametros: string[] // nombres extraídos de segmentos dinámicos "(nombre)" en la ruta
     linea: number
 }
  
@@ -298,6 +299,7 @@ export type ModificadorMostrar =
     | { tipo: "maximo"; cantidad: number }
     | { tipo: "ordenados"; campo: string }
     | { tipo: "filtrados"; campo: string; valor: string }
+    | { tipo: "filtrados_parametro"; campo: string; parametro: string }
     | { tipo: "recientes" }
  
 export type Condicion =

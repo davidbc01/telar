@@ -159,6 +159,20 @@ página inicio en "/"
 
 ---
 
+## Rutas dinámicas
+
+Un segmento entre paréntesis en la ruta se convierte en un parámetro. `telar servir` lo resuelve en tiempo real: una sola página compilada sirve cualquier valor de `id`, la resolución ocurre en el navegador.
+
+```telar
+página detalle en "/producto/(id)"
+  título "Detalle del producto"
+  mostrar Producto filtrados por id = parametro.id
+```
+
+`GET /producto/42` y `GET /producto/999` sirven el mismo `producto-id.html`; el `id` real se lee de la URL y se usa para pedir `/api/producto?id=42` a tu backend. Tu API tiene que soportar ese filtro — Telar solo genera la petición, no el servidor de datos.
+
+---
+
 ## El problema
 
 El desarrollo web moderno tiene un problema de complejidad acumulada. Para construir una aplicación simple hoy, un desarrollador necesita:
@@ -223,12 +237,12 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (101) + CI/CD | ✅ Completo |
+| Tests completos (111) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
 | Diseños y componentes reutilizables | ✅ Completo |
-| Rutas dinámicas con parámetros | 🟪 Pendiente |
+| Rutas dinámicas con parámetros | ✅ Completo |
 | Formularios con validación | 🟪 Pendiente |
 | Variables y estado local | 🟪 Pendiente |
 | Temas visuales | 🟪 Pendiente |
@@ -284,10 +298,10 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Sintaxis `componente <Nombre>` para elementos reutilizables, sin paréntesis ni argumentos posicionales
 - Uso con `NombreComponente con argumento`, accediendo a propiedades vía `item.propiedad`
 
-### v0.9 — Rutas dinámicas
+### v0.9 — Rutas dinámicas ✅
 - Parámetros en URLs: `página detalle en "/producto/(id)"`
-- Acceso al parámetro dentro de la página
-- Redirecciones declarativas
+- Acceso al parámetro con `mostrar Modelo filtrados por campo = parametro.nombre`
+- `telar servir` resuelve rutas dinámicas en tiempo real, no solo archivos estáticos
 
 ### v0.10 — Formularios con validación
 - `campo requerido`, `campo validar email`

@@ -80,6 +80,9 @@ const Telar = {
         if (opciones.maximo)   params.set('limit', opciones.maximo)
         if (opciones.ordenar)  params.set('sort', opciones.ordenar)
         if (opciones.recientes) params.set('recientes', 'true')
+        if (opciones.filtroCampo && opciones.filtroValor != null) {
+            params.set(opciones.filtroCampo, opciones.filtroValor)
+        }
 
         const url = \`/api/\${modelo.toLowerCase()}?\${params}\`
 
@@ -90,6 +93,18 @@ const Telar = {
         } catch (error) {
             throw error
         }
+    },
+
+    // Extraer un parámetro de la ruta actual (rutas dinámicas, ej. /producto/(id))
+    parametroActual(nombre) {
+        for (const clave in Telar.rutas) {
+            const r = Telar.rutas[clave]
+            const m = window.location.pathname.match(r.patron)
+            if (!m) continue
+            const i = r.nombres.indexOf(nombre)
+            if (i !== -1) return decodeURIComponent(m[i + 1])
+        }
+        return null
     },
 
     // Mostrar error en un contenedor
@@ -141,7 +156,34 @@ const Telar = {
     reintentar(fn, segundos) {
         setTimeout(fn, segundos * 1000)
     }
-};`
+};
+
+${this.generarTablaRutas()}`
+    }
+
+    // --- Rutas dinámicas ---
+    // Mapa de páginas con segmentos "(parametro)" en su ruta, para que
+    // Telar.parametroActual() pueda extraerlos de la URL en el navegador.
+
+    private generarTablaRutas(): string {
+        const paginasDinamicas = this.app.paginas.filter(p => p.parametros.length > 0)
+        if (paginasDinamicas.length === 0) return 'Telar.rutas = {};'
+
+        const entradas = paginasDinamicas.map(p => {
+            const patron = this.rutaARegex(p.ruta)
+            const nombres = JSON.stringify(p.parametros)
+            return `    ${p.nombre}: { patron: ${patron}, nombres: ${nombres} }`
+        })
+
+        return `Telar.rutas = {\n${entradas.join(',\n')}\n};`
+    }
+
+    // "/producto/(id)" -> /^\/producto\/([^\/]+)$/
+    private rutaARegex(ruta: string): string {
+        const escapada = ruta
+            .replace(/[.*+?^${}|[\]\\/]/g, '\\$&')
+            .replace(/\(([a-zA-Z_][a-zA-Z0-9_]*)\)/g, '([^\\/]+)')
+        return `/^${escapada}$/`
     }
 
     // --- Condiciones ---
@@ -212,6 +254,14 @@ ${lineas.join('\n')}
             if (m.tipo === 'maximo') opciones.push(`maximo: '${m.cantidad}'`)
             if (m.tipo === 'ordenados') opciones.push(`ordenar: '${m.campo}'`)
             if (m.tipo === 'recientes') opciones.push(`recientes: true`)
+            if (m.tipo === 'filtrados') {
+                opciones.push(`filtroCampo: '${m.campo}'`)
+                opciones.push(`filtroValor: '${m.valor}'`)
+            }
+            if (m.tipo === 'filtrados_parametro') {
+                opciones.push(`filtroCampo: '${m.campo}'`)
+                opciones.push(`filtroValor: Telar.parametroActual('${m.parametro}')`)
+            }
         })
     
         const reintentar = nodo.siFalla?.find(n => n.tipo === 'reintentar') as NodoReintentar | undefined

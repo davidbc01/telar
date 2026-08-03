@@ -227,8 +227,15 @@ export class Parser {
         const nombre = this.consumirIdentificador().valor
         this.consumir(TipoToken.En)
         const ruta = this.consumir(TipoToken.Texto).valor
+        const parametros = this.extraerParametrosRuta(ruta)
         const { hijos, diseno } = this.parsearBloquePagina()
-        return { tipo: "pagina", nombre, ruta, hijos, diseno, linea: token.linea }
+        return { tipo: "pagina", nombre, ruta, hijos, diseno, parametros, linea: token.linea }
+    }
+
+    // "/producto/(id)" -> ["id"]
+    private extraerParametrosRuta(ruta: string): string[] {
+        const coincidencias = ruta.match(/\(([a-zA-Z_][a-zA-Z0-9_]*)\)/g) ?? []
+        return coincidencias.map(m => m.slice(1, -1))
     }
  
   // ── Nodos dentro de una página ──────────────────────────────
@@ -332,6 +339,15 @@ export class Parser {
                     if (this.actual().tipo === TipoToken.Por) this.avanzar()
                     const campo = this.consumirIdentificador().valor
                     if (this.actual().tipo === TipoToken.Igual) this.avanzar()
+
+                    // filtrados por id = parametro.id  →  valor viene de la ruta dinámica
+                    if (this.actual().tipo === TipoToken.Identificador &&
+                        this.actual().valor.startsWith('parametro.')) {
+                        const parametro = this.consumirIdentificador().valor.slice('parametro.'.length)
+                        modificadores.push({ tipo: "filtrados_parametro", campo, parametro })
+                        continue
+                    }
+
                     const valor = this.consumir(TipoToken.Texto).valor
                     modificadores.push({ tipo: "filtrados", campo, valor })
                     continue

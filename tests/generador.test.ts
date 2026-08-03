@@ -298,3 +298,48 @@ describe("Generador — componentes (v0.8)", () => {
     })
 
 })
+
+describe("Generador — rutas dinámicas (v0.9)", () => {
+
+    it("genera un nombre de archivo sin paréntesis para rutas dinámicas", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`
+        )
+        const nombres = archivos.map(a => a.nombre)
+        expect(nombres).toContain('producto-id.html')
+    })
+
+    it("registra la ruta dinámica en Telar.rutas dentro del JS generado", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('Telar.rutas')
+        expect(js.contenido).toContain('nombres: ["id"]')
+    })
+
+    it("una página sin parámetros no aparece en Telar.rutas", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('Telar.rutas = {};')
+    })
+
+    it("conecta filtrados_parametro con Telar.parametroActual en el cargador", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto filtrados por id = parametro.id`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("filtroCampo: 'id'")
+        expect(js.contenido).toContain("Telar.parametroActual('id')")
+    })
+
+    it("conecta filtrados con valor literal en el cargador", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto filtrados por categoria = "ropa"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("filtroCampo: 'categoria'")
+        expect(js.contenido).toContain("filtroValor: 'ropa'")
+    })
+
+})

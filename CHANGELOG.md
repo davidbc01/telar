@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.9.0] - 2026-08-03
+
+### Añadido
+- Rutas dinámicas: `página detalle en "/producto/(id)"` — segmentos entre paréntesis se extraen como parámetros
+- `mostrar Modelo filtrados por campo = parametro.nombre` para acceder al parámetro de la ruta en tiempo de ejecución
+- `telar servir` resuelve rutas dinámicas en tiempo real (deja de ser un servidor puramente estático): una sola página compilada atiende cualquier valor del parámetro
+- `Telar.parametroActual(nombre)` y `Telar.rutas` en el runtime JS generado
+- 10 tests nuevos cubriendo rutas dinámicas (111 tests en total)
+
+### Corregido
+- El modificador `filtrados por campo = "valor"` (existente desde antes) se parseaba correctamente pero nunca llegaba a generarse en el JS runtime — quedaba sin efecto. Ahora está conectado, junto con la nueva variante dinámica
+
+---
+
 ## [0.8.0] - 2026-07-24
 
 ### Añadido
