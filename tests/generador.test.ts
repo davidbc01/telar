@@ -5,6 +5,9 @@
 // ─────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from "vitest"
+import * as fs from "fs"
+import * as path from "path"
+import * as os from "os"
 import { Lexer } from "../src/lexer"
 import { Parser } from "../src/parser"
 import { Generador } from "../src/generador"
@@ -562,6 +565,105 @@ describe("Generador — SEO y metadatos (v0.13)", () => {
         const robots = archivos.find(a => a.nombre === 'robots.txt')!
         expect(robots.contenido).toContain('Allow: /')
         expect(robots.contenido).toContain('Sitemap: https://mitienda.com/sitemap.xml')
+    })
+
+})
+
+describe("Generador — estilos y Tailwind (v0.15)", () => {
+
+    it("el CDN de Tailwind genera <script>, no <link> (bug real corregido)", () => {
+        const resultado = html(
+            `aplicación MiApp\n  estilos "https://cdn.tailwindcss.com"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).toContain('<script src="https://cdn.tailwindcss.com"></script>')
+        expect(resultado).not.toContain('<link rel="stylesheet" href="https://cdn.tailwindcss.com">')
+    })
+
+    it("una URL .js explícita también genera <script>", () => {
+        const resultado = html(
+            `aplicación MiApp\n  estilos "https://ejemplo.com/analytics.js"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).toContain('<script src="https://ejemplo.com/analytics.js"></script>')
+    })
+
+    it("una URL CSS externa normal sigue generando <link>", () => {
+        const resultado = html(
+            `aplicación MiApp\n  estilos "https://fonts.googleapis.com/css2"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).toContain('<link rel="stylesheet" href="https://fonts.googleapis.com/css2">')
+    })
+
+    it("con estilos declarados, no se enlaza telar.css (el usuario controla el CSS)", () => {
+        const resultado = html(
+            `aplicación MiApp\n  estilos "https://cdn.tailwindcss.com"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).not.toContain('href="telar.css"')
+    })
+
+    it("sin estilos declarados, sí se enlaza telar.css", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).toContain('href="telar.css"')
+    })
+
+    it("un estilos.css local en el proyecto tiene prioridad sobre el CSS generado", () => {
+        const dirTemp = fs.mkdtempSync(path.join(os.tmpdir(), "telar-test-estilos-"))
+        try {
+            fs.writeFileSync(path.join(dirTemp, "estilos.css"), "/* mi css personalizado */\nbody { color: red; }")
+
+            const tokens = new Lexer(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`).tokenizar()
+            const arbol = new Parser(tokens).parsear()
+            const archivos = new Generador(arbol, dirTemp).generar()
+
+            const css = archivos.find(a => a.nombre === "telar.css")!
+            expect(css.contenido).toContain("mi css personalizado")
+            expect(css.contenido).not.toContain("--primario")
+        } finally {
+            fs.rmSync(dirTemp, { recursive: true, force: true })
+        }
+    })
+
+})
+
+describe("Generador — combinaciones diseño + rutas dinámicas + componentes (v0.15)", () => {
+
+    it("con varios diseños declarados, se usa el primero como el de por defecto", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ndiseño principal\n  título "Diseño A"\n\ndiseño secundario\n  título "Diseño B"\n\npágina inicio en "/"\n  título "Inicio"`
+        )
+        expect(resultado).toContain('titulo-diseno-a')
+        expect(resultado).not.toContain('titulo-diseno-b')
+    })
+
+    it("una página puede elegir explícitamente el segundo diseño declarado", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ndiseño principal\n  título "Diseño A"\n\ndiseño secundario\n  título "Diseño B"\n\npágina inicio en "/"\n  diseño secundario\n  título "Inicio"`
+        )
+        expect(resultado).toContain('titulo-diseno-b')
+        expect(resultado).not.toContain('titulo-diseno-a')
+    })
+
+    it("si una página referencia un diseño que no existe, no rompe la compilación", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina inicio en "/"\n  diseño queNoExiste\n  título "Inicio"`
+        )
+        expect(resultado).toContain('titulo-inicio')
+    })
+
+    it("un diseño se aplica también a páginas con ruta dinámica", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  navbar\n    título "Mi Navbar"\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`
+        )
+        const pagina = archivos.find(a => a.nombre === 'producto-id.html')!
+        expect(pagina.contenido).toContain('titulo-mi-navbar')
+        expect(pagina.contenido).toContain('titulo-detalle')
+    })
+
+    it("un componente se puede usar dentro del bloque de un diseño, no solo en páginas", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente Saludo\n  mostrar item.nombre\n\ndiseño principal\n  Saludo con usuario\n\npágina inicio en "/"\n  título "Inicio"`
+        )
+        expect(resultado).toContain('componente-saludo')
+        expect(resultado).toContain('usuario.nombre')
     })
 
 })

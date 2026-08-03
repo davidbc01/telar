@@ -301,7 +301,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (159) + CI/CD | ✅ Completo |
+| Tests completos (181) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -395,9 +395,11 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `examples/blog/` y `examples/tienda/` — reescritos desde cero: los anteriores usaban sintaxis que nunca existió y ni siquiera compilaban. Los nuevos sí, verificado
 - De paso, dos bugs reales de `telar nuevo`: no respetaba rutas absolutas (creaba el proyecto en el sitio equivocado sin avisar) y generaba un nombre de aplicación inválido en ese caso
 
-### v0.15 — Tests y estabilidad
-- Cobertura de rutas dinámicas, componentes, layouts
-- Edge cases de estilos y Tailwind
+### v0.15 — Tests y estabilidad ✅
+- Tests del CLI (`nuevo`, `compilar`, `verificar`) — antes no tenían ninguna cobertura automática
+- Cobertura de combinaciones diseño + rutas dinámicas + componentes
+- **Bug real corregido:** el CDN de Tailwind (`estilos "https://cdn.tailwindcss.com"`, el ejemplo destacado del propio README) generaba `<link rel="stylesheet">` en vez de `<script src="...">` — nunca había funcionado
+- 22 tests nuevos (181 en total)
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

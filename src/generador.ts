@@ -123,13 +123,14 @@ export class Generador {
         // estilos "https://cdn.tailwindcss.com"
         const estilosExternos = (this.app.estilos ?? [])
             .map(url => {
-                // Si es una URL externa → <link>
+                // Scripts — extensión .js explícita, o CDNs conocidos que
+                // sirven JS aunque su URL no lo delate (ej. Tailwind CDN)
+                if (url.endsWith('.js') || url.includes('cdn.tailwindcss.com')) {
+                    return `    <script src="${url}"></script>`
+                }
+                // URL externa de CSS → <link>
                 if (url.startsWith('http')) {
                     return `    <link rel="stylesheet" href="${url}">`
-                }
-                // Si es un script (tailwind, bootstrap JS) → <script>
-                if (url.endsWith('.js')) {
-                    return `    <script src="${url}"></script>`
                 }
                 // Ruta local → <link>
                 return `    <link rel="stylesheet" href="${url}">`

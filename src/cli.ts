@@ -60,50 +60,55 @@ const AYUDA = `
 `
  
 // ── Entrada principal ─────────────────────────────────────────
- 
-const args = process.argv.slice(2)
- 
-if (args.length === 0 || args.includes('--ayuda') || args.includes('-a')) {
-    console.log(AYUDA)
-    process.exit(0)
-}
- 
-if (args.includes('--version') || args.includes('-v')) {
-    console.log(`Telar v${VERSION}`)
-    process.exit(0)
-}
- 
-const comando = args[0]
- 
-switch (comando) {
-    case 'compilar':
-        comandoCompilar(args.slice(1))
-        break
-    case 'servir':
-        comandoServir(args.slice(1))
-        break
-    case 'verificar':
-        comandoVerificar(args.slice(1))
-        break
-    case 'añadir':
-        comandoAñadir(args.slice(1))
-        break
-    case 'quitar':
-        comandoQuitar(args.slice(1))
-        break
-    case 'paquetes':
-        listarPaquetes()
-        break
-    case 'buscar':
-        comandoBuscar(args.slice(1))
-        break
-    case 'nuevo':
-        comandoNuevo(args.slice(1))
-        break
-    default:
-        console.error(`\n✗  Comando desconocido: "${comando}"`)
-        console.error(`   Usa "telar --ayuda" para ver los comandos disponibles\n`)
-        process.exit(1)
+// Protegido con require.main === module: este bloque solo se ejecuta
+// cuando el archivo se corre directamente (telar, ts-node src/cli.ts),
+// no cuando otro módulo lo importa (por ejemplo, los tests del CLI).
+
+if (require.main === module) {
+    const args = process.argv.slice(2)
+
+    if (args.length === 0 || args.includes('--ayuda') || args.includes('-a')) {
+        console.log(AYUDA)
+        process.exit(0)
+    }
+
+    if (args.includes('--version') || args.includes('-v')) {
+        console.log(`Telar v${VERSION}`)
+        process.exit(0)
+    }
+
+    const comando = args[0]
+
+    switch (comando) {
+        case 'compilar':
+            comandoCompilar(args.slice(1))
+            break
+        case 'servir':
+            comandoServir(args.slice(1))
+            break
+        case 'verificar':
+            comandoVerificar(args.slice(1))
+            break
+        case 'añadir':
+            comandoAñadir(args.slice(1))
+            break
+        case 'quitar':
+            comandoQuitar(args.slice(1))
+            break
+        case 'paquetes':
+            listarPaquetes()
+            break
+        case 'buscar':
+            comandoBuscar(args.slice(1))
+            break
+        case 'nuevo':
+            comandoNuevo(args.slice(1))
+            break
+        default:
+            console.error(`\n✗  Comando desconocido: "${comando}"`)
+            console.error(`   Usa "telar --ayuda" para ver los comandos disponibles\n`)
+            process.exit(1)
+    }
 }
  
 // ── Resolución de incluciones ─────────────────────────────────
@@ -187,7 +192,7 @@ function resolverIncluciones(
  
 // ── Comando: compilar ─────────────────────────────────────────
  
-function comandoCompilar(args: string[]) {
+export function comandoCompilar(args: string[]) {
     const { archivo, salida } = parsearArgs(args, 'dist')
  
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
@@ -413,7 +418,7 @@ function comandoServir(args: string[]) {
  
 // ── Comando: verificar ────────────────────────────────────────
  
-function comandoVerificar(args: string[]) {
+export function comandoVerificar(args: string[]) {
     const { archivo } = parsearArgs(args, '')
     const nombreArchivo = path.basename(archivo)
  
@@ -452,7 +457,7 @@ function comandoVerificar(args: string[]) {
  
 // ── Comando: nuevo ────────────────────────────────────────────
  
-function comandoNuevo(args: string[]) {
+export function comandoNuevo(args: string[]) {
     if (args.length === 0) {
         console.error('\n✗  Falta el nombre del proyecto')
         console.error('   Ejemplo: telar nuevo mi-proyecto\n')

@@ -5,6 +5,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.15.0] - 2026-08-03
+
+### Añadido
+- `tests/cli.test.ts` — primera cobertura automática de `telar nuevo`, `compilar` y `verificar` (antes, cero tests; solo verificación manual)
+- El punto de entrada del CLI ahora está protegido con `require.main === module`, para poder importar sus funciones desde tests sin disparar el despacho de comandos con los argumentos del test runner
+- `comandoCompilar`, `comandoVerificar` y `comandoNuevo` ahora son funciones exportadas
+- Tests de combinaciones diseño + rutas dinámicas + componentes (múltiples diseños, diseño inexistente referenciado, diseño en páginas con ruta dinámica, componente dentro de un diseño)
+- Tests de edge cases de `estilos` (Tailwind CDN, `.js` explícito, CSS externo normal, `estilos.css` local con prioridad)
+- 22 tests nuevos (181 en total)
+
+### Corregido
+- El CDN de Tailwind (`estilos "https://cdn.tailwindcss.com"` — el ejemplo destacado del propio README desde v0.7) generaba `<link rel="stylesheet">` en vez de `<script src="...">`. Tailwind nunca llegó a cargarse con ese patrón documentado. Ahora se detecta correctamente y genera `<script>`
+
+---
+
 ## [0.14.0] - 2026-08-03
 
 ### Añadido
