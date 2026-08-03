@@ -73,8 +73,8 @@ página inicio en "/"
   variable cuenta = 0
   texto cuenta
 
-  botón "Sumar" hacer sumar cuenta
-  botón "Restar" hacer restar cuenta
+  botón "Sumar" suma cuenta
+  botón "Restar" resta cuenta
 ```
 
 Guarda, recarga, y haz clic en los botones. Eso ya es una web con estado real, funcionando en el navegador.

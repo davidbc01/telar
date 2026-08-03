@@ -11,7 +11,7 @@ import {
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
     NodoVariable, NodoTextoVariable, NodoImagen,
-    Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion
+    Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion, AccionBoton
 } from './tipos'
 import { Errores } from './errores'
 
@@ -385,13 +385,12 @@ export class Parser {
                     continue
                 }
  
-                if (t.tipo === TipoToken.Filtrados) {
+                if (t.tipo === TipoToken.Segun) {
                     this.avanzar()
-                    if (this.actual().tipo === TipoToken.Por) this.avanzar()
                     const campo = this.consumirIdentificador().valor
                     if (this.actual().tipo === TipoToken.Igual) this.avanzar()
 
-                    // filtrados por id = parametro.id  →  valor viene de la ruta dinámica
+                    // según id = parametro.id  →  valor viene de la ruta dinámica
                     if (this.actual().tipo === TipoToken.Identificador &&
                         this.actual().valor.startsWith('parametro.')) {
                         const parametro = this.consumirIdentificador().valor.slice('parametro.'.length)
@@ -428,43 +427,56 @@ export class Parser {
     }
  
     // botón "Entrar" clase "..." ir a login
+    // botón "Sumar" suma cuenta
+    // botón "Guardar" guardar
     private parsearBoton(): NodoBoton {
         const token = this.consumir(TipoToken.Boton)
         const texto = this.consumir(TipoToken.Texto).valor
         const clase = this.leerClaseOpcional()
- 
-        const accionToken = this.actual()
-        if (accionToken.tipo !== TipoToken.Ir && accionToken.tipo !== TipoToken.Hacer) {
-            throw new TelarError(
-                Errores.seEsperaba('"ir" o "hacer"', accionToken.valor, accionToken.linea, accionToken.columna)
-            )
-        }
- 
-        const accion = accionToken.tipo === TipoToken.Ir ? "ir" : "hacer"
-        this.avanzar()
- 
-        // Saltar "a" si existe
-        if (this.actual().valor === "a") this.avanzar()
- 
-        const primeraPalabra = this.consumirIdentificador().valor
 
-        let destino = primeraPalabra
+        const accionToken = this.actual()
+        let accion: AccionBoton
+        let destino: string
         let operacion: "sumar" | "restar" | "cambiar_tema" | undefined
         let variable: string | undefined
 
-        // hacer sumar cuenta / hacer restar cuenta — acciones incorporadas
-        // que modifican una variable de la página, sin llamar a ninguna API
-        if (accion === "hacer" && (primeraPalabra === "sumar" || primeraPalabra === "restar")) {
-            operacion = primeraPalabra
-            variable = this.consumirIdentificador().valor
-            destino = `${operacion}_${variable}`
-        }
-
-        // hacer cambiar tema — alterna entre tema oscuro/claro en el navegador
-        if (accion === "hacer" && primeraPalabra === "cambiar" && this.actual().tipo === TipoToken.Tema) {
+        if (accionToken.tipo === TipoToken.Ir) {
             this.avanzar()
+            if (this.actual().valor === "a") this.avanzar()
+            accion = "ir"
+            destino = this.consumirIdentificador().valor
+
+        } else if (accionToken.tipo === TipoToken.Suma) {
+            this.avanzar()
+            accion = "hacer"
+            operacion = "sumar"
+            variable = this.consumirIdentificador().valor
+            destino = `sumar_${variable}`
+
+        } else if (accionToken.tipo === TipoToken.Resta) {
+            this.avanzar()
+            accion = "hacer"
+            operacion = "restar"
+            variable = this.consumirIdentificador().valor
+            destino = `restar_${variable}`
+
+        } else if (accionToken.tipo === TipoToken.Alterna && this.siguiente()?.tipo === TipoToken.Tema) {
+            this.avanzar() // alterna
+            this.avanzar() // tema
+            accion = "hacer"
             operacion = "cambiar_tema"
             destino = "cambiar_tema"
+
+        } else if (accionToken.tipo === TipoToken.Identificador || accionToken.tipo === TipoToken.Nombre) {
+            // acción personalizada: botón "Guardar" guardar
+            accion = "hacer"
+            destino = this.consumirIdentificador().valor
+
+        } else {
+            throw new TelarError(
+                Errores.seEsperaba('"ir a", "suma", "resta", "alterna tema" o el nombre de una acción',
+                    accionToken.valor, accionToken.linea, accionToken.columna)
+            )
         }
  
         // Leer bloque "si falla" opcional después del botón
@@ -478,12 +490,11 @@ export class Parser {
         return { tipo: "boton", texto, accion, destino, operacion, variable, clase, siFalla, linea: token.linea }
     }
  
-    // campo "Correo" tipo email
+    // campo "Correo" email
     private parsearCampo(): NodoCampo {
         const token = this.consumir(TipoToken.Campo)
         const etiqueta = this.consumir(TipoToken.Texto).valor
     
-        this.consumir(TipoToken.Tipo)
         const tipoCampo = this.parsearTipoCampo()
         const clase = this.leerClaseOpcional()
 

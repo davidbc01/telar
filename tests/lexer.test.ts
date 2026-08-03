@@ -70,10 +70,11 @@ describe("Lexer — palabras clave de contenido", () => {
     })
     
     it("tokeniza campo", () => {
-        const tokens = new Lexer(`campo "Correo" tipo email`).tokenizar()
+        const tokens = new Lexer(`campo "Correo" email`).tokenizar()
         expect(tokens[0].tipo).toBe(TipoToken.Campo)
         expect(tokens[1].tipo).toBe(TipoToken.Texto)
-        expect(tokens[2].tipo).toBe(TipoToken.Tipo)
+        expect(tokens[2].tipo).toBe(TipoToken.Identificador)
+        expect(tokens[2].valor).toBe("email")
     })
  
 })

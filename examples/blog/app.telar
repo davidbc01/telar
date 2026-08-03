@@ -46,20 +46,20 @@ página inicio en "/"
 página articulo en "/articulo/(id)"
   diseño principal
   título "Artículo"
-  mostrar Articulo filtrados por id = parametro.id
+  mostrar Articulo según id = parametro.id
 
 # Contacto, con validación real: si el correo no es válido o falta el
-# mensaje, el navegador bloquea el envío antes de llegar a hacer ninguna
+# mensaje, el navegador bloquea el envío antes de llegar a ninguna
 # petición.
 página contacto en "/contacto"
   diseño principal
   título "Contacto"
   descripción "¿Alguna pregunta? Escríbeme."
 
-  campo "Tu nombre" tipo texto requerido
-  campo "Tu correo" tipo email requerido
-  campo "Mensaje" tipo área de texto requerido máximo 500 caracteres
+  campo "Tu nombre" texto requerido
+  campo "Tu correo" email requerido
+  campo "Mensaje" área de texto requerido máximo 500 caracteres
 
-  botón "Enviar" hacer enviar
+  botón "Enviar" enviar
     si falla
       mostrar "No se pudo enviar. Inténtalo de nuevo."

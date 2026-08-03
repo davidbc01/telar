@@ -51,7 +51,7 @@ export enum TipoToken {
     // Palabras clave - modificadores
     Maximo = "maximo",
     Ordenados = "ordenados",
-    Filtrados = "filtrados",
+    Segun = "segun",
     Por = "por",
     Recientes = "recientes",
     Para = "para",
@@ -63,8 +63,9 @@ export enum TipoToken {
     Segundos = "segundos",
     Optimizar = "optimizar",
     Ir = "ir",
-    Hacer = "hacer",
-    Tipo = "tipo",
+    Suma = "suma",
+    Resta = "resta",
+    Alterna = "alterna",
     Idioma = "idioma",
     Estilos = "estilos",
     Clase = "clase",
@@ -258,7 +259,7 @@ export interface NodoBoton {
     linea: number
 }
  
-// campo "Correo" tipo email
+// campo "Correo" email
 export interface NodoCampo {
     tipo: "campo"
     etiqueta: string

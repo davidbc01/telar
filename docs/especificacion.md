@@ -173,7 +173,7 @@ El compilador toma un archivo `.telar` y produce un bundle listo para desplegar 
 - `mostrar Producto recientes` → llamada a `/api/producto?limit=8&sort=precio`
 - `si el usuario está conectado` → lee el estado de sesión del localStorage
 - `si falla` → muestra el mensaje de error y reintenta si se especifica
-- `hacer acción` → POST a `/api/accion/nombre` con feedback visual
+- `botón "X" acción` → POST a `/api/accion/nombre` con feedback visual
 - `código ... fin código` → JavaScript directo envuelto en función anónima
 
 ---

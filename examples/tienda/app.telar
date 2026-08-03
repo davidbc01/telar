@@ -29,7 +29,7 @@ página inicio en "/"
   título "Bienvenido a MiTienda"
   descripción "Los mejores productos al mejor precio"
 
-  botón "🌙 Cambiar tema" hacer cambiar tema
+  botón "🌙 Cambiar tema" alterna tema
 
   mostrar Producto recientes
     máximo 8
@@ -48,14 +48,14 @@ página detalle en "/producto/(id)"
   diseño principal
   título "Producto"
 
-  mostrar Producto filtrados por id = parametro.id
+  mostrar Producto según id = parametro.id
 
   variable cantidad = 1
   texto cantidad
-  botón "+" hacer sumar cantidad
-  botón "−" hacer restar cantidad
+  botón "+" suma cantidad
+  botón "−" resta cantidad
 
-  botón "Añadir al carrito" hacer añadirAlCarrito
+  botón "Añadir al carrito" añadirAlCarrito
     si falla
       mostrar "No se pudo añadir. Inténtalo de nuevo."
 
@@ -64,9 +64,9 @@ página login en "/entrar"
   diseño principal
   título "Entrar"
 
-  campo "Correo electrónico" tipo email requerido
-  campo "Contraseña" tipo contraseña requerido mínimo 8
+  campo "Correo electrónico" email requerido
+  campo "Contraseña" contraseña requerido mínimo 8
 
-  botón "Entrar" hacer iniciarSesion
+  botón "Entrar" iniciarSesion
     si falla
       mostrar "Correo o contraseña incorrectos"

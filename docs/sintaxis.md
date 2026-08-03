@@ -70,7 +70,7 @@ mostrar NombreModelo recientes
 mostrar NombreModelo recientes
   máximo 10
   ordenados por campo
-  filtrados por campo = "valor"
+  según campo = "valor"
 ```
 
 ---
@@ -96,23 +96,23 @@ si no
 ## Campos de formulario
 
 ```telar
-campo "Etiqueta" tipo texto
-campo "Etiqueta" tipo email
-campo "Etiqueta" tipo contraseña
-campo "Etiqueta" tipo área de texto
+campo "Etiqueta" texto
+campo "Etiqueta" email
+campo "Etiqueta" contraseña
+campo "Etiqueta" área de texto
 ```
 
 Con validación (v0.10):
 
 ```telar
-campo "Email" tipo email requerido
-campo "Contraseña" tipo contraseña requerido mínimo 8
-campo "Nombre" tipo texto máximo 50 caracteres
+campo "Email" email requerido
+campo "Contraseña" contraseña requerido mínimo 8
+campo "Nombre" texto máximo 50 caracteres
 ```
 
 `requerido`, `mínimo N` y `máximo N` se pueden combinar en el mismo campo, en cualquier orden, y generan los atributos HTML5 nativos (`required`, `minlength`, `maxlength`). La palabra `caracteres` tras el número es opcional — solo estilística. Cada campo genera automáticamente un contenedor de mensaje de error, visible cuando el campo no es válido.
 
-Un botón `hacer` valida todos los campos de la página antes de enviar la petición — si alguno falla, no se llega a hacer la llamada. Si todo es válido, se envían los valores reales del formulario como JSON a `/api/accion/<nombre>`.
+Un botón con una acción (`botón "Enviar" enviar`) valida todos los campos de la página antes de enviar la petición — si alguno falla, no se llega a hacer la llamada. Si todo es válido, se envían los valores reales del formulario como JSON a `/api/accion/<nombre>`.
 
 ---
 
@@ -121,7 +121,7 @@ Un botón `hacer` valida todos los campos de la página antes de enviar la petic
 ```telar
 botón "Texto" ir a NombrePagina
 botón "Texto" ir a "https://ejemplo.com"
-botón "Texto" hacer acción
+botón "Texto" acción
 ```
 
 ---
@@ -168,14 +168,14 @@ Un segmento entre paréntesis en la ruta se convierte en parámetro:
 
 ```telar
 página detalle en "/producto/(id)"
-  mostrar Producto filtrados por id = parametro.id
+  mostrar Producto según id = parametro.id
 ```
 
-`parametro.<nombre>` referencia el valor real de la URL en tiempo de ejecución. Se puede usar dentro de un modificador `filtrados por`, junto al ya existente valor literal:
+`parametro.<nombre>` referencia el valor real de la URL en tiempo de ejecución. Se puede usar dentro de un modificador `según`, junto al ya existente valor literal:
 
 ```telar
-mostrar Producto filtrados por categoria = "ropa"     # valor fijo
-mostrar Producto filtrados por id = parametro.id      # valor de la URL
+mostrar Producto según categoria = "ropa"     # valor fijo
+mostrar Producto según id = parametro.id      # valor de la URL
 ```
 
 `telar servir` resuelve estas rutas en tiempo real: una sola página compilada (`producto-id.html`) atiende cualquier `/producto/<lo-que-sea>`. Requiere que tu API en `/api/<modelo>` soporte el filtro correspondiente como query param.
@@ -194,13 +194,13 @@ texto cuenta
 Acciones incorporadas para modificar una variable, sin llamar a ninguna API:
 
 ```telar
-botón "Sumar" hacer sumar cuenta
-botón "Restar" hacer restar cuenta
+botón "Sumar" suma cuenta
+botón "Restar" resta cuenta
 ```
 
-Cada clic suma o resta 1 a la variable y refresca en pantalla todos los `texto` que la muestren. Esto es distinto de un botón `hacer <accion>` normal, que sí hace una petición POST a `/api/accion/<accion>`.
+Cada clic suma o resta 1 a la variable y refresca en pantalla todos los `texto` que la muestren. Esto es distinto de un botón con una acción normal (`botón "Guardar" guardar`), que sí hace una petición POST a `/api/accion/<accion>`.
 
-Pendiente para una versión futura: variables compartidas a nivel de aplicación (no solo por página), y asignar cualquier valor con `hacer` (no solo sumar/restar 1).
+Pendiente para una versión futura: variables compartidas a nivel de aplicación (no solo por página), y asignar cualquier valor a una variable (no solo sumar/restar 1).
 
 ---
 
@@ -220,7 +220,7 @@ aplicación MiApp
 Botón opcional para que el usuario lo cambie en vivo:
 
 ```telar
-botón "Cambiar tema" hacer cambiar tema
+botón "Cambiar tema" alterna tema
 ```
 
 Alterna entre oscuro y claro en el navegador y lo recuerda entre visitas con `localStorage` — no llama a ninguna API. Se puede combinar con cualquiera de los dos temas fijos: el botón sobreescribe el valor inicial, y la próxima visita respeta lo último elegido.
@@ -265,7 +265,7 @@ mostrar algo
 ```
 
 ```telar
-botón "Enviar" hacer enviarFormulario
+botón "Enviar" enviarFormulario
   si falla
     mostrar "No se pudo enviar"
   si funciona

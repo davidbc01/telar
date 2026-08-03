@@ -5,6 +5,33 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.16.0] - 2026-08-04
+
+### ⚠️ Breaking change — sintaxis más limpia antes de v1.0
+
+Rediseño deliberado de la gramática: cada palabra clave tiene que aportar significado. Se quitan las que eran puro pegamento gramatical.
+
+| Antes | Ahora |
+|---|---|
+| `campo "X" tipo email` | `campo "X" email` |
+| `mostrar Modelo filtrados por id = parametro.id` | `mostrar Modelo según id = parametro.id` |
+| `botón "X" hacer sumar cuenta` | `botón "X" suma cuenta` |
+| `botón "X" hacer restar cuenta` | `botón "X" resta cuenta` |
+| `botón "X" hacer cambiar tema` | `botón "X" alterna tema` |
+| `botón "X" hacer accionPersonalizada` | `botón "X" accionPersonalizada` |
+
+`ir a`, `diseño`, `componente ... con`, `variable`, `texto`, `tema`, `dominio`, `imagen`, `mostrar ... máximo/ordenados por/recientes`, `si`/`si no`/`si falla`, `optimizar para móvil`, `caché`, `usar`, `incluir` y `código ... fin código` no cambian.
+
+### Corregido
+- Los 3 paquetes locales (`paquetes/formulario`, `paquetes/lista`, `paquetes/navbar`) migrados a la nueva sintaxis y verificados compilando de verdad, incluidos entre ellos e incluidos en una app real
+- `paquetes/formulario`: quitado un bloque `si funciona` tras un botón — no es sintaxis real (`NodoBoton` nunca ha soportado eso), y el parser lo trataba como una condición desconocida, mostrando el mensaje de éxito siempre, incondicionalmente
+- `paquetes/lista`: quitada una interpolación `"Total: (elementos.total) elementos"` — Telar no interpola variables dentro de strings; se mostraba el texto `(elementos.total)` literal, no un número real
+
+### Nota
+Las entradas anteriores de este changelog (v0.7–v0.15) se dejan tal cual — documentan la sintaxis real de cada versión en su momento, no la actual.
+
+---
+
 ## [0.15.0] - 2026-08-03
 
 ### Añadido

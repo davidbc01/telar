@@ -135,14 +135,14 @@ describe("Parser — botones", () => {
     })
 
     it("parsea botón hacer", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" hacer enviarFormulario`)
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" enviarFormulario`)
         const boton = arbol.paginas[0].hijos[0] as any
         expect(boton.accion).toBe("hacer")
         expect(boton.destino).toBe("enviarFormulario")
     })
 
     it.skip("parsea botón con si falla", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" hacer enviar\n    si falla\n      mostrar "Error"`)
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" enviar\n    si falla\n      mostrar "Error"`)
         const boton = arbol.paginas[0].hijos[0] as any
         expect(boton.siFalla).toBeDefined()
     })
@@ -151,22 +151,22 @@ describe("Parser — botones", () => {
 
 describe("Parser — campos", () => {
 
-    it("parsea campo tipo email", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+    it("parsea campo email", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.tipo).toBe("campo")
         expect(campo.etiqueta).toBe("Correo")
         expect(campo.tipoCampo).toBe("email")
     })
 
-    it("parsea campo tipo contraseña", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña`)
+    it("parsea campo contraseña", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" contraseña`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.tipoCampo).toBe("contraseña")
     })
 
     it("un campo sin modificadores no es requerido y no tiene límites", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.requerido).toBe(false)
         expect(campo.minimo).toBeUndefined()
@@ -174,25 +174,25 @@ describe("Parser — campos", () => {
     })
 
     it("parsea campo requerido", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email requerido`)
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email requerido`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.requerido).toBe(true)
     })
 
     it("parsea campo con mínimo de caracteres", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña mínimo 8 caracteres`)
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" contraseña mínimo 8 caracteres`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.minimo).toBe(8)
     })
 
     it("parsea campo con máximo de caracteres", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" tipo texto máximo 50 caracteres`)
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" texto máximo 50 caracteres`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.maximo).toBe(50)
     })
 
     it("combina requerido y mínimo en el mismo campo", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña requerido mínimo 8`)
+        const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" contraseña requerido mínimo 8`)
         const campo = arbol.paginas[0].hijos[0] as any
         expect(campo.requerido).toBe(true)
         expect(campo.minimo).toBe(8)
@@ -274,7 +274,7 @@ describe("Parser — rutas dinámicas (v0.9)", () => {
 
     it("filtrados con valor literal sigue funcionando (compatibilidad)", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto filtrados por categoria = "ropa"`
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto según categoria = "ropa"`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.modificadores[0]).toEqual({ tipo: "filtrados", campo: "categoria", valor: "ropa" })
@@ -282,7 +282,7 @@ describe("Parser — rutas dinámicas (v0.9)", () => {
 
     it("filtrados con parametro.X genera filtrados_parametro", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto filtrados por id = parametro.id`
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto según id = parametro.id`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.modificadores[0]).toEqual({ tipo: "filtrados_parametro", campo: "id", parametro: "id" })
@@ -313,9 +313,9 @@ describe("Parser — variables y estado local (v0.11)", () => {
         expect(textoVariable.nombre).toBe("cuenta")
     })
 
-    it("un botón hacer sumar X guarda la operación y la variable", () => {
+    it("un botón suma X guarda la operación y la variable", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Sumar" hacer sumar cuenta`
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Sumar" suma cuenta`
         )
         const boton = arbol.paginas[0].hijos[1] as any
         expect(boton.accion).toBe("hacer")
@@ -324,17 +324,17 @@ describe("Parser — variables y estado local (v0.11)", () => {
         expect(boton.destino).toBe("sumar_cuenta")
     })
 
-    it("un botón hacer restar X guarda la operación y la variable", () => {
+    it("un botón resta X guarda la operación y la variable", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Restar" hacer restar cuenta`
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Restar" resta cuenta`
         )
         const boton = arbol.paginas[0].hijos[1] as any
         expect(boton.operacion).toBe("restar")
         expect(boton.variable).toBe("cuenta")
     })
 
-    it("un botón hacer con una acción normal no lleva operación ni variable", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Guardar" hacer guardar`)
+    it("un botón con una acción normal no lleva operación ni variable", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Guardar" guardar`)
         const boton = arbol.paginas[0].hijos[0] as any
         expect(boton.destino).toBe("guardar")
         expect(boton.operacion).toBeUndefined()
@@ -360,8 +360,8 @@ describe("Parser — temas visuales (v0.12)", () => {
         expect(arbol.tema).toBe("claro")
     })
 
-    it("un botón hacer cambiar tema guarda la operación cambiar_tema", () => {
-        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Cambiar" hacer cambiar tema`)
+    it("un botón alterna tema guarda la operación cambiar_tema", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Cambiar" alterna tema`)
         const boton = arbol.paginas[0].hijos[0] as any
         expect(boton.operacion).toBe("cambiar_tema")
         expect(boton.destino).toBe("cambiar_tema")

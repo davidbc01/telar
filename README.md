@@ -168,7 +168,7 @@ Un segmento entre paréntesis en la ruta se convierte en un parámetro. `telar s
 ```telar
 página detalle en "/producto/(id)"
   título "Detalle del producto"
-  mostrar Producto filtrados por id = parametro.id
+  mostrar Producto según id = parametro.id
 ```
 
 `GET /producto/42` y `GET /producto/999` sirven el mismo `producto-id.html`; el `id` real se lee de la URL y se usa para pedir `/api/producto?id=42` a tu backend. Tu API tiene que soportar ese filtro — Telar solo genera la petición, no el servidor de datos.
@@ -179,12 +179,12 @@ página detalle en "/producto/(id)"
 
 ```telar
 página registro en "/registro"
-  campo "Email" tipo email requerido
-  campo "Contraseña" tipo contraseña requerido mínimo 8
-  botón "Registrarse" hacer registrar
+  campo "Email" email requerido
+  campo "Contraseña" contraseña requerido mínimo 8
+  botón "Registrarse" registrar
 ```
 
-`requerido`, `mínimo N` y `máximo N` generan los atributos HTML5 correspondientes (`required`, `minlength`, `maxlength`) y un mensaje de error visible por campo. Al pulsar un botón `hacer`, Telar valida todos los campos de la página antes de enviar nada — si algo no es válido, no se llega a hacer la petición. Si todo es correcto, los valores reales del formulario se envían como JSON a `/api/accion/<nombre>`.
+`requerido`, `mínimo N` y `máximo N` generan los atributos HTML5 correspondientes (`required`, `minlength`, `maxlength`) y un mensaje de error visible por campo. Al pulsar un botón con una acción, Telar valida todos los campos de la página antes de enviar nada — si algo no es válido, no se llega a hacer la petición. Si todo es correcto, los valores reales del formulario se envían como JSON a `/api/accion/<nombre>`.
 
 ---
 
@@ -197,11 +197,11 @@ página contador en "/"
   título "Contador"
   texto cuenta
 
-  botón "Sumar" hacer sumar cuenta
-  botón "Restar" hacer restar cuenta
+  botón "Sumar" suma cuenta
+  botón "Restar" resta cuenta
 ```
 
-`variable` declara estado local a la página, sin llamar a ninguna API. `texto cuenta` muestra el valor y se actualiza sola cada vez que cambia. `hacer sumar <variable>` / `hacer restar <variable>` son acciones incorporadas — todo pasa en el navegador, al hacer clic, sin red de por medio. Las variables a nivel de aplicación (compartidas entre páginas) y la asignación de valores arbitrarios con `hacer` quedan para una versión futura.
+`variable` declara estado local a la página, sin llamar a ninguna API. `texto cuenta` muestra el valor y se actualiza sola cada vez que cambia. `suma <variable>` / `resta <variable>` son acciones incorporadas — todo pasa en el navegador, al hacer clic, sin red de por medio. Las variables a nivel de aplicación (compartidas entre páginas) y la asignación de valores arbitrarios quedan para una versión futura.
 
 ---
 
@@ -212,10 +212,10 @@ aplicación MiApp
   tema oscuro
 
 página inicio en "/"
-  botón "🌙 Cambiar tema" hacer cambiar tema
+  botón "🌙 Cambiar tema" alterna tema
 ```
 
-Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que siempre). `tema oscuro` o `tema claro` lo fija para toda la web, sin importar el sistema operativo. El botón `hacer cambiar tema` es opcional y se puede combinar con cualquiera de los dos: alterna en vivo y lo recuerda entre visitas con `localStorage`, sin llamar a ninguna API.
+Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que siempre). `tema oscuro` o `tema claro` lo fija para toda la web, sin importar el sistema operativo. El botón `alterna tema` es opcional y se puede combinar con cualquiera de los dos: alterna en vivo y lo recuerda entre visitas con `localStorage`, sin llamar a ninguna API.
 
 ---
 
@@ -364,7 +364,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.9 — Rutas dinámicas ✅
 - Parámetros en URLs: `página detalle en "/producto/(id)"`
-- Acceso al parámetro con `mostrar Modelo filtrados por campo = parametro.nombre`
+- Acceso al parámetro con `mostrar Modelo según campo = parametro.nombre`
 - `telar servir` resuelve rutas dinámicas en tiempo real, no solo archivos estáticos
 
 ### v0.10 — Formularios con validación ✅
@@ -375,12 +375,12 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 ### v0.11 — Variables y estado local ✅
 - `variable cuenta = 0` — estado local por página
 - `texto cuenta` — muestra el valor y se actualiza sola
-- `botón "Sumar" hacer sumar cuenta` / `hacer restar cuenta` — acciones incorporadas que mutan la variable sin llamar a ninguna API
+- `botón "Sumar" suma cuenta` / `resta cuenta` — acciones incorporadas que mutan la variable sin llamar a ninguna API
 
 ### v0.12 — Temas visuales ✅
 - `tema oscuro` / `tema claro` en `app.telar`, fijo para toda la web
 - Sin declarar tema, sigue el sistema operativo automáticamente (comportamiento igual que antes de v0.12)
-- `botón "X" hacer cambiar tema` — alterna en vivo, recordado entre visitas con `localStorage`
+- `botón "X" alterna tema` — alterna en vivo, recordado entre visitas con `localStorage`
 - Colores de tema totalmente personalizados (más allá de oscuro/claro) quedan para una versión futura
 
 ### v0.13 — SEO y metadatos ✅

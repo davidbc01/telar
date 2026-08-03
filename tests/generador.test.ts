@@ -118,7 +118,7 @@ describe("Generador — botones", () => {
     })
 
     it("genera button para botón hacer", () => {
-        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" hacer enviar`)
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" enviar`)
         expect(resultado).toContain('<button')
         expect(resultado).toContain('data-accion="enviar"')
         expect(resultado).toContain('Enviar')
@@ -133,25 +133,25 @@ describe("Generador — botones", () => {
 
 describe("Generador — campos de formulario", () => {
 
-    it("genera input tipo email", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+    it("genera input email", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         expect(resultado).toContain('type="email"')
         expect(resultado).toContain('autocomplete="email"')
     })
 
     it("genera label asociado al input", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         expect(resultado).toContain('<label')
         expect(resultado).toContain('Correo')
     })
 
     it("normaliza tildes en el id del campo", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo electrónico" tipo email`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo electrónico" email`)
         expect(resultado).toContain('id="correo-electronico"')
     })
 
     it("normaliza ñ en el id del campo", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" contraseña`)
         expect(resultado).toContain('id="contrasena"')
     })
 
@@ -329,7 +329,7 @@ describe("Generador — rutas dinámicas (v0.9)", () => {
 
     it("conecta filtrados_parametro con Telar.parametroActual en el cargador", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto filtrados por id = parametro.id`
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  mostrar Producto según id = parametro.id`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain("filtroCampo: 'id'")
@@ -338,7 +338,7 @@ describe("Generador — rutas dinámicas (v0.9)", () => {
 
     it("conecta filtrados con valor literal en el cargador", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto filtrados por categoria = "ropa"`
+            `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto según categoria = "ropa"`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain("filtroCampo: 'categoria'")
@@ -349,52 +349,52 @@ describe("Generador — rutas dinámicas (v0.9)", () => {
 
 describe("Generador — validación de formularios (v0.10)", () => {
 
-    it("un campo tipo contraseña genera type=password en HTML (no 'contraseña')", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña`)
+    it("un campo contraseña genera type=password en HTML (no 'contraseña')", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" contraseña`)
         expect(resultado).toContain('type="password"')
         expect(resultado).not.toContain('type="contraseña"')
     })
 
     it("campo requerido genera el atributo required", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email requerido`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email requerido`)
         expect(resultado).toContain('required')
     })
 
     it("campo con mínimo genera minlength", () => {
         const resultado = html(
-            `aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" tipo contraseña mínimo 8`
+            `aplicación MiApp\n\npágina login en "/"\n  campo "Contraseña" contraseña mínimo 8`
         )
         expect(resultado).toContain('minlength="8"')
     })
 
     it("campo con máximo genera maxlength", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" tipo texto máximo 50`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" texto máximo 50`)
         expect(resultado).toContain('maxlength="50"')
     })
 
     it("un campo sin modificadores no genera atributos de validación", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         expect(resultado).not.toContain('required')
         expect(resultado).not.toContain('minlength')
         expect(resultado).not.toContain('maxlength')
     })
 
     it("cada campo tiene un contenedor de mensaje de error", () => {
-        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         expect(resultado).toContain('class="campo-error"')
         expect(resultado).toContain('id="correo-error"')
     })
 
     it("el runtime JS incluye validarCampos y recogerCampos", () => {
-        const archivos = compilar(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email`)
+        const archivos = compilar(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain('validarCampos()')
         expect(js.contenido).toContain('recogerCampos()')
     })
 
-    it("un botón hacer valida y envía los campos en el POST", () => {
+    it("un botón valida y envía los campos en el POST", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina login en "/"\n  campo "Correo" tipo email requerido\n  botón "Entrar" hacer entrar`
+            `aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email requerido\n  botón "Entrar" entrar`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain('if (!Telar.validarCampos()) return')
@@ -434,9 +434,9 @@ describe("Generador — variables y estado local (v0.11)", () => {
         expect(js.contenido).toContain('Telar.estado = {};')
     })
 
-    it("botón hacer sumar X genera una función sin llamada a fetch", () => {
+    it("botón suma X genera una función sin llamada a fetch", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Sumar" hacer sumar cuenta`
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Sumar" suma cuenta`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain('function sumar_cuenta()')
@@ -445,16 +445,16 @@ describe("Generador — variables y estado local (v0.11)", () => {
         expect(js.contenido).not.toContain("fetch('/api/accion/sumar_cuenta'")
     })
 
-    it("botón hacer restar X resta 1 en vez de sumar", () => {
+    it("botón resta X resta 1 en vez de sumar", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Restar" hacer restar cuenta`
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "Restar" resta cuenta`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain('Telar.estado.cuenta = Telar.estado.cuenta - 1')
     })
 
-    it("un botón hacer normal (no sumar/restar) sigue llamando a la API", () => {
-        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Guardar" hacer guardar`)
+    it("un botón normal (no sumar/restar) sigue llamando a la API", () => {
+        const archivos = compilar(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Guardar" guardar`)
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain("fetch('/api/accion/guardar'")
     })
@@ -491,9 +491,9 @@ describe("Generador — temas visuales (v0.12)", () => {
         expect(js.contenido).toContain('alternarTema()')
     })
 
-    it("un botón hacer cambiar tema no llama a ninguna API", () => {
+    it("un botón alterna tema no llama a ninguna API", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\npágina inicio en "/"\n  botón "Cambiar" hacer cambiar tema`
+            `aplicación MiApp\n\npágina inicio en "/"\n  botón "Cambiar" alterna tema`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).toContain('function cambiar_tema()')
