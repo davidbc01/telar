@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.22.0] - 2026-08-04
+
+### Contexto
+Al comparar Telar con frameworks como Astro para decidir qué falta antes de v1.0, salieron tres huecos reales: control del `<head>`, componentes más potentes, y contenido tipo Markdown. Esta versión cierra el primero — el más pequeño y sin riesgo de los tres.
+
+### Añadido
+- `favicon "url"` en `app.telar` — genera `<link rel="icon">` en todas las páginas. Antes no había ninguna forma de declarar un favicon
+- `meta "nombre" "valor"` — genera un `<meta name="nombre" content="valor">` personalizado, repetible tantas veces como haga falta (color de tema, título de app iOS/Android, verificación de buscadores, etc.)
+- 8 tests nuevos (226 en total)
+
+---
+
+## [0.21.1] - 2026-08-04
+
+### Corregido
+- Detectado al construir telar.dev (el proyecto real exigido por el propio roadmap para v1.0): `botón "X" ir a "https://..."` — la sintaxis documentada desde siempre para enlaces externos — **nunca había funcionado**. El parser solo aceptaba nombres de página internos tras `ir a`, nunca una URL entre comillas. Cualquier botón apuntando a una URL externa fallaba al compilar
+- 2 tests de regresión
+
+---
+
 ## [0.21.0] - 2026-08-04
 
 ### Auditoría pre-v1.0: prueba combinando todo lo construido esta sesión en un solo proyecto

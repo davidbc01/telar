@@ -29,6 +29,8 @@ export enum TipoToken {
     Tema = "tema",
     Imagen = "imagen",
     Dominio = "dominio",
+    Favicon = "favicon",
+    Meta = "meta",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -137,6 +139,8 @@ export interface NodoAplicacion {
     componentes: NodoComponente[]
     tema: "automatico" | "oscuro" | "claro"
     dominio?: string // "https://mitienda.com" — para SEO: sitemap.xml, robots.txt, og:url
+    favicon?: string // "https://.../favicon.ico"
+    metasPersonalizadas: { nombre: string; valor: string }[] // meta "theme-color" "#000"
     linea: number
 }
  

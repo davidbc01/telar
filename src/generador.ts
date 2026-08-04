@@ -165,6 +165,14 @@ export class Generador {
             descripcion ? `    <meta name="twitter:description" content="${this.escapar(descripcion)}">` : '',
             primeraImagen ? `    <meta name="twitter:image" content="${this.escapar(primeraImagen.url)}">` : ''
         ].filter(Boolean).join('\n')
+
+        // ── favicon y meta tags personalizadas ──────────────────
+        const faviconHTML = this.app.favicon
+            ? `    <link rel="icon" href="${this.escapar(this.app.favicon)}">`
+            : ''
+        const metasPersonalizadasHTML = (this.app.metasPersonalizadas ?? [])
+            .map(m => `    <meta name="${this.escapar(m.nombre)}" content="${this.escapar(m.valor)}">`)
+            .join('\n')
  
         return `<!DOCTYPE html>
 <html lang="es"${atributoTema}>
@@ -174,6 +182,8 @@ export class Generador {
     <title>${this.escapar(titulo)}</title>
     ${descripcion ? `<meta name="description" content="${this.escapar(descripcion)}">` : ''}
 ${metaOG}
+${faviconHTML}
+${metasPersonalizadasHTML}
     ${tieneCache ? '<meta http-equiv="Cache-Control" content="max-age=600">' : ''}
     ${esMovil ? '<meta name="mobile-web-app-capable" content="yes">' : ''}
 ${enlaceCSS}

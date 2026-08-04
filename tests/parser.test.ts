@@ -499,3 +499,33 @@ describe("Parser — SEO y metadatos (v0.13)", () => {
     })
 
 })
+
+describe("Parser — control del <head>: favicon y meta", () => {
+
+    it("sin favicon declarado, queda indefinido", () => {
+        const arbol = parsear(`aplicación MiApp`)
+        expect(arbol.favicon).toBeUndefined()
+        expect(arbol.metasPersonalizadas).toEqual([])
+    })
+
+    it("parsea favicon", () => {
+        const arbol = parsear(`aplicación MiApp\n  favicon "https://midominio.com/favicon.ico"`)
+        expect(arbol.favicon).toBe("https://midominio.com/favicon.ico")
+    })
+
+    it("parsea una meta personalizada", () => {
+        const arbol = parsear(`aplicación MiApp\n  meta "theme-color" "#0B0B0D"`)
+        expect(arbol.metasPersonalizadas).toEqual([{ nombre: "theme-color", valor: "#0B0B0D" }])
+    })
+
+    it("parsea varias meta personalizadas en orden", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n  meta "theme-color" "#0B0B0D"\n  meta "apple-mobile-web-app-title" "MiApp"`
+        )
+        expect(arbol.metasPersonalizadas).toEqual([
+            { nombre: "theme-color", valor: "#0B0B0D" },
+            { nombre: "apple-mobile-web-app-title", valor: "MiApp" }
+        ])
+    })
+
+})

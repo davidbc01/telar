@@ -238,6 +238,8 @@ Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que s
 ```telar
 aplicación MiTienda
   dominio "https://mitienda.com"
+  favicon "https://mitienda.com/favicon.ico"
+  meta "theme-color" "#0B0B0D"
 
 página inicio en "/"
   imagen "https://mitienda.com/img/portada.jpg"
@@ -248,6 +250,8 @@ página inicio en "/"
 Cada página genera automáticamente sus etiquetas `og:title`, `og:description`, `twitter:card` y similares a partir del título y la descripción — sin nada que configurar. `imagen "url"` se muestra en la página como una imagen normal y, si es la primera de esa página, se usa también como `og:image`/`twitter:image`.
 
 Declarar `dominio` en `app.telar` añade dos cosas más: `og:url` con la URL absoluta real de cada página, y dos archivos nuevos generados en la raíz — `sitemap.xml` y `robots.txt`, listos para subir tal cual. Las rutas dinámicas (`/producto/(id)`) se excluyen del sitemap automáticamente, porque no representan una URL real.
+
+`favicon "url"` añade el icono de la pestaña del navegador en todas las páginas. `meta "nombre" "valor"` añade cualquier etiqueta `<meta>` personalizada que necesites (color de tema, título para apps de iOS, verificación de Search Console...) — se puede repetir tantas veces como haga falta.
 
 ---
 
@@ -315,7 +319,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (216) + CI/CD | ✅ Completo |
+| Tests completos (226) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -449,7 +453,14 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `campo "X" área de texto` generaba un `<input>` en vez de un `<textarea>` real desde v0.10
 - `campo "X" texto` / `número` no generaban tipos HTML5 válidos (`type="texto"`, sin `type="number"` nunca)
 - Botones/títulos/descripciones con texto sin letras (`"+"`, `"−"`) generaban una clase CSS rota (`boton-` vacía)
-- 11 tests de regresión nuevos (216 en total)
+- **Bug crítico corregido a raíz de construir telar.dev**: `botón "X" ir a "https://..."` — documentado desde siempre — nunca había funcionado; solo aceptaba nombres de página internos
+- 13 tests de regresión nuevos (218 en total)
+
+### v0.22 — Control del `<head>` ✅
+- `favicon "url"` — icono de pestaña, antes imposible de declarar
+- `meta "nombre" "valor"` — cualquier etiqueta `<meta>` personalizada (color de tema, título de app iOS, verificación de buscadores...), repetible
+- Motivado por comparar Telar con frameworks como Astro y encontrar este hueco real al intentar montar telar.dev
+- 8 tests nuevos (226 en total)
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

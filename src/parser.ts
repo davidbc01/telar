@@ -113,6 +113,8 @@ export class Parser {
         const componentes: NodoComponente[] = []
         let tema: "automatico" | "oscuro" | "claro" = "automatico"
         let dominio: string | undefined
+        let favicon: string | undefined
+        const metasPersonalizadas: { nombre: string; valor: string }[] = []
  
         // Leer hijos de la aplicación
         while (!this.finArchivo()) {
@@ -145,6 +147,22 @@ export class Parser {
             if (actual.tipo === TipoToken.Dominio) {
                 this.avanzar()
                 dominio = this.consumir(TipoToken.Texto).valor
+                continue
+            }
+
+            // favicon "https://.../favicon.ico"
+            if (actual.tipo === TipoToken.Favicon) {
+                this.avanzar()
+                favicon = this.consumir(TipoToken.Texto).valor
+                continue
+            }
+
+            // meta "theme-color" "#0B0B0D"
+            if (actual.tipo === TipoToken.Meta) {
+                this.avanzar()
+                const nombre = this.consumir(TipoToken.Texto).valor
+                const valor = this.consumir(TipoToken.Texto).valor
+                metasPersonalizadas.push({ nombre, valor })
                 continue
             }
  
@@ -191,6 +209,8 @@ export class Parser {
             componentes,
             tema,
             dominio,
+            favicon,
+            metasPersonalizadas,
             linea: token.linea
         }
     }

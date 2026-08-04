@@ -783,3 +783,43 @@ describe("Generador — clases CSS con texto sin letras/números (regresión pre
     })
 
 })
+
+describe("Generador — control del <head>: favicon y meta personalizadas", () => {
+
+    it("sin favicon declarado, no genera <link rel='icon'>", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`)
+        expect(resultado).not.toContain('rel="icon"')
+    })
+
+    it("favicon declarado genera el <link rel='icon'>", () => {
+        const resultado = html(
+            `aplicación MiApp\n  favicon "https://midominio.com/favicon.ico"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).toContain('<link rel="icon" href="https://midominio.com/favicon.ico">')
+    })
+
+    it("meta personalizada genera un <meta name=... content=...>", () => {
+        const resultado = html(
+            `aplicación MiApp\n  meta "theme-color" "#0B0B0D"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).toContain('<meta name="theme-color" content="#0B0B0D">')
+    })
+
+    it("varias meta personalizadas se generan todas, en orden", () => {
+        const resultado = html(
+            `aplicación MiApp\n  meta "theme-color" "#0B0B0D"\n  meta "apple-mobile-web-app-title" "MiApp"\n\npágina inicio en "/"\n  título "Hola"`
+        )
+        expect(resultado).toContain('name="theme-color" content="#0B0B0D"')
+        expect(resultado).toContain('name="apple-mobile-web-app-title" content="MiApp"')
+    })
+
+    it("favicon y meta aparecen en todas las páginas de la app, no solo una", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n  favicon "https://x.com/favicon.ico"\n\npágina inicio en "/"\n  título "Inicio"\n\npágina contacto en "/contacto"\n  título "Contacto"`
+        )
+        for (const archivo of archivos.filter(a => a.nombre.endsWith('.html'))) {
+            expect(archivo.contenido).toContain('rel="icon"')
+        }
+    })
+
+})

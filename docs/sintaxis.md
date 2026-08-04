@@ -263,6 +263,17 @@ página inicio en "/"
 
 El `sitemap.xml` incluye todas las páginas estáticas. Las rutas dinámicas (`/producto/(id)`) se excluyen automáticamente, porque no representan una URL real sino una plantilla.
 
+También a nivel de aplicación:
+
+```telar
+aplicación MiTienda
+  favicon "https://mitienda.com/favicon.ico"
+  meta "theme-color" "#0B0B0D"
+  meta "apple-mobile-web-app-title" "MiTienda"
+```
+
+`favicon "url"` genera `<link rel="icon" href="url">` en todas las páginas. `meta "nombre" "valor"` genera un `<meta name="nombre" content="valor">` — se puede repetir tantas veces como haga falta, y sirve para cualquier etiqueta que Telar no genere automáticamente (color de tema del navegador, título para apps de iOS/Android, códigos de verificación de buscadores, etc.).
+
 ---
 
 ## Manejo de errores
