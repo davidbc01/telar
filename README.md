@@ -315,7 +315,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (205) + CI/CD | ✅ Completo |
+| Tests completos (216) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -443,6 +443,13 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.20 — Último ajuste de sintaxis ✅
 - `según campo = valor` → `donde campo = valor`, el mismo patrón que `WHERE` en SQL — "según" sonaba a prosa justo al lado del operador `=`
+
+### v0.21 — Auditoría pre-v1.0 ✅
+- Prueba combinando todo lo construido esta sesión en un solo proyecto (diseño + componente + lista real + ruta dinámica + variable + tema + SEO + formulario) — 4 bugs reales encontrados que ningún test aislado había pillado
+- `campo "X" área de texto` generaba un `<input>` en vez de un `<textarea>` real desde v0.10
+- `campo "X" texto` / `número` no generaban tipos HTML5 válidos (`type="texto"`, sin `type="number"` nunca)
+- Botones/títulos/descripciones con texto sin letras (`"+"`, `"−"`) generaban una clase CSS rota (`boton-` vacía)
+- 11 tests de regresión nuevos (216 en total)
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

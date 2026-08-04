@@ -607,8 +607,8 @@ export class Parser {
             "texto": "texto",
             "email": "email",
             "contraseña": "contraseña",
-            "numero": "texto",
-            "número": "texto",
+            "numero": "numero",
+            "número": "numero",
         }
     
         if (tipos[valor]) {
@@ -621,7 +621,7 @@ export class Parser {
             this.avanzar()
             if (this.actual().valor === "de") this.avanzar()
             if (this.actual().valor === "texto") this.avanzar()
-            return "texto"
+            return "área de texto"
         }
     
         throw new TelarError(

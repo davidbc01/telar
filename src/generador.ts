@@ -214,8 +214,7 @@ ${this.indentar(cuerpo, 4)}
     }
  
     private generarTitulo(nodo: NodoTitulo): string {
-        const slug = this.slugify(nodo.texto)
-        return `<h1 ${this.claseHTML(`titulo titulo-${slug}`, nodo.clase)}>${this.escapar(nodo.texto)}</h1>`
+        return `<h1 ${this.claseHTML(this.claseConSlug('titulo', nodo.texto), nodo.clase)}>${this.escapar(nodo.texto)}</h1>`
     }
 
     // texto cuenta — muestra el valor inicial de la variable en el HTML
@@ -236,8 +235,7 @@ ${this.indentar(cuerpo, 4)}
     }
  
     private generarDescripcion(nodo: NodoDescripcion): string {
-        const slug = this.slugify(nodo.texto.slice(0, 30))
-        return `<p ${this.claseHTML(`descripcion descripcion-${slug}`, nodo.clase)}>${this.escapar(nodo.texto)}</p>`
+        return `<p ${this.claseHTML(this.claseConSlug('descripcion', nodo.texto.slice(0, 30)), nodo.clase)}>${this.escapar(nodo.texto)}</p>`
     }
  
     private generarMostrar(nodo: NodoMostrar): string {
@@ -267,19 +265,20 @@ ${this.indentar(cuerpo, 4)}
     }
  
     private generarBoton(nodo: NodoBoton): string {
-        const slug = this.slugify(nodo.texto)
+        const claseBase = this.claseConSlug('boton', nodo.texto)
+
         if (nodo.accion === 'ir') {
             const href = nodo.destino.startsWith('http')
                 ? nodo.destino
                 : this.resolverRuta(nodo.destino)
-            return `<a href="${href}" ${this.claseHTML(`boton boton-${slug}`, nodo.clase)} role="button">${this.escapar(nodo.texto)}</a>`
+            return `<a href="${href}" ${this.claseHTML(claseBase, nodo.clase)} role="button">${this.escapar(nodo.texto)}</a>`
         }
  
         const siFallaHTML = nodo.siFalla
             ? `\n<div class="error" role="alert" hidden>\n${this.indentar(nodo.siFalla.map(n => this.generarNodo(n)).join('\n'), 2)}\n</div>`
             : ''
  
-        return `<button ${this.claseHTML(`boton boton-${slug}`, nodo.clase)} data-accion="${nodo.destino}" type="button">
+        return `<button ${this.claseHTML(claseBase, nodo.clase)} data-accion="${nodo.destino}" type="button">
     ${this.escapar(nodo.texto)}
 </button>${siFallaHTML}`
     }
@@ -287,7 +286,13 @@ ${this.indentar(cuerpo, 4)}
     private generarCampo(nodo: NodoCampo): string {
         const id = this.textoAId(nodo.etiqueta)
         const tipo = nodo.tipoCampo === 'área de texto' ? null : nodo.tipoCampo
-        const tipoHTML = tipo === 'contraseña' ? 'password' : tipo
+        const mapaTipoHTML: Record<string, string> = {
+            texto: 'text',
+            numero: 'number',
+            contraseña: 'password',
+            email: 'email'
+        }
+        const tipoHTML = tipo ? (mapaTipoHTML[tipo] ?? 'text') : null
         const claseInput = nodo.clase ?? ''
 
         const atributosValidacion = [
@@ -767,6 +772,13 @@ html[data-tema="oscuro"] select { background: #1a1d27; }
             .replace(/ñ/g, 'n')
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-|-$/g, '')
+    }
+
+    // Construye "base base-slug", o solo "base" si el slug queda vacío
+    // (texto sin ningún carácter alfanumérico, ej. un botón "+" o "🎉")
+    private claseConSlug(base: string, textoOrigen: string): string {
+        const slug = this.slugify(textoOrigen)
+        return slug ? `${base} ${base}-${slug}` : base
     }
  
     private resolverRuta(destino: string): string {

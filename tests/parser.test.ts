@@ -165,6 +165,18 @@ describe("Parser — campos", () => {
         expect(campo.tipoCampo).toBe("contraseña")
     })
 
+    it("parsea campo área de texto como tipo propio, no como 'texto' (regresión pre-v1.0)", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina contacto en "/"\n  campo "Mensaje" área de texto`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.tipoCampo).toBe("área de texto")
+    })
+
+    it("parsea campo número como tipo propio, no como 'texto' (regresión pre-v1.0)", () => {
+        const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  campo "Edad" número`)
+        const campo = arbol.paginas[0].hijos[0] as any
+        expect(campo.tipoCampo).toBe("numero")
+    })
+
     it("un campo sin modificadores no es requerido y no tiene límites", () => {
         const arbol = parsear(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email`)
         const campo = arbol.paginas[0].hijos[0] as any

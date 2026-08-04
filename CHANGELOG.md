@@ -5,6 +5,24 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.21.0] - 2026-08-04
+
+### Auditoría pre-v1.0: prueba combinando todo lo construido esta sesión en un solo proyecto
+
+Antes de comprometerse a v1.0, se compiló un proyecto que usa diseño + componente + lista real + ruta dinámica + variable + tema + SEO + formulario a la vez, y se revisó el HTML/JS generado línea por línea. Salieron 4 bugs reales que ningún test había pillado por separado:
+
+### Corregido
+- **`campo "X" área de texto`** generaba `<input type="área de texto">` en vez de un `<textarea>` real — `parsearTipoCampo` devolvía `"texto"` para ambos casos, así que el generador nunca distinguía uno de otro. Esto llevaba roto desde que existe la validación de formularios (v0.10)
+- **`campo "X" texto`** generaba `type="texto"`, que no es un tipo válido de HTML5 (el navegador lo trata como texto plano, sin más — funcionalmente inocuo pero técnicamente incorrecto)
+- **`campo "X" número`** generaba lo mismo que `texto`, sin usar nunca `type="number"` — la palabra clave existía pero no producía ningún comportamiento distinto en el HTML
+- **Botones con texto sin letras/números** (`botón "+" ...`, `botón "−" ...`) generaban una clase CSS vacía y rota: `class="boton boton-"`. Mismo problema latente en `título` y `descripción` con texto similar — arreglado en los tres sitios con un helper común
+
+### Añadido
+- 11 tests de regresión nuevos cubriendo los 4 bugs (216 en total)
+- Confirmado: `package.json` no incluye `paquetes/` en el paquete publicado (correcto, `telar añadir` los descarga de GitHub en vivo) y el CI usa Node 20, compatible con `fetch` nativo para los tests de `telar servir`
+
+---
+
 ## [0.20.0] - 2026-08-04
 
 ### Cambiado — último ajuste de sintaxis antes de v1.0

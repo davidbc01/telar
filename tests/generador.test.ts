@@ -354,6 +354,30 @@ describe("Generador — validación de formularios (v0.10)", () => {
         expect(resultado).not.toContain('type="contraseña"')
     })
 
+    it("un campo texto genera type=text en HTML (no 'texto') — regresión pre-v1.0", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Nombre" texto`)
+        expect(resultado).toContain('type="text"')
+        expect(resultado).not.toContain('type="texto"')
+    })
+
+    it("un campo número genera type=number en HTML — regresión pre-v1.0", () => {
+        const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Edad" número`)
+        expect(resultado).toContain('type="number"')
+    })
+
+    it("un campo área de texto genera un <textarea> real, no un <input> — regresión pre-v1.0", () => {
+        const resultado = html(`aplicación MiApp\n\npágina contacto en "/"\n  campo "Mensaje" área de texto`)
+        expect(resultado).toContain('<textarea')
+        expect(resultado).not.toContain('type="área de texto"')
+        expect(resultado).not.toContain('type="texto"')
+    })
+
+    it("un campo área de texto con validación sigue generando <textarea>", () => {
+        const resultado = html(`aplicación MiApp\n\npágina contacto en "/"\n  campo "Mensaje" área de texto requerido máximo 500`)
+        expect(resultado).toContain('<textarea')
+        expect(resultado).toContain('maxlength="500"')
+    })
+
     it("campo requerido genera el atributo required", () => {
         const resultado = html(`aplicación MiApp\n\npágina login en "/"\n  campo "Correo" email requerido`)
         expect(resultado).toContain('required')
@@ -718,6 +742,37 @@ página inicio en "/"
         expect(() => compilar(
             `aplicación MiApp\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con NoExiste`
         )).toThrow(/componente que no existe/)
+    })
+
+})
+
+describe("Generador — clases CSS con texto sin letras/números (regresión pre-v1.0)", () => {
+
+    it("un botón con texto solo símbolos ('+') no genera una clase 'boton-' vacía", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina inicio en "/"\n  variable cuenta = 0\n  botón "+" suma cuenta`
+        )
+        expect(resultado).toContain('class="boton"')
+        expect(resultado).not.toContain('class="boton boton-"')
+        expect(resultado).not.toContain('boton- ')
+        expect(resultado).not.toContain('boton-"')
+    })
+
+    it("un botón con texto normal sigue generando su clase modificadora normalmente", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Entrar" ir a login`)
+        expect(resultado).toContain('boton boton-entrar')
+    })
+
+    it("un título con texto solo símbolos no genera una clase 'titulo-' vacía", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  título "—"`)
+        expect(resultado).toContain('class="titulo"')
+        expect(resultado).not.toContain('titulo-"')
+    })
+
+    it("una descripción con texto solo símbolos no genera una clase 'descripcion-' vacía", () => {
+        const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  descripción "···"`)
+        expect(resultado).toContain('class="descripcion"')
+        expect(resultado).not.toContain('descripcion-"')
     })
 
 })
