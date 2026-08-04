@@ -505,7 +505,11 @@ export class Parser {
             this.avanzar()
             if (this.actual().valor === "a") this.avanzar()
             accion = "ir"
-            destino = this.consumirIdentificador().valor
+            // "ir a" acepta una URL externa entre comillas o el nombre
+            // de una página interna sin comillas
+            destino = this.actual().tipo === TipoToken.Texto
+                ? this.consumir(TipoToken.Texto).valor
+                : this.consumirIdentificador().valor
 
         } else if (accionToken.tipo === TipoToken.Suma) {
             this.avanzar()

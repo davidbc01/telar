@@ -134,6 +134,14 @@ describe("Parser — botones", () => {
         expect(boton.destino).toBe("login")
     })
 
+    it("parsea botón ir a con URL externa entre comillas (regresión pre-v1.0)", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\npágina inicio en "/"\n  botón "GitHub" ir a "https://github.com/davidbc01/telar"`
+        )
+        const boton = arbol.paginas[0].hijos[0] as any
+        expect(boton.destino).toBe("https://github.com/davidbc01/telar")
+    })
+
     it("parsea botón hacer", () => {
         const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" enviarFormulario`)
         const boton = arbol.paginas[0].hijos[0] as any

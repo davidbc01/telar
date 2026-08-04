@@ -117,6 +117,13 @@ describe("Generador — botones", () => {
         expect(resultado).toContain('Entrar')
     })
 
+    it("botón ir a con URL externa entre comillas funciona (regresión pre-v1.0)", () => {
+        const resultado = html(
+            `aplicación MiApp\n\npágina inicio en "/"\n  botón "GitHub" ir a "https://github.com/davidbc01/telar"`
+        )
+        expect(resultado).toContain('<a href="https://github.com/davidbc01/telar"')
+    })
+
     it("genera button para botón hacer", () => {
         const resultado = html(`aplicación MiApp\n\npágina inicio en "/"\n  botón "Enviar" enviar`)
         expect(resultado).toContain('<button')
