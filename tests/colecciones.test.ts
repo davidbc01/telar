@@ -200,9 +200,10 @@ describe("Generador — colecciones de contenido (con archivos .md reales)", () 
 
     it("el sitemap incluye la URL real de cada artículo, no una plantilla", () => {
         dirTemp = crearProyecto({ "mi-post.md": `---\ntítulo: Mi post\n---\nHola.` })
+        fs.writeFileSync(path.join(dirTemp, "telar.config.json"), JSON.stringify({ dominio: "https://x.com" }))
         const archivos = compilarEnDisco(
             dirTemp,
-            `aplicación MiApp\n  dominio "https://x.com"\n\ncolección Articulos en "contenido/articulos"\n\npágina detalle en "/blog/(slug)"\n  artículo Articulos`
+            `aplicación MiApp\n\ncolección Articulos en "contenido/articulos"\n\npágina detalle en "/blog/(slug)"\n  artículo Articulos`
         )
         const sitemap = archivos.find(a => a.nombre === 'sitemap.xml')!.contenido
         expect(sitemap).toContain('https://x.com/blog/mi-post')

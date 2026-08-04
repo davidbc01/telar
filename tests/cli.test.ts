@@ -44,9 +44,10 @@ describe("CLI — telar nuevo", () => {
         const carpeta = path.join(dirTemp, "mi-proyecto")
         comandoNuevo([carpeta])
 
-        expect(fs.existsSync(path.join(carpeta, "app.telar"))).toBe(true)
-        expect(fs.existsSync(path.join(carpeta, "paginas", "inicio.telar"))).toBe(true)
-        expect(fs.existsSync(path.join(carpeta, "estilos.css"))).toBe(true)
+        expect(fs.existsSync(path.join(carpeta, "telar.config.json"))).toBe(true)
+        expect(fs.existsSync(path.join(carpeta, "src", "app.telar"))).toBe(true)
+        expect(fs.existsSync(path.join(carpeta, "src", "paginas", "inicio.telar"))).toBe(true)
+        expect(fs.existsSync(path.join(carpeta, "public", "estilos.css"))).toBe(true)
         expect(fs.existsSync(path.join(carpeta, "README.md"))).toBe(true)
     })
 
@@ -57,7 +58,7 @@ describe("CLI — telar nuevo", () => {
 
         // Antes del fix, path.join(process.cwd(), carpeta) las creaba
         // dentro de process.cwd() en vez de en la ruta absoluta real
-        expect(fs.existsSync(path.join(carpeta, "app.telar"))).toBe(true)
+        expect(fs.existsSync(path.join(carpeta, "src", "app.telar"))).toBe(true)
     })
 
     it("el nombre de la aplicación generado es válido, no la ruta completa", () => {
@@ -65,7 +66,7 @@ describe("CLI — telar nuevo", () => {
         const carpeta = path.join(dirTemp, "mi-proyecto-genial")
         comandoNuevo([carpeta])
 
-        const contenido = fs.readFileSync(path.join(carpeta, "app.telar"), "utf-8")
+        const contenido = fs.readFileSync(path.join(carpeta, "src", "app.telar"), "utf-8")
         expect(contenido).toContain("aplicación MiProyectoGenial")
         expect(contenido).toMatch(/^aplicación MiProyectoGenial$/m)
     })
@@ -76,10 +77,22 @@ describe("CLI — telar nuevo", () => {
         comandoNuevo([carpeta])
 
         const salida = path.join(carpeta, "dist")
-        comandoCompilar([path.join(carpeta, "app.telar"), "-o", salida])
+        comandoCompilar([path.join(carpeta, "src", "app.telar"), "-o", salida])
 
         expect(fs.existsSync(path.join(salida, "index.html"))).toBe(true)
         expect(fs.existsSync(path.join(salida, "sobre-nosotros.html"))).toBe(true)
+    })
+
+    it("el idioma del telar.config.json generado se refleja en el HTML", () => {
+        silenciarConsola()
+        const carpeta = path.join(dirTemp, "proyecto-idioma")
+        comandoNuevo([carpeta])
+
+        const salida = path.join(carpeta, "dist")
+        comandoCompilar([path.join(carpeta, "src", "app.telar"), "-o", salida])
+
+        const html = fs.readFileSync(path.join(salida, "index.html"), "utf-8")
+        expect(html).toContain('lang="es"')
     })
 
     it("falla si la carpeta ya existe", () => {
@@ -157,6 +170,60 @@ describe("CLI — telar verificar", () => {
 
         expect(() => comandoVerificar([archivo])).toThrow()
         expect(salir).toHaveBeenCalledWith(1)
+    })
+
+})
+
+describe("CLI — telar.config.json y estructura src/public", () => {
+
+    it("encuentra telar.config.json subiendo desde src/, no solo en la carpeta del app.telar", () => {
+        silenciarConsola()
+        fs.mkdirSync(path.join(dirTemp, "src"), { recursive: true })
+        fs.writeFileSync(path.join(dirTemp, "telar.config.json"), JSON.stringify({ idioma: "inglés" }))
+        fs.writeFileSync(
+            path.join(dirTemp, "src", "app.telar"),
+            `aplicación Prueba\n\npágina inicio en "/"\n  título "Hola"`
+        )
+
+        const salida = path.join(dirTemp, "dist")
+        comandoCompilar([path.join(dirTemp, "src", "app.telar"), "-o", salida])
+
+        const html = fs.readFileSync(path.join(salida, "index.html"), "utf-8")
+        expect(html).toContain('lang="en"')
+    })
+
+    it("copia todo lo que haya en public/ al resultado, excepto estilos.css", () => {
+        silenciarConsola()
+        fs.mkdirSync(path.join(dirTemp, "src"), { recursive: true })
+        fs.mkdirSync(path.join(dirTemp, "public"), { recursive: true })
+        fs.writeFileSync(path.join(dirTemp, "public", "estilos.css"), "body { color: red; }")
+        fs.writeFileSync(path.join(dirTemp, "public", "robots-a-mano.txt"), "contenido de prueba")
+        fs.writeFileSync(
+            path.join(dirTemp, "src", "app.telar"),
+            `aplicación Prueba\n\npágina inicio en "/"\n  título "Hola"`
+        )
+
+        const salida = path.join(dirTemp, "dist")
+        comandoCompilar([path.join(dirTemp, "src", "app.telar"), "-o", salida])
+
+        expect(fs.existsSync(path.join(salida, "robots-a-mano.txt"))).toBe(true)
+        // estilos.css no se copia tal cual — ya se copió como telar.css
+        expect(fs.existsSync(path.join(salida, "estilos.css"))).toBe(false)
+        const css = fs.readFileSync(path.join(salida, "telar.css"), "utf-8")
+        expect(css).toContain("color: red")
+    })
+
+    it("sin telar.config.json, sigue compilando con los valores por defecto", () => {
+        silenciarConsola()
+        fs.mkdirSync(path.join(dirTemp, "src"), { recursive: true })
+        fs.writeFileSync(
+            path.join(dirTemp, "src", "app.telar"),
+            `aplicación Prueba\n\npágina inicio en "/"\n  título "Hola"`
+        )
+
+        const salida = path.join(dirTemp, "dist")
+        expect(() => comandoCompilar([path.join(dirTemp, "src", "app.telar"), "-o", salida])).not.toThrow()
+        expect(fs.existsSync(path.join(salida, "index.html"))).toBe(true)
     })
 
 })

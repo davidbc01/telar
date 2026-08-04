@@ -23,6 +23,22 @@ function html(codigo: string, pagina = 0): string {
     return archivos[pagina].contenido
 }
 
+// Compila código Telar contra un proyecto real en disco, con un
+// telar.config.json de verdad — para todo lo que ahora es configuración
+// del sitio (idioma, dominio, tema, favicon, meta) y ya no se declara
+// dentro de app.telar.
+function compilarConConfig(codigo: string, config: Record<string, unknown>) {
+    const dirTemp = fs.mkdtempSync(path.join(os.tmpdir(), "telar-test-config-"))
+    fs.writeFileSync(path.join(dirTemp, "telar.config.json"), JSON.stringify(config))
+    try {
+        const tokens = new Lexer(codigo).tokenizar()
+        const arbol = new Parser(tokens).parsear()
+        return new Generador(arbol, dirTemp).generar()
+    } finally {
+        fs.rmSync(dirTemp, { recursive: true, force: true })
+    }
+}
+
 describe("Generador — estructura HTML", () => {
 
     it("genera DOCTYPE y html lang=es", () => {
@@ -498,18 +514,27 @@ describe("Generador — temas visuales (v0.12)", () => {
         expect(resultado).not.toContain('data-tema')
     })
 
-    it("tema oscuro genera data-tema=oscuro en el html", () => {
-        const resultado = html(`aplicación MiApp\n  tema oscuro\n\npágina inicio en "/"\n  título "Hola"`)
-        expect(resultado).toContain('<html lang="es" data-tema="oscuro">')
+    it("tema oscuro (vía telar.config.json) genera data-tema=oscuro en el html", () => {
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { tema: "oscuro" }
+        )
+        expect(archivos[0].contenido).toContain('<html lang="es" data-tema="oscuro">')
     })
 
-    it("tema claro genera data-tema=claro en el html", () => {
-        const resultado = html(`aplicación MiApp\n  tema claro\n\npágina inicio en "/"\n  título "Hola"`)
-        expect(resultado).toContain('<html lang="es" data-tema="claro">')
+    it("tema claro (vía telar.config.json) genera data-tema=claro en el html", () => {
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { tema: "claro" }
+        )
+        expect(archivos[0].contenido).toContain('<html lang="es" data-tema="claro">')
     })
 
     it("el CSS incluye la variante fija para html[data-tema=oscuro]", () => {
-        const archivos = compilar(`aplicación MiApp\n  tema oscuro\n\npágina inicio en "/"\n  título "Hola"`)
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { tema: "oscuro" }
+        )
         const css = archivos.find(a => a.nombre === 'telar.css')!
         expect(css.contenido).toContain('html[data-tema="oscuro"]')
     })
@@ -552,11 +577,12 @@ describe("Generador — SEO y metadatos (v0.13)", () => {
         expect(archivos.find(a => a.nombre === 'robots.txt')).toBeUndefined()
     })
 
-    it("con dominio declarado, genera og:url absoluta", () => {
-        const resultado = html(
-            `aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina contacto en "/contacto"\n  título "Contacto"`
+    it("con dominio declarado (vía config), genera og:url absoluta", () => {
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina contacto en "/contacto"\n  título "Contacto"`,
+            { dominio: "https://mitienda.com" }
         )
-        expect(resultado).toContain('property="og:url" content="https://mitienda.com/contacto"')
+        expect(archivos[0].contenido).toContain('property="og:url" content="https://mitienda.com/contacto"')
     })
 
     it("una imagen se renderiza en el HTML y se usa como og:image", () => {
@@ -574,8 +600,9 @@ describe("Generador — SEO y metadatos (v0.13)", () => {
     })
 
     it("con dominio, genera sitemap.xml con las páginas estáticas", () => {
-        const archivos = compilar(
-            `aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina inicio en "/"\n  título "Hola"\n\npágina contacto en "/contacto"\n  título "Contacto"`
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"\n\npágina contacto en "/contacto"\n  título "Contacto"`,
+            { dominio: "https://mitienda.com" }
         )
         const sitemap = archivos.find(a => a.nombre === 'sitemap.xml')!
         expect(sitemap.contenido).toContain('<loc>https://mitienda.com</loc>')
@@ -583,15 +610,19 @@ describe("Generador — SEO y metadatos (v0.13)", () => {
     })
 
     it("las rutas dinámicas no aparecen en el sitemap", () => {
-        const archivos = compilar(
-            `aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina detalle en "/producto/(id)"\n  título "Detalle"`,
+            { dominio: "https://mitienda.com" }
         )
         const sitemap = archivos.find(a => a.nombre === 'sitemap.xml')!
         expect(sitemap.contenido).not.toContain('producto')
     })
 
     it("con dominio, genera robots.txt apuntando al sitemap", () => {
-        const archivos = compilar(`aplicación MiApp\n  dominio "https://mitienda.com"\n\npágina inicio en "/"\n  título "Hola"`)
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { dominio: "https://mitienda.com" }
+        )
         const robots = archivos.find(a => a.nombre === 'robots.txt')!
         expect(robots.contenido).toContain('Allow: /')
         expect(robots.contenido).toContain('Sitemap: https://mitienda.com/sitemap.xml')
@@ -635,10 +666,11 @@ describe("Generador — estilos y Tailwind (v0.15)", () => {
         expect(resultado).toContain('href="telar.css"')
     })
 
-    it("un estilos.css local en el proyecto tiene prioridad sobre el CSS generado", () => {
+    it("un estilos.css local en public/ tiene prioridad sobre el CSS generado", () => {
         const dirTemp = fs.mkdtempSync(path.join(os.tmpdir(), "telar-test-estilos-"))
         try {
-            fs.writeFileSync(path.join(dirTemp, "estilos.css"), "/* mi css personalizado */\nbody { color: red; }")
+            fs.mkdirSync(path.join(dirTemp, "public"), { recursive: true })
+            fs.writeFileSync(path.join(dirTemp, "public", "estilos.css"), "/* mi css personalizado */\nbody { color: red; }")
 
             const tokens = new Lexer(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`).tokenizar()
             const arbol = new Parser(tokens).parsear()
@@ -791,34 +823,54 @@ describe("Generador — control del <head>: favicon y meta personalizadas", () =
         expect(resultado).not.toContain('rel="icon"')
     })
 
-    it("favicon declarado genera el <link rel='icon'>", () => {
-        const resultado = html(
-            `aplicación MiApp\n  favicon "https://midominio.com/favicon.ico"\n\npágina inicio en "/"\n  título "Hola"`
+    it("favicon declarado (vía config) genera el <link rel='icon'>", () => {
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { favicon: "https://midominio.com/favicon.ico" }
         )
-        expect(resultado).toContain('<link rel="icon" href="https://midominio.com/favicon.ico">')
+        expect(archivos[0].contenido).toContain('<link rel="icon" href="https://midominio.com/favicon.ico">')
     })
 
-    it("meta personalizada genera un <meta name=... content=...>", () => {
-        const resultado = html(
-            `aplicación MiApp\n  meta "theme-color" "#0B0B0D"\n\npágina inicio en "/"\n  título "Hola"`
+    it("meta personalizada (vía config) genera un <meta name=... content=...>", () => {
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { meta: { "theme-color": "#0B0B0D" } }
         )
-        expect(resultado).toContain('<meta name="theme-color" content="#0B0B0D">')
+        expect(archivos[0].contenido).toContain('<meta name="theme-color" content="#0B0B0D">')
     })
 
     it("varias meta personalizadas se generan todas, en orden", () => {
-        const resultado = html(
-            `aplicación MiApp\n  meta "theme-color" "#0B0B0D"\n  meta "apple-mobile-web-app-title" "MiApp"\n\npágina inicio en "/"\n  título "Hola"`
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`,
+            { meta: { "theme-color": "#0B0B0D", "apple-mobile-web-app-title": "MiApp" } }
         )
-        expect(resultado).toContain('name="theme-color" content="#0B0B0D"')
-        expect(resultado).toContain('name="apple-mobile-web-app-title" content="MiApp"')
+        expect(archivos[0].contenido).toContain('name="theme-color" content="#0B0B0D"')
+        expect(archivos[0].contenido).toContain('name="apple-mobile-web-app-title" content="MiApp"')
     })
 
     it("favicon y meta aparecen en todas las páginas de la app, no solo una", () => {
-        const archivos = compilar(
-            `aplicación MiApp\n  favicon "https://x.com/favicon.ico"\n\npágina inicio en "/"\n  título "Inicio"\n\npágina contacto en "/contacto"\n  título "Contacto"`
+        const archivos = compilarConConfig(
+            `aplicación MiApp\n\npágina inicio en "/"\n  título "Inicio"\n\npágina contacto en "/contacto"\n  título "Contacto"`,
+            { favicon: "https://x.com/favicon.ico" }
         )
         for (const archivo of archivos.filter(a => a.nombre.endsWith('.html'))) {
             expect(archivo.contenido).toContain('rel="icon"')
+        }
+    })
+
+    it("un public/favicon.ico se detecta automáticamente sin declarar nada", () => {
+        const dirTemp = fs.mkdtempSync(path.join(os.tmpdir(), "telar-test-favicon-"))
+        try {
+            fs.mkdirSync(path.join(dirTemp, "public"), { recursive: true })
+            fs.writeFileSync(path.join(dirTemp, "public", "favicon.ico"), "contenido-falso-del-icono")
+
+            const tokens = new Lexer(`aplicación MiApp\n\npágina inicio en "/"\n  título "Hola"`).tokenizar()
+            const arbol = new Parser(tokens).parsear()
+            const archivos = new Generador(arbol, dirTemp).generar()
+
+            expect(archivos[0].contenido).toContain('<link rel="icon" href="/favicon.ico">')
+        } finally {
+            fs.rmSync(dirTemp, { recursive: true, force: true })
         }
     })
 

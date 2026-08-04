@@ -194,26 +194,48 @@ function resolverIncluciones(
  
 export function comandoCompilar(args: string[]) {
     const { archivo, salida } = parsearArgs(args, 'dist')
- 
+
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
- 
+
     const resultado = compilar(archivo)
     if (!resultado) process.exit(1)
     const { archivos } = resultado
- 
+
     if (!fs.existsSync(salida)) {
         fs.mkdirSync(salida, { recursive: true })
     }
- 
+
     for (const f of archivos) {
         const ruta = path.join(salida, f.nombre)
         fs.writeFileSync(ruta, f.contenido, 'utf-8')
         console.log(`✓  ${f.nombre}`)
     }
- 
+
+    const dirProyecto = encontrarRaizProyecto(path.dirname(path.resolve(archivo)))
+    copiarCarpetaPublic(dirProyecto, salida)
+
     console.log(`\n✓  ${archivos.length} archivos generados en ${salida}/\n`)
 }
- 
+
+// Copia todo lo que haya en public/ (imágenes, favicon.ico, robots.txt a
+// mano, lo que sea) tal cual al resultado — excepto estilos.css, que ya
+// se copia como telar.css desde el propio Generador.
+function copiarCarpetaPublic(dirProyecto: string, salida: string) {
+    const carpetaPublic = path.join(dirProyecto, 'public')
+    if (!fs.existsSync(carpetaPublic)) return
+
+    for (const entrada of fs.readdirSync(carpetaPublic, { withFileTypes: true })) {
+        if (entrada.name === 'estilos.css') continue
+        const origen = path.join(carpetaPublic, entrada.name)
+        const destino = path.join(salida, entrada.name)
+        if (entrada.isDirectory()) {
+            fs.cpSync(origen, destino, { recursive: true })
+        } else {
+            fs.copyFileSync(origen, destino)
+        }
+    }
+}
+
 // ── Comando: servir ───────────────────────────────────────────
  
 export function comandoServir(args: string[]) {
@@ -224,6 +246,7 @@ export function comandoServir(args: string[]) {
         ? parseInt(args[indicePuerto + 1])
         : 3000
     const puertoWS = puerto + 1
+    const dirProyecto = encontrarRaizProyecto(path.dirname(path.resolve(archivo)))
  
     console.log(`\nTelar — compilando ${path.basename(archivo)}...\n`)
     const resultado = compilar(archivo)
@@ -272,6 +295,7 @@ export function comandoServir(args: string[]) {
             }
             fs.writeFileSync(path.join(salida, f.nombre), contenido, 'utf-8')
         }
+        copiarCarpetaPublic(dirProyecto, salida)
         return true
     }
  
@@ -320,15 +344,18 @@ export function comandoServir(args: string[]) {
     // En lugar de vigilar solo app.telar, vigilamos todos los
     // .telar del directorio del proyecto.
  
-    const dirProyecto = path.dirname(path.resolve(archivo))
- 
     function obtenerArchivosTelar(dir: string): string[] {
         const resultado: string[] = []
         for (const entrada of fs.readdirSync(dir, { withFileTypes: true })) {
             const ruta = path.join(dir, entrada.name)
             if (entrada.isDirectory() && !entrada.name.startsWith('.') && entrada.name !== 'paquetes') {
                 resultado.push(...obtenerArchivosTelar(ruta))
-            } else if (entrada.isFile() && (entrada.name.endsWith('.telar') || entrada.name.endsWith('.css'))) {
+            } else if (entrada.isFile() && (
+                entrada.name.endsWith('.telar') ||
+                entrada.name.endsWith('.css') ||
+                entrada.name.endsWith('.md') ||
+                entrada.name === 'telar.config.json'
+            )) {
                 resultado.push(ruta)
             }
         }
@@ -488,75 +515,83 @@ export function comandoNuevo(args: string[]) {
         console.error('   Ejemplo: telar nuevo mi-proyecto\n')
         process.exit(1)
     }
- 
+
     const nombre = args[0]
     const carpeta = path.resolve(process.cwd(), nombre)
- 
+
     if (fs.existsSync(carpeta)) {
         console.error(`\n✗  Ya existe una carpeta llamada "${nombre}"\n`)
         process.exit(1)
     }
- 
+
     const nombrePascal = path.basename(nombre)
         .split(/[-_]/)
         .map(p => p.charAt(0).toUpperCase() + p.slice(1))
         .join('')
- 
+
     console.log(`\nTelar — creando proyecto "${nombre}"...\n`)
- 
-    // Estructura de carpetas
+
+    // Estructura de carpetas: telar.config.json en la raíz, código en
+    // src/, assets estáticos (favicon, imágenes, CSS) en public/ — nada
+    // suelto sin un sitio fijo.
     fs.mkdirSync(carpeta, { recursive: true })
-    fs.mkdirSync(path.join(carpeta, 'paginas'), { recursive: true })
+    fs.mkdirSync(path.join(carpeta, 'src', 'paginas'), { recursive: true })
+    fs.mkdirSync(path.join(carpeta, 'public'), { recursive: true })
     fs.mkdirSync(path.join(carpeta, 'paquetes'), { recursive: true })
- 
-    // ── app.telar ─────────────────────────────────────────────
-    fs.writeFileSync(path.join(carpeta, 'app.telar'),
+
+    // ── telar.config.json ──────────────────────────────────────
+    fs.writeFileSync(path.join(carpeta, 'telar.config.json'),
+        JSON.stringify({ idioma: 'español' }, null, 2) + '\n', 'utf-8')
+
+    // ── src/app.telar ───────────────────────────────────────────
+    fs.writeFileSync(path.join(carpeta, 'src', 'app.telar'),
 `# ${nombre}
 # Creado con Telar — telar.dev
- 
+# La configuración del sitio (idioma, dominio, tema...) vive en
+# telar.config.json, en la raíz del proyecto — aquí solo va código.
+
 aplicación ${nombrePascal}
-  idioma español
- 
+
 incluir paginas/inicio
 incluir paginas/sobre-nosotros
 `, 'utf-8')
- 
-    // ── paginas/inicio.telar ──────────────────────────────────
-    fs.writeFileSync(path.join(carpeta, 'paginas', 'inicio.telar'),
+
+    // ── src/paginas/inicio.telar ────────────────────────────────
+    fs.writeFileSync(path.join(carpeta, 'src', 'paginas', 'inicio.telar'),
 `página inicio en "/"
   título "Hola desde ${nombrePascal}"
   descripción "Bienvenido a tu primera aplicación con Telar"
- 
+
   mostrar "Este es tu punto de partida."
-  mostrar "Edita paginas/inicio.telar para empezar."
- 
+  mostrar "Edita src/paginas/inicio.telar para empezar."
+
   botón "Sobre nosotros" ir a sobreNosotros
- 
+
   optimizar para móvil
 `, 'utf-8')
- 
-    // ── paginas/sobre-nosotros.telar ──────────────────────────
-    fs.writeFileSync(path.join(carpeta, 'paginas', 'sobre-nosotros.telar'),
+
+    // ── src/paginas/sobre-nosotros.telar ────────────────────────
+    fs.writeFileSync(path.join(carpeta, 'src', 'paginas', 'sobre-nosotros.telar'),
 `página sobreNosotros en "/sobre-nosotros"
   título "Sobre nosotros"
- 
+
   mostrar "Construido con Telar, un lenguaje declarativo para la web en español."
- 
+
   botón "Volver al inicio" ir a inicio
- 
+
   optimizar para móvil
 `, 'utf-8')
- 
-    // ── estilos.css ──────────────────────────────────────────
-    fs.writeFileSync(path.join(carpeta, 'estilos.css'),
+
+    // ── public/estilos.css ──────────────────────────────────────
+    fs.writeFileSync(path.join(carpeta, 'public', 'estilos.css'),
 `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
- 
-/* Para usar Tailwind en su lugar, añade en app.telar:        */
-/*   estilos "https://cdn.tailwindcss.com"                    */
-/* Y borra o vacía este archivo.                              */
- 
+
+/* Para usar Tailwind en su lugar, añade en telar.config.json:      */
+/*   "estilos": ["https://cdn.tailwindcss.com"]                     */
+/* Y borra o vacía este archivo.                                    */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
 :root {
     --primario:       #6d4aff;
     --primario-dark:  #5535ee;
@@ -573,9 +608,9 @@ incluir paginas/sobre-nosotros
     --sombra:         0 4px 16px rgba(0,0,0,.08);
     --transicion:     150ms ease;
 }
- 
+
 html { font-size: 16px; scroll-behavior: smooth; }
- 
+
 body {
     font-family: 'Inter', system-ui, sans-serif;
     background: var(--fondo);
@@ -583,13 +618,13 @@ body {
     line-height: 1.65;
     min-height: 100vh;
 }
- 
+
 main {
     max-width: 720px;
     margin: 0 auto;
     padding: 3rem 1.5rem 5rem;
 }
- 
+
 h1 {
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 700;
@@ -597,15 +632,15 @@ h1 {
     line-height: 1.2;
     margin-bottom: 0.75rem;
 }
- 
+
 p { color: var(--texto-suave); margin-bottom: 1rem; }
- 
+
 .descripcion {
     font-size: 1.125rem;
     color: var(--texto-suave);
     margin-bottom: 2rem;
 }
- 
+
 .boton {
     display: inline-flex;
     align-items: center;
@@ -623,24 +658,24 @@ p { color: var(--texto-suave); margin-bottom: 1rem; }
     box-shadow: 0 1px 3px rgba(109,74,255,.35);
     margin: 0.25rem 0.25rem 0.25rem 0;
 }
- 
+
 .boton:hover {
     background: var(--primario-dark);
     box-shadow: 0 4px 12px rgba(109,74,255,.4);
     transform: translateY(-1px);
 }
- 
+
 .boton:active { transform: translateY(0); box-shadow: none; }
- 
+
 .campo-grupo {
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
     margin-bottom: 1.25rem;
 }
- 
+
 label { font-size: 0.875rem; font-weight: 500; }
- 
+
 input, textarea, select {
     padding: 0.625rem 0.875rem;
     border: 1.5px solid var(--borde);
@@ -651,15 +686,15 @@ input, textarea, select {
     width: 100%;
     transition: border-color var(--transicion), box-shadow var(--transicion);
 }
- 
+
 input:focus, textarea:focus {
     outline: none;
     border-color: var(--primario);
     box-shadow: 0 0 0 3px rgba(109,74,255,.15);
 }
- 
+
 .lista { margin: 1.5rem 0; }
- 
+
 .cargando {
     display: flex;
     align-items: center;
@@ -668,7 +703,7 @@ input:focus, textarea:focus {
     font-size: 0.9rem;
     padding: 2rem 0;
 }
- 
+
 .cargando::before {
     content: '';
     width: 16px;
@@ -679,9 +714,9 @@ input:focus, textarea:focus {
     animation: girar 0.7s linear infinite;
     flex-shrink: 0;
 }
- 
+
 @keyframes girar { to { transform: rotate(360deg); } }
- 
+
 .error {
     color: var(--error);
     font-size: 0.875rem;
@@ -691,7 +726,7 @@ input:focus, textarea:focus {
     border-radius: var(--radio-sm);
     margin: 0.75rem 0;
 }
- 
+
 .reintentar {
     background: none;
     border: 1.5px solid var(--borde);
@@ -703,14 +738,14 @@ input:focus, textarea:focus {
     color: var(--texto-suave);
     transition: border-color var(--transicion), color var(--transicion);
 }
- 
+
 .reintentar:hover { border-color: var(--primario); color: var(--primario); }
- 
+
 @media (max-width: 600px) {
     main { padding: 1.5rem 1rem 4rem; }
     h1 { font-size: 1.625rem; }
 }
- 
+
 @media (prefers-color-scheme: dark) {
     :root {
         --texto: #f3f4f6;
@@ -722,58 +757,70 @@ input:focus, textarea:focus {
     input, textarea { background: #1a1d27; }
 }
 `, 'utf-8')
- 
+
     // ── telar.paquetes.json ───────────────────────────────────
     fs.writeFileSync(
         path.join(carpeta, 'telar.paquetes.json'),
         JSON.stringify([], null, 2),
         'utf-8'
     )
- 
+
     // ── .gitignore ────────────────────────────────────────────
     fs.writeFileSync(path.join(carpeta, '.gitignore'),
 `dist/
 paquetes/
 .telar-tmp/
 `, 'utf-8')
- 
+
     // ── README.md ─────────────────────────────────────────────
     fs.writeFileSync(path.join(carpeta, 'README.md'),
 `# ${nombre}
- 
+
 Proyecto creado con [Telar](https://github.com/davidbc01/telar).
- 
+
+## Estructura
+
+\`\`\`
+telar.config.json   — idioma, dominio, tema, meta... configuración del sitio
+src/
+  app.telar          — aplicación, diseños, componentes, colecciones, incluir
+  paginas/           — una página por archivo
+public/
+  estilos.css        — editable; también favicon.ico, imágenes, etc.
+\`\`\`
+
 ## Desarrollo
- 
+
 \`\`\`bash
-telar servir app.telar
+telar servir src/app.telar
 \`\`\`
- 
+
 ## Compilar
- 
+
 \`\`\`bash
-telar compilar app.telar -o dist/
+telar compilar src/app.telar -o dist/
 \`\`\`
- 
+
 ## Añadir una página
- 
-1. Crea \`paginas/mi-pagina.telar\`
-2. Añade \`incluir paginas/mi-pagina\` en \`app.telar\`
+
+1. Crea \`src/paginas/mi-pagina.telar\`
+2. Añade \`incluir paginas/mi-pagina\` en \`src/app.telar\`
 3. Guarda — el live reload recarga automáticamente
 `, 'utf-8')
- 
-    console.log(`✓  estilos.css`)
-    console.log(`✓  app.telar`)
-    console.log(`✓  paginas/inicio.telar`)
-    console.log(`✓  paginas/sobre-nosotros.telar`)
+
+    console.log(`✓  telar.config.json`)
+    console.log(`✓  src/app.telar`)
+    console.log(`✓  src/paginas/inicio.telar`)
+    console.log(`✓  src/paginas/sobre-nosotros.telar`)
+    console.log(`✓  public/estilos.css`)
     console.log(`✓  telar.paquetes.json`)
     console.log(`✓  .gitignore`)
     console.log(`✓  README.md`)
     console.log(`\n✓  Proyecto "${nombre}" listo\n`)
     console.log(`   cd ${nombre}`)
-    console.log(`   telar servir app.telar\n`)
+    console.log(`   telar servir src/app.telar\n`)
 }
- 
+
 // ── Comandos: paquetes ────────────────────────────────────────
  
 async function comandoAñadir(args: string[]) {
@@ -838,7 +885,7 @@ function compilar(rutaArchivo: string) {
         const parser = new Parser(tokens)
         const arbol = parser.parsear()
  
-        const dirProyecto = path.dirname(path.resolve(rutaArchivo))
+        const dirProyecto = encontrarRaizProyecto(path.dirname(path.resolve(rutaArchivo)))
         const generador = new Generador(arbol, dirProyecto)
         return { archivos: generador.generar(), paginas: arbol.paginas }
  
@@ -853,6 +900,23 @@ function compilar(rutaArchivo: string) {
         }
         return null
     }
+}
+
+// Busca hacia arriba desde la carpeta del app.telar hasta encontrar
+// telar.config.json — es la raíz real del proyecto (app.telar vive en
+// src/, pero el config y public/ viven un nivel por encima). Si no
+// encuentra ninguno en 5 niveles, usa la carpeta del propio app.telar.
+function encontrarRaizProyecto(dirInicial: string): string {
+    let dir = dirInicial
+    for (let i = 0; i < 5; i++) {
+        if (fs.existsSync(path.join(dir, 'telar.config.json')) || fs.existsSync(path.join(dir, 'public'))) {
+            return dir
+        }
+        const padre = path.dirname(dir)
+        if (padre === dir) break
+        dir = padre
+    }
+    return dirInicial
 }
  
 function parsearArgs(args: string[], salidaDefault: string) {

@@ -86,7 +86,6 @@ Telar usa un dialecto estructurado del español. No es español completamente li
 ```telar
 # Declaración de aplicación
 aplicación NombreApp
-  idioma español
 
 # Modelos de datos
 datos Producto

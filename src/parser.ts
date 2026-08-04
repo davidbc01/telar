@@ -166,43 +166,15 @@ export class Parser {
                 continue
             }
  
-            if (actual.tipo === TipoToken.Idioma) {
-                this.avanzar()
-                idioma = this.consumirIdentificador().valor
-                continue
-            }
- 
-            // tema oscuro / tema claro / tema automático
-            if (actual.tipo === TipoToken.Tema) {
-                this.avanzar()
-                const valor = this.consumirIdentificador().valor.toLowerCase()
-                if (valor === "oscuro" || valor === "claro") {
-                    tema = valor
-                }
-                continue
-            }
-
-            // dominio "https://mitienda.com"
-            if (actual.tipo === TipoToken.Dominio) {
-                this.avanzar()
-                dominio = this.consumir(TipoToken.Texto).valor
-                continue
-            }
-
-            // favicon "https://.../favicon.ico"
-            if (actual.tipo === TipoToken.Favicon) {
-                this.avanzar()
-                favicon = this.consumir(TipoToken.Texto).valor
-                continue
-            }
-
-            // meta "theme-color" "#0B0B0D"
-            if (actual.tipo === TipoToken.Meta) {
-                this.avanzar()
-                const nombre = this.consumir(TipoToken.Texto).valor
-                const valor = this.consumir(TipoToken.Texto).valor
-                metasPersonalizadas.push({ nombre, valor })
-                continue
+            // idioma / tema / dominio / favicon / meta ya no van en
+            // app.telar — son configuración del sitio, no código, y
+            // ahora viven en telar.config.json en la raíz del proyecto
+            if (actual.tipo === TipoToken.Idioma || actual.tipo === TipoToken.Tema ||
+                actual.tipo === TipoToken.Dominio || actual.tipo === TipoToken.Favicon ||
+                actual.tipo === TipoToken.Meta) {
+                throw new TelarError(
+                    Errores.configEnAppTelar(actual.valor, actual.linea, actual.columna)
+                )
             }
 
             // colección Articulos en "contenido/articulos"
@@ -363,7 +335,12 @@ export class Parser {
  
     private parsearDatos(): NodoDatos {
         const token = this.consumir(TipoToken.Datos)
-        const nombre = this.consumir(TipoToken.Nombre).valor
+        // El nombre de un modelo puede coincidir con una palabra reservada
+        // (ej. "Articulo", que colisiona con la palabra clave "artículo")
+        // — se acepta cualquier token aquí, igual que con nombres de página.
+        const nombreToken = this.actual()
+        this.avanzar()
+        const nombre = nombreToken.valor
         const campos: NodoCamposDatos[] = []
  
         if (this.actual().tipo === TipoToken.Indentacion) {

@@ -4,12 +4,59 @@ Guía de referencia rápida. Para la explicación completa, ver la [especificaci
 
 ---
 
+## Estructura de un proyecto
+
+```
+mi-proyecto/
+  telar.config.json   — idioma, dominio, tema, favicon, meta: configuración del sitio
+  src/
+    app.telar          — aplicación, diseños, componentes, colecciones, incluir
+    paginas/
+      inicio.telar      — una página por archivo
+    contenido/
+      articulos/*.md     — si usas colecciones
+  public/
+    estilos.css          — editable; también favicon.ico, imágenes, etc. se copian tal cual
+```
+
+`app.telar` es solo código: páginas, diseños, componentes, colecciones. La configuración del sitio (todo lo que en otros frameworks iría en un archivo de config) vive aparte, en `telar.config.json`.
+
 ## Estructura básica
 
 ```telar
 aplicación NombreApp
-  idioma español
+
+incluir paginas/inicio
 ```
+
+---
+
+## Configuración del sitio (telar.config.json)
+
+En la raíz del proyecto, junto a `src/` y `public/`:
+
+```json
+{
+  "idioma": "español",
+  "dominio": "https://mitienda.com",
+  "tema": "oscuro",
+  "favicon": "https://mitienda.com/favicon.ico",
+  "meta": {
+    "theme-color": "#0B0B0D",
+    "apple-mobile-web-app-title": "MiTienda"
+  }
+}
+```
+
+Todos los campos son opcionales:
+
+- **`idioma`** — controla el atributo `lang` del HTML (`"español"` → `lang="es"`, `"inglés"` → `lang="en"`, etc.). Por defecto, `"español"`.
+- **`dominio`** — habilita `og:url` con la URL absoluta de cada página, y genera `sitemap.xml` y `robots.txt`. Sin `dominio`, esos dos archivos no se generan.
+- **`tema`** — `"oscuro"` o `"claro"` fija el tema para toda la web. Sin declarar, Telar sigue el sistema operativo del visitante.
+- **`favicon`** — URL del icono de pestaña. Si no se declara y existe `public/favicon.ico`, se usa automáticamente sin tener que escribir nada.
+- **`meta`** — objeto `"nombre": "valor"`, uno por cada `<meta>` personalizada que necesites — tantas como haga falta.
+
+Si `dominio`/`tema`/`favicon`/`meta`/`idioma` aparecen dentro de un archivo `.telar`, Telar avisa al compilar: ya no van ahí.
 
 ---
 
@@ -251,16 +298,7 @@ Pendiente para una versión futura: variables compartidas a nivel de aplicación
 
 ## Temas visuales
 
-A nivel de aplicación, en `app.telar`:
-
-```telar
-aplicación MiApp
-  tema oscuro
-```
-
-- Sin declarar `tema`, Telar sigue el sistema operativo del visitante (comportamiento igual que antes de v0.12)
-- `tema oscuro` fija el tema oscuro para toda la web, sin importar el sistema operativo
-- `tema claro` fija el tema claro de la misma forma
+El tema fijo (`"tema": "oscuro"` / `"claro"`) se declara en `telar.config.json` — ver [Configuración del sitio](#configuración-del-sitio-telarconfigjson). Sin declarar nada, Telar sigue el sistema operativo del visitante.
 
 Botón opcional para que el usuario lo cambie en vivo:
 
@@ -268,7 +306,7 @@ Botón opcional para que el usuario lo cambie en vivo:
 botón "Cambiar tema" alterna tema
 ```
 
-Alterna entre oscuro y claro en el navegador y lo recuerda entre visitas con `localStorage` — no llama a ninguna API. Se puede combinar con cualquiera de los dos temas fijos: el botón sobreescribe el valor inicial, y la próxima visita respeta lo último elegido.
+Alterna entre oscuro y claro en el navegador y lo recuerda entre visitas con `localStorage` — no llama a ninguna API. Se puede combinar con un tema fijo en la config: el botón sobreescribe el valor inicial, y la próxima visita respeta lo último elegido.
 
 Pendiente para una versión futura: colores de tema totalmente personalizados, más allá de los presets oscuro/claro.
 
@@ -277,10 +315,10 @@ Pendiente para una versión futura: colores de tema totalmente personalizados, m
 ## Colecciones de contenido (Markdown)
 
 ```telar
-colección Articulos en "contenido/articulos"
+colección Articulos en "src/contenido/articulos"
 ```
 
-Declara una colección respaldada por una carpeta de archivos `.md`, relativa a la raíz del proyecto. Cada archivo se convierte en un elemento de la colección; el nombre del archivo (sin `.md`) es su `slug`.
+Declara una colección respaldada por una carpeta de archivos `.md`, **relativa a la raíz del proyecto** (donde está `telar.config.json`, no donde está `app.telar`). Cada archivo se convierte en un elemento de la colección; el nombre del archivo (sin `.md`) es su `slug`.
 
 Cada archivo `.md` lleva una cabecera YAML simple entre `---`, seguida del contenido:
 
@@ -326,14 +364,7 @@ El `sitemap.xml` (si hay `dominio` declarado) incluye la URL real de cada artíc
 
 ## SEO y metadatos
 
-A nivel de aplicación, en `app.telar`:
-
-```telar
-aplicación MiTienda
-  dominio "https://mitienda.com"
-```
-
-Declarar `dominio` habilita `og:url` con la URL absoluta de cada página, y genera dos archivos nuevos en la raíz del proyecto compilado: `sitemap.xml` y `robots.txt`. Sin `dominio`, esos dos archivos no se generan (un sitemap sin URLs absolutas no es válido), pero el resto de metadatos sí.
+`dominio` se declara en `telar.config.json` (ver [Configuración del sitio](#configuración-del-sitio-telarconfigjson)) — habilita `og:url` con la URL absoluta de cada página, y genera `sitemap.xml`/`robots.txt`. Sin `dominio`, esos dos archivos no se generan (un sitemap sin URLs absolutas no es válido), pero el resto de metadatos sí.
 
 `og:title`, `og:description`, `twitter:card`, `twitter:title` y `twitter:description` se generan automáticamente en cada página a partir de `título` y `descripción` — sin nada que declarar.
 
@@ -346,18 +377,9 @@ página inicio en "/"
 
 `imagen "url"` se renderiza como un `<img>` normal en la página (con el título de la página como texto alternativo). Si es la primera imagen declarada en esa página, además se usa como `og:image` y `twitter:image`, y el `twitter:card` pasa de `summary` a `summary_large_image` automáticamente.
 
-El `sitemap.xml` incluye todas las páginas estáticas. Las rutas dinámicas (`/producto/(id)`) se excluyen automáticamente, porque no representan una URL real sino una plantilla.
+El `sitemap.xml` incluye todas las páginas estáticas, más la URL real de cada artículo de una colección. Las rutas dinámicas normales (`/producto/(id)`) se excluyen automáticamente, porque no representan una URL real sino una plantilla.
 
-También a nivel de aplicación:
-
-```telar
-aplicación MiTienda
-  favicon "https://mitienda.com/favicon.ico"
-  meta "theme-color" "#0B0B0D"
-  meta "apple-mobile-web-app-title" "MiTienda"
-```
-
-`favicon "url"` genera `<link rel="icon" href="url">` en todas las páginas. `meta "nombre" "valor"` genera un `<meta name="nombre" content="valor">` — se puede repetir tantas veces como haga falta, y sirve para cualquier etiqueta que Telar no genere automáticamente (color de tema del navegador, título para apps de iOS/Android, códigos de verificación de buscadores, etc.).
+`favicon` y `meta` también van en `telar.config.json` — ver la sección de configuración más arriba.
 
 ---
 
@@ -415,7 +437,6 @@ caché N horas
 
 ```telar
 aplicación MiTienda
-  idioma español
 
 datos Producto
   nombre: texto

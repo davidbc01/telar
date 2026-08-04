@@ -16,7 +16,7 @@ function parsear(codigo: string) {
 describe("Parser — aplicación", () => {
 
     it("parsea una aplicación básica", () => {
-        const arbol = parsear(`aplicación MiApp\n  idioma español`)
+        const arbol = parsear(`aplicación MiApp`)
         expect(arbol.tipo).toBe("aplicacion")
         expect(arbol.nombre).toBe("MiApp")
         expect(arbol.idioma).toBe("español")
@@ -25,6 +25,14 @@ describe("Parser — aplicación", () => {
     it("usa español como idioma por defecto", () => {
         const arbol = parsear(`aplicación MiApp`)
         expect(arbol.idioma).toBe("español")
+    })
+
+    it("idioma/dominio/tema/favicon/meta ya no son válidos dentro de app.telar (v1.0-rc)", () => {
+        expect(() => parsear(`aplicación MiApp\n  idioma español`)).toThrow(/ya no va dentro de app\.telar/)
+        expect(() => parsear(`aplicación MiApp\n  dominio "https://x.com"`)).toThrow(/ya no va dentro de app\.telar/)
+        expect(() => parsear(`aplicación MiApp\n  tema oscuro`)).toThrow(/ya no va dentro de app\.telar/)
+        expect(() => parsear(`aplicación MiApp\n  favicon "https://x.com/f.ico"`)).toThrow(/ya no va dentro de app\.telar/)
+        expect(() => parsear(`aplicación MiApp\n  meta "x" "y"`)).toThrow(/ya no va dentro de app\.telar/)
     })
 
     it("lanza error sin nombre de aplicación", () => {
@@ -365,19 +373,9 @@ describe("Parser — variables y estado local (v0.11)", () => {
 
 describe("Parser — temas visuales (v0.12)", () => {
 
-    it("sin declarar tema, la app usa automático", () => {
+    it("sin config, la app usa tema automático por defecto", () => {
         const arbol = parsear(`aplicación MiApp`)
         expect(arbol.tema).toBe("automatico")
-    })
-
-    it("parsea tema oscuro", () => {
-        const arbol = parsear(`aplicación MiApp\n  tema oscuro`)
-        expect(arbol.tema).toBe("oscuro")
-    })
-
-    it("parsea tema claro", () => {
-        const arbol = parsear(`aplicación MiApp\n  tema claro`)
-        expect(arbol.tema).toBe("claro")
     })
 
     it("un botón alterna tema guarda la operación cambiar_tema", () => {
@@ -475,11 +473,6 @@ describe("Parser — SEO y metadatos (v0.13)", () => {
         expect(arbol.dominio).toBeUndefined()
     })
 
-    it("parsea el dominio de la aplicación", () => {
-        const arbol = parsear(`aplicación MiApp\n  dominio "https://mitienda.com"`)
-        expect(arbol.dominio).toBe("https://mitienda.com")
-    })
-
     it("parsea una imagen en una página", () => {
         const arbol = parsear(`aplicación MiApp\n\npágina inicio en "/"\n  imagen "https://mitienda.com/foto.jpg"`)
         const imagen = arbol.paginas[0].hijos[0] as any
@@ -498,34 +491,19 @@ describe("Parser — SEO y metadatos (v0.13)", () => {
         expect(campos[2].nombre).toBe("precio")
     })
 
+    it("un modelo se puede llamar 'Articulo' pese a colisionar con la palabra clave (regresión pre-v1.0)", () => {
+        const arbol = parsear(`aplicación MiApp\n\ndatos Articulo\n  título: texto`)
+        expect(arbol.datos[0].nombre).toBe("Articulo")
+    })
+
 })
 
 describe("Parser — control del <head>: favicon y meta", () => {
 
-    it("sin favicon declarado, queda indefinido", () => {
+    it("sin config, favicon y metasPersonalizadas quedan vacíos por defecto", () => {
         const arbol = parsear(`aplicación MiApp`)
         expect(arbol.favicon).toBeUndefined()
         expect(arbol.metasPersonalizadas).toEqual([])
-    })
-
-    it("parsea favicon", () => {
-        const arbol = parsear(`aplicación MiApp\n  favicon "https://midominio.com/favicon.ico"`)
-        expect(arbol.favicon).toBe("https://midominio.com/favicon.ico")
-    })
-
-    it("parsea una meta personalizada", () => {
-        const arbol = parsear(`aplicación MiApp\n  meta "theme-color" "#0B0B0D"`)
-        expect(arbol.metasPersonalizadas).toEqual([{ nombre: "theme-color", valor: "#0B0B0D" }])
-    })
-
-    it("parsea varias meta personalizadas en orden", () => {
-        const arbol = parsear(
-            `aplicación MiApp\n  meta "theme-color" "#0B0B0D"\n  meta "apple-mobile-web-app-title" "MiApp"`
-        )
-        expect(arbol.metasPersonalizadas).toEqual([
-            { nombre: "theme-color", valor: "#0B0B0D" },
-            { nombre: "apple-mobile-web-app-title", valor: "MiApp" }
-        ])
     })
 
 })

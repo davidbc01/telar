@@ -51,7 +51,51 @@ export class Generador {
     constructor(app: NodoAplicacion, dirProyecto: string = process.cwd()) {
         this.app = app
         this.dirProyecto = dirProyecto
+        this.aplicarConfig()
+        this.aplicarFaviconAutomatico()
     }
+
+    // Lee telar.config.json de la raíz del proyecto (idioma, dominio,
+    // tema, meta) — la configuración del sitio ya no vive en app.telar,
+    // solo el código: páginas, diseños, componentes, colecciones.
+    private aplicarConfig() {
+        const rutaConfig = path.join(this.dirProyecto, 'telar.config.json')
+        if (!fs.existsSync(rutaConfig)) return
+
+        let config: {
+            idioma?: string
+            dominio?: string
+            tema?: 'automatico' | 'oscuro' | 'claro'
+            favicon?: string
+            meta?: Record<string, string>
+        }
+
+        try {
+            config = JSON.parse(fs.readFileSync(rutaConfig, 'utf-8'))
+        } catch {
+            return
+        }
+
+        if (config.idioma) this.app.idioma = config.idioma
+        if (config.dominio) this.app.dominio = config.dominio
+        if (config.tema) this.app.tema = config.tema
+        if (config.favicon) this.app.favicon = config.favicon
+        if (config.meta) {
+            this.app.metasPersonalizadas = Object.entries(config.meta)
+                .map(([nombre, valor]) => ({ nombre, valor }))
+        }
+    }
+
+    // Si hay un public/favicon.ico y no se declaró uno explícito en el
+    // config, se usa automáticamente — sin que haga falta declarar nada
+    private aplicarFaviconAutomatico() {
+        if (this.app.favicon) return
+        const rutaFavicon = path.join(this.dirProyecto, 'public', 'favicon.ico')
+        if (fs.existsSync(rutaFavicon)) {
+            this.app.favicon = '/favicon.ico'
+        }
+    }
+
  
     generar(): ArchivoGenerado[] {
         const archivos: ArchivoGenerado[] = []
@@ -83,8 +127,8 @@ export class Generador {
         }
  
         // ── Estilos ───────────────────────────────────────────
-        // Prioridad: estilos.css local > CSS automático
-        const rutaEstilosLocal = path.join(this.dirProyecto, 'estilos.css')
+        // Prioridad: public/estilos.css > CSS automático
+        const rutaEstilosLocal = path.join(this.dirProyecto, 'public', 'estilos.css')
  
         if (fs.existsSync(rutaEstilosLocal)) {
             // Copiar el estilos.css del proyecto al output
@@ -226,7 +270,7 @@ export class Generador {
             .join('\n')
  
         return `<!DOCTYPE html>
-<html lang="es"${atributoTema}>
+<html lang="${this.idiomaACodigoISO(this.app.idioma)}"${atributoTema}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1039,6 +1083,22 @@ html[data-tema="oscuro"] select { background: #1a1d27; }
     }
  
     // Genera un id/slug limpio a partir de un texto
+    // "español" -> "es", para el atributo lang="..." del HTML — antes
+    // estaba fijo a "es" siempre, ignorando lo que se declarara
+    private idiomaACodigoISO(idioma: string): string {
+        const mapa: Record<string, string> = {
+            'español': 'es', 'espanol': 'es',
+            'inglés': 'en', 'ingles': 'en', 'english': 'en',
+            'francés': 'fr', 'frances': 'fr',
+            'alemán': 'de', 'aleman': 'de',
+            'italiano': 'it',
+            'portugués': 'pt', 'portugues': 'pt',
+            'catalán': 'ca', 'catalan': 'ca',
+            'euskera': 'eu', 'gallego': 'gl',
+        }
+        return mapa[idioma.toLowerCase().trim()] ?? 'es'
+    }
+
     private slugify(texto: string): string {
         return texto.toLowerCase()
             .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')

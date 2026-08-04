@@ -5,6 +5,55 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.25.0] - 2026-08-05
+ 
+### Contexto
+Al usar telar.dev y comparar con Astro, quedó claro que la estructura de un proyecto Telar tenía un problema real: todo mezclado en `app.telar` (configuración del sitio y código por igual), sin ningún sitio fijo para nada. Rediseño completo, con ruptura total deliberada — pre-v1.0.
+
+### Cambiado — breaking change
+
+**`idioma`, `dominio`, `tema`, `favicon` y `meta` ya no van dentro de ningún archivo `.telar`.** Si aparecen ahí, Telar lanza un error claro que redirige a `telar.config.json`. Ahora viven en un archivo de configuración en la raíz del proyecto:
+
+```json
+{
+  "idioma": "español",
+  "dominio": "https://mitienda.com",
+  "tema": "oscuro",
+  "favicon": "https://mitienda.com/favicon.ico",
+  "meta": { "theme-color": "#0B0B0D" }
+}
+```
+
+**Nueva estructura de carpetas**, generada de golpe por `telar nuevo`:
+
+```
+mi-proyecto/
+  telar.config.json
+  src/
+    app.telar
+    paginas/
+    contenido/        (si usas colecciones)
+  public/
+    estilos.css
+```
+
+- `estilos.css` ahora se busca en `public/estilos.css`, no en la raíz del proyecto
+- Las rutas de `colección` ahora se resuelven desde la raíz del proyecto (donde está `telar.config.json`), no desde la carpeta de `app.telar` — un proyecto con `app.telar` en `src/` necesita `colección X en "src/contenido/X"`, no `"contenido/X"`
+### Añadido
+- **`public/` se copia entero al resultado** en `telar compilar` y `telar servir` (imágenes, `favicon.ico`, cualquier archivo estático) — antes no existía ningún mecanismo para esto
+- **`public/favicon.ico` se detecta automáticamente**, sin declarar nada, si no hay uno explícito en la config
+- `telar servir` ahora vigila también `telar.config.json` y archivos `.md`, no solo `.telar`/`.css`
+- La búsqueda de la raíz del proyecto (`telar.config.json` o `public/`) sube hasta 5 niveles desde la carpeta de `app.telar`
+- 9 tests nuevos dedicados a la estructura nueva (config, `public/`, la búsqueda de raíz)
+### Corregido
+- **El `idioma` llevaba sin tener ningún efecto real desde que existe**: el atributo `lang` del HTML estaba fijo a `"es"` pase lo que pase se declarara. Ahora se traduce de verdad (`"inglés"` → `lang="en"`, `"francés"` → `lang="fr"`, etc.)
+- **Otra colisión de palabra reservada, encontrada al migrar el ejemplo del blog**: `datos Articulo` fallaba al compilar porque "Articulo" colisiona con la palabra clave de colecciones (v0.24) — mismo arreglo que ya se había aplicado a nombres de página, ahora también en nombres de modelo
+- 24 tests migrados de la sintaxis vieja a `telar.config.json` real en disco
+### Migrado
+- `examples/blog`, `examples/tienda` y telar.dev, los 3 proyectos reales de esta sesión, movidos a la estructura nueva y reverificados compilando de verdad
+
+---
+
 ## [0.24.2] - 2026-08-04
 
 ### Corregido

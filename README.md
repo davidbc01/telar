@@ -4,7 +4,6 @@
 
 ```telar
 aplicación MiTienda
-  idioma español
 
 incluir modelos/Producto
 incluir paginas/inicio
@@ -56,19 +55,20 @@ npx ts-node src/cli.ts nuevo mi-proyecto
 ## Uso
 
 ```bash
-# Crear un proyecto nuevo
+# Crear un proyecto nuevo — genera telar.config.json, src/, public/, todo listo
 telar nuevo mi-proyecto
+cd mi-proyecto
 
 # Verificar la sintaxis
-telar verificar app.telar
+telar verificar src/app.telar
 
 # Compilar a HTML + CSS + JS
-telar compilar app.telar
-telar compilar app.telar -o dist/
+telar compilar src/app.telar
+telar compilar src/app.telar -o dist/
 
 # Servir en el navegador con live reload
-telar servir app.telar
-telar servir app.telar -p 3050   # en otro puerto, si el 3000 está ocupado
+telar servir src/app.telar
+telar servir src/app.telar -p 3050   # en otro puerto, si el 3000 está ocupado
 
 # Gestionar paquetes
 telar añadir formulario
@@ -94,11 +94,10 @@ mi-proyecto/
   telar.paquetes.json
 ```
 
-`app.telar` orquesta el proyecto con `incluir`:
+`src/app.telar` orquesta el proyecto con `incluir`:
 
 ```telar
 aplicación MiProyecto
-  idioma español
   estilos "https://cdn.tailwindcss.com"   # opcional
 
 incluir modelos/Producto
@@ -241,15 +240,16 @@ página contador en "/"
 
 ## Temas visuales
 
-```telar
-aplicación MiApp
-  tema oscuro
+```json
+{ "tema": "oscuro" }
+```
 
+```telar
 página inicio en "/"
   botón "🌙 Cambiar tema" alterna tema
 ```
 
-Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que siempre). `tema oscuro` o `tema claro` lo fija para toda la web, sin importar el sistema operativo. El botón `alterna tema` es opcional y se puede combinar con cualquiera de los dos: alterna en vivo y lo recuerda entre visitas con `localStorage`, sin llamar a ninguna API.
+Sin declarar `tema` en `telar.config.json`, Telar sigue el sistema operativo del visitante (igual que siempre). `"oscuro"` o `"claro"` lo fija para toda la web, sin importar el sistema operativo. El botón `alterna tema` es opcional y se puede combinar con cualquiera de los dos: alterna en vivo y lo recuerda entre visitas con `localStorage`, sin llamar a ninguna API.
 
 ---
 
@@ -258,7 +258,7 @@ Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que s
 ```telar
 aplicación MiBlog
 
-colección Articulos en "contenido/articulos"
+colección Articulos en "src/contenido/articulos"
 
 página blog en "/blog"
   listar Articulos
@@ -286,12 +286,19 @@ Contenido en **Markdown** normal: negrita, *cursiva*, `código`, listas, citas y
 
 ## SEO y metadatos
 
-```telar
-aplicación MiTienda
-  dominio "https://mitienda.com"
-  favicon "https://mitienda.com/favicon.ico"
-  meta "theme-color" "#0B0B0D"
+`dominio`, `favicon` y `meta` se declaran en `telar.config.json`, en la raíz del proyecto — no en `app.telar`:
 
+```json
+{
+  "dominio": "https://mitienda.com",
+  "favicon": "https://mitienda.com/favicon.ico",
+  "meta": { "theme-color": "#0B0B0D" }
+}
+```
+
+Y en la página, lo que sí es contenido real:
+
+```telar
 página inicio en "/"
   imagen "https://mitienda.com/img/portada.jpg"
   título "Bienvenido a Mi Tienda"
@@ -300,9 +307,9 @@ página inicio en "/"
 
 Cada página genera automáticamente sus etiquetas `og:title`, `og:description`, `twitter:card` y similares a partir del título y la descripción — sin nada que configurar. `imagen "url"` se muestra en la página como una imagen normal y, si es la primera de esa página, se usa también como `og:image`/`twitter:image`.
 
-Declarar `dominio` en `app.telar` añade dos cosas más: `og:url` con la URL absoluta real de cada página, y dos archivos nuevos generados en la raíz — `sitemap.xml` y `robots.txt`, listos para subir tal cual. Las rutas dinámicas (`/producto/(id)`) se excluyen del sitemap automáticamente, porque no representan una URL real.
+Declarar `dominio` en el config añade dos cosas más: `og:url` con la URL absoluta real de cada página, y dos archivos nuevos generados en la raíz — `sitemap.xml` y `robots.txt`, listos para subir tal cual (incluyendo la URL real de cada artículo de una colección). Las rutas dinámicas normales (`/producto/(id)`) se excluyen del sitemap automáticamente, porque no representan una URL real.
 
-`favicon "url"` añade el icono de la pestaña del navegador en todas las páginas. `meta "nombre" "valor"` añade cualquier etiqueta `<meta>` personalizada que necesites (color de tema, título para apps de iOS, verificación de Search Console...) — se puede repetir tantas veces como haga falta.
+`favicon` añade el icono de la pestaña del navegador en todas las páginas — y si no lo declaras pero tienes `public/favicon.ico`, se usa automáticamente, sin escribir nada. `meta` añade cualquier etiqueta `<meta>` personalizada que necesites (color de tema, título para apps de iOS, verificación de Search Console...) — tantas como haga falta, como pares clave-valor en el objeto.
 
 ---
 
@@ -386,6 +393,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Componentes conectados a listas de datos reales | ✅ Completo |
 | Componentes con varios parámetros nombrados y slots | ✅ Completo |
 | Colecciones de contenido (Markdown) | ✅ Completo |
+| Estructura de proyecto: telar.config.json + src/ + public/ | ✅ Completo |
 | Validación semántica (diseños/componentes inexistentes) | ✅ Completo |
 | Control del `<head>` (favicon, meta personalizadas) | ✅ Completo |
 | Tests de integración de `telar servir` | ✅ Completo |
@@ -462,7 +470,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.13 — SEO y metadatos ✅
 - `og:title`, `og:description`, `og:image`, `twitter:card` automáticos a partir de título/descripción/imagen — sin configuración
-- `dominio "https://..."` en `app.telar` habilita `og:url` absoluta, `sitemap.xml` y `robots.txt`
+- `dominio` en `telar.config.json` habilita `og:url` absoluta, `sitemap.xml` y `robots.txt`
 - `imagen "url"` — se muestra en la página y, si es la primera de esa página, se usa también como imagen para compartir en redes
 - Las rutas dinámicas (`/producto/(id)`) se excluyen del sitemap automáticamente
 
@@ -497,7 +505,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.19 — Tests de `telar servir` ✅
 - Antes, el servidor de desarrollo (rutas dinámicas, live reload, recompilación al vuelo) solo se había verificado a mano toda la sesión — ahora tiene 7 tests de integración con peticiones HTTP reales
-- `telar servir app.telar -p 3050` — puerto configurable, útil si el 3000 está ocupado o para correr varias instancias
+- `telar servir src/app.telar -p 3050` — puerto configurable, útil si el 3000 está ocupado o para correr varias instancias
 
 ### v0.20 — Último ajuste de sintaxis ✅
 - `según campo = valor` → `donde campo = valor`, el mismo patrón que `WHERE` en SQL — "según" sonaba a prosa justo al lado del operador `=`
@@ -525,7 +533,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - 19 tests nuevos (245 en total)
 
 ### v0.24 — Colecciones de contenido (Markdown) ✅
-- `colección Articulos en "contenido/articulos"` — cada `.md` de la carpeta, con cabecera YAML, se convierte en un elemento real
+- `colección Articulos en "src/contenido/articulos"` — cada `.md` de la carpeta, con cabecera YAML, se convierte en un elemento real
 - `listar Articulos` — lista generada en tiempo de compilación, enlazando a la URL real de cada artículo
 - `artículo Articulos` — genera **un HTML real y distinto por cada archivo .md**, con el contenido ya dentro (a diferencia de las rutas dinámicas normales, que resuelven todo en el navegador con JS porque los datos vienen de una API en vivo)
 - Conversor Markdown → HTML propio: encabezados, negrita, cursiva, código, listas, citas, enlaces
@@ -533,6 +541,18 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Tercero y último de los huecos que salieron al comparar Telar con Astro — el más grande de los tres, casi un subsistema nuevo
 - De paso, arreglado otro caso de colisión de palabra reservada: una página no podía llamarse "articulo" (mismo problema que tuvimos con `imagen` como nombre de campo en v0.13)
 - 17 tests nuevos, con archivos `.md` reales en disco (262 en total)
+
+### v0.25 — Estructura de proyecto: telar.config.json + src/ + public/ ✅
+- Rediseño completo de cómo se organiza un proyecto, motivado por comparar Telar con Astro y encontrar que todo estaba mezclado en un único `app.telar`: configuración del sitio y código
+- **`telar.config.json`** (raíz del proyecto): `idioma`, `dominio`, `tema`, `favicon`, `meta` — ya no van dentro de ningún `.telar`, y si aparecen ahí, Telar avisa con un error claro
+- **`src/`**: `app.telar`, `paginas/`, `contenido/` (si usas colecciones) — todo el código, en un sitio fijo
+- **`public/`**: `estilos.css`, `favicon.ico`, imágenes, lo que sea — se copia tal cual al resultado. Un `favicon.ico` ahí se detecta solo, sin declarar nada
+- `telar nuevo` genera la estructura completa de golpe — nada que crear a mano
+- **Bug real corregido de paso**: el idioma llevaba sin usarse nunca — el HTML siempre decía `lang="es"` sin importar lo que se declarara. Ahora se traduce de verdad (`"inglés"` → `lang="en"`, etc.)
+- **Otra colisión de palabra reservada encontrada y arreglada**: `datos Articulo` fallaba porque "Articulo" colisiona con la palabra clave de colecciones — mismo arreglo que ya se había hecho para nombres de página
+- Los 3 proyectos reales de esta sesión (`examples/blog`, `examples/tienda`, telar.dev) migrados a la estructura nueva y reverificados compilando
+- Breaking change total — se decidió deliberadamente no mantener compatibilidad con la estructura antigua, estando pre-v1.0
+- 269 tests en total
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

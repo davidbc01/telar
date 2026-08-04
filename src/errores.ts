@@ -154,4 +154,11 @@ export const Errores = {
         linea,
         columna,
     }),
+
+    configEnAppTelar: (palabra: string, linea: number, columna: number): ErrorTelar => ({
+        mensaje: `"${palabra}" ya no va dentro de app.telar — es configuración del sitio, no código`,
+        sugerencia: `Muévelo a telar.config.json, en la raíz del proyecto: { "${palabra}": "..." }`,
+        linea,
+        columna,
+    }),
 }
