@@ -33,6 +33,9 @@ export enum TipoToken {
     Meta = "meta",
     Y = "y",
     Contenido = "contenido",
+    Coleccion = "coleccion",
+    Listar = "listar",
+    Articulo = "articulo",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -129,6 +132,9 @@ export type Nodo =
     | NodoTextoVariable
     | NodoImagen
     | NodoContenidoSlot
+    | NodoColeccion
+    | NodoListar
+    | NodoArticulo
  
 // aplicación MiTienda
 export interface NodoAplicacion {
@@ -144,6 +150,7 @@ export interface NodoAplicacion {
     dominio?: string // "https://mitienda.com" — para SEO: sitemap.xml, robots.txt, og:url
     favicon?: string // "https://.../favicon.ico"
     metasPersonalizadas: { nombre: string; valor: string }[] // meta "theme-color" "#000"
+    colecciones: NodoColeccion[]
     linea: number
 }
  
@@ -191,6 +198,32 @@ export interface NodoUsoComponente {
 // el que lo usa pase como bloque indentado (o al final, si no hay marcador)
 export interface NodoContenidoSlot {
     tipo: "contenido_slot"
+    linea: number
+}
+
+// colección Articulos en "contenido/articulos"
+export interface NodoColeccion {
+    tipo: "coleccion"
+    nombre: string
+    ruta: string // carpeta de archivos .md, relativa al proyecto
+    linea: number
+}
+
+// listar Articulos
+//   ordenados por fecha
+//   máximo 5
+export interface NodoListar {
+    tipo: "listar"
+    coleccion: string
+    modificadores: ModificadorMostrar[]
+    linea: number
+}
+
+// artículo Articulos — dentro de una página con ruta dinámica; genera un
+// HTML real por cada elemento de la colección, en tiempo de compilación
+export interface NodoArticulo {
+    tipo: "articulo_coleccion"
+    coleccion: string
     linea: number
 }
 

@@ -138,4 +138,20 @@ export const Errores = {
         linea,
         columna,
     }),
+
+    coleccionNoExiste: (nombre: string, disponibles: string[], linea: number, columna: number): ErrorTelar => ({
+        mensaje: `Se usa la colección "${nombre}" pero no existe`,
+        sugerencia: disponibles.length > 0
+            ? `Colecciones declaradas: ${disponibles.join(', ')}`
+            : `Declara la colección primero: colección ${nombre} en "contenido/carpeta"`,
+        linea,
+        columna,
+    }),
+
+    articuloSinRutaDinamica: (nombrePagina: string, linea: number, columna: number): ErrorTelar => ({
+        mensaje: `La página "${nombrePagina}" usa "artículo" pero su ruta no tiene ningún segmento dinámico`,
+        sugerencia: `Un archivo se generaría por cada elemento, todos con el mismo nombre, pisándose entre sí. Añade un segmento como (slug) a la ruta: página ${nombrePagina} en "/blog/(slug)"`,
+        linea,
+        columna,
+    }),
 }

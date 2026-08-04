@@ -11,6 +11,7 @@ import {
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
     NodoVariable, NodoTextoVariable, NodoImagen, NodoContenidoSlot,
+    NodoColeccion, NodoListar, NodoArticulo,
     Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion, AccionBoton
 } from './tipos'
 import { Errores } from './errores'
@@ -48,6 +49,7 @@ export class Parser {
     private validarReferencias(app: NodoAplicacion) {
         const nombresDisenos = app.disenos.map(d => d.nombre)
         const componentes = app.componentes
+        const colecciones = app.colecciones
 
         for (const pagina of app.paginas) {
             if (pagina.diseno && !nombresDisenos.includes(pagina.diseno)) {
@@ -55,16 +57,25 @@ export class Parser {
                     Errores.disenoNoExiste(pagina.diseno, nombresDisenos, pagina.linea, 1)
                 )
             }
-            this.validarNodosHijos(pagina.hijos, componentes)
+
+            const nodoArticulo = pagina.hijos.find(h => h.tipo === 'articulo_coleccion') as NodoArticulo | undefined
+            if (nodoArticulo && pagina.parametros.length === 0) {
+                throw new TelarError(
+                    Errores.articuloSinRutaDinamica(pagina.nombre, nodoArticulo.linea, 1)
+                )
+            }
+
+            this.validarNodosHijos(pagina.hijos, componentes, colecciones)
         }
 
         for (const diseno of app.disenos) {
-            this.validarNodosHijos(diseno.hijos, componentes)
+            this.validarNodosHijos(diseno.hijos, componentes, colecciones)
         }
     }
 
-    private validarNodosHijos(hijos: Nodo[], componentes: NodoComponente[]) {
+    private validarNodosHijos(hijos: Nodo[], componentes: NodoComponente[], colecciones: NodoColeccion[]) {
         const nombresComponentes = componentes.map(c => c.nombre)
+        const nombresColecciones = colecciones.map(c => c.nombre)
 
         for (const nodo of hijos) {
             if (nodo.tipo === 'uso_componente') {
@@ -81,7 +92,7 @@ export class Parser {
                         )
                     )
                 }
-                this.validarNodosHijos(nodo.contenidoSlot, componentes)
+                this.validarNodosHijos(nodo.contenidoSlot, componentes, colecciones)
             }
 
             if (nodo.tipo === 'mostrar' && nodo.componentePlantilla) {
@@ -98,17 +109,24 @@ export class Parser {
                 }
             }
 
+            if ((nodo.tipo === 'listar' || nodo.tipo === 'articulo_coleccion') &&
+                !nombresColecciones.includes(nodo.coleccion)) {
+                throw new TelarError(
+                    Errores.coleccionNoExiste(nodo.coleccion, nombresColecciones, nodo.linea, 1)
+                )
+            }
+
             // Recorrer bloques anidados (si/si no, si falla, si funciona)
             if (nodo.tipo === 'si') {
-                this.validarNodosHijos(nodo.entonces, componentes)
-                if (nodo.siNo) this.validarNodosHijos(nodo.siNo, componentes)
+                this.validarNodosHijos(nodo.entonces, componentes, colecciones)
+                if (nodo.siNo) this.validarNodosHijos(nodo.siNo, componentes, colecciones)
             }
             if (nodo.tipo === 'mostrar') {
-                if (nodo.siFalla) this.validarNodosHijos(nodo.siFalla, componentes)
-                if (nodo.siFunciona) this.validarNodosHijos(nodo.siFunciona, componentes)
+                if (nodo.siFalla) this.validarNodosHijos(nodo.siFalla, componentes, colecciones)
+                if (nodo.siFunciona) this.validarNodosHijos(nodo.siFunciona, componentes, colecciones)
             }
             if (nodo.tipo === 'boton' && nodo.siFalla) {
-                this.validarNodosHijos(nodo.siFalla, componentes)
+                this.validarNodosHijos(nodo.siFalla, componentes, colecciones)
             }
         }
     }
@@ -135,6 +153,7 @@ export class Parser {
         let dominio: string | undefined
         let favicon: string | undefined
         const metasPersonalizadas: { nombre: string; valor: string }[] = []
+        const colecciones: NodoColeccion[] = []
  
         // Leer hijos de la aplicación
         while (!this.finArchivo()) {
@@ -185,6 +204,16 @@ export class Parser {
                 metasPersonalizadas.push({ nombre, valor })
                 continue
             }
+
+            // colección Articulos en "contenido/articulos"
+            if (actual.tipo === TipoToken.Coleccion) {
+                this.avanzar()
+                const nombreColeccion = this.consumir(TipoToken.Nombre).valor
+                this.consumir(TipoToken.En)
+                const rutaColeccion = this.consumir(TipoToken.Texto).valor
+                colecciones.push({ tipo: "coleccion", nombre: nombreColeccion, ruta: rutaColeccion, linea: actual.linea })
+                continue
+            }
  
             // estilos "https://cdn.tailwindcss.com"
             if (actual.tipo === TipoToken.Estilos) {
@@ -231,6 +260,7 @@ export class Parser {
             dominio,
             favicon,
             metasPersonalizadas,
+            colecciones,
             linea: token.linea
         }
     }
@@ -282,6 +312,51 @@ export class Parser {
     private parsearContenidoSlot(): NodoContenidoSlot {
         const token = this.consumir(TipoToken.Contenido)
         return { tipo: "contenido_slot", linea: token.linea }
+    }
+
+    // listar Articulos
+    //   ordenados por fecha
+    //   máximo 5
+    private parsearListar(): NodoListar {
+        const token = this.consumir(TipoToken.Listar)
+        const coleccion = this.consumir(TipoToken.Nombre).valor
+        const modificadores: ModificadorMostrar[] = []
+
+        const leer = () => {
+            while (!this.finArchivo()) {
+                const t = this.actual()
+                if (t.tipo === TipoToken.Maximo) {
+                    this.avanzar()
+                    const cantidad = parseInt(this.consumir(TipoToken.Numero).valor)
+                    modificadores.push({ tipo: "maximo", cantidad })
+                    continue
+                }
+                if (t.tipo === TipoToken.Ordenados) {
+                    this.avanzar()
+                    if (this.actual().tipo === TipoToken.Por) this.avanzar()
+                    const campo = this.consumirIdentificador().valor
+                    modificadores.push({ tipo: "ordenados", campo })
+                    continue
+                }
+                break
+            }
+        }
+
+        leer()
+        if (this.actual().tipo === TipoToken.Indentacion) {
+            this.avanzar()
+            leer()
+            if (this.actual().tipo === TipoToken.FinIndentacion) this.avanzar()
+        }
+
+        return { tipo: "listar", coleccion, modificadores, linea: token.linea }
+    }
+
+    // artículo Articulos — dentro de una página con ruta dinámica
+    private parsearArticuloColeccion(): NodoArticulo {
+        const token = this.consumir(TipoToken.Articulo)
+        const coleccion = this.consumir(TipoToken.Nombre).valor
+        return { tipo: "articulo_coleccion", coleccion, linea: token.linea }
     }
  
   // ── datos Producto ──────────────────────────────────────────
@@ -364,7 +439,17 @@ export class Parser {
  
     private parsearPagina(): NodoPagina {
         const token = this.consumir(TipoToken.Pagina)
-        const nombre = this.consumirIdentificador().valor
+        // El nombre de una página puede coincidir con una palabra reservada
+        // (ej. una página llamada "articulo") — se acepta cualquier token
+        // aquí, igual que se hizo para los campos de "datos".
+        const nombreToken = this.actual()
+        if (nombreToken.tipo === TipoToken.En) {
+            throw new TelarError(
+                Errores.seEsperaba("el nombre de la página", nombreToken.valor, nombreToken.linea, nombreToken.columna)
+            )
+        }
+        this.avanzar()
+        const nombre = nombreToken.valor
         this.consumir(TipoToken.En)
         const ruta = this.consumir(TipoToken.Texto).valor
         const parametros = this.extraerParametrosRuta(ruta)
@@ -409,6 +494,8 @@ export class Parser {
             case TipoToken.PalabraTexto: return this.parsearTextoVariable()
             case TipoToken.Imagen:      return this.parsearImagen()
             case TipoToken.Contenido:   return this.parsearContenidoSlot()
+            case TipoToken.Listar:      return this.parsearListar()
+            case TipoToken.Articulo:    return this.parsearArticuloColeccion()
             default:
             this.avanzar()
             return null

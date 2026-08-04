@@ -5,6 +5,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.24.0] - 2026-08-04
+
+### Contexto
+Tercero y último de los huecos que salieron al comparar Telar con Astro. El más grande con diferencia — casi un subsistema nuevo, no una palabra clave más.
+
+### Añadido
+- `colección Articulos en "contenido/articulos"` — declara una colección respaldada por una carpeta de archivos `.md`
+- Cabecera YAML simple (`título`, `fecha`, cualquier clave: valor de una línea) en cada archivo `.md`
+- Conversor Markdown → HTML propio, sin dependencias externas: encabezados (`#`/`##`/`###`), párrafos, negrita, cursiva, código en línea, bloques de código, listas, citas, enlaces
+- `listar Articulos` — lista generada en tiempo de compilación (con `ordenados por` y `máximo`, igual que `mostrar`), enlazando a la URL real de cada artículo
+- `artículo Articulos` — genera **un HTML real y distinto por cada archivo `.md`**, con el contenido ya dentro. A diferencia de las rutas dinámicas normales (`/producto/(id)`, que resuelven todo en el navegador con JS porque los datos vienen de una API en tiempo de ejecución), aquí el contenido ya existe en disco al compilar — mejor para SEO, más rápido, sin depender de JS para ver el artículo
+- Validación nueva: usar `artículo` en una página sin segmento dinámico en la ruta es un error de compilación claro (si no, todos los artículos generarían el mismo nombre de archivo y se pisarían entre sí)
+- El `título`/`descripción` del frontmatter se usan automáticamente como `<title>`, `og:title`, `og:description`, etc. de cada artículo
+- El `sitemap.xml` incluye la URL real de cada artículo automáticamente, no una plantilla
+- `tests/colecciones.test.ts` — 17 tests nuevos, con archivos `.md` reales en disco (262 en total)
+
+### Corregido
+- Otro caso de colisión de palabra reservada, encontrado al probar con un ejemplo real: una página no podía llamarse "articulo" porque la palabra ya estaba reservada para la nueva sintaxis. Mismo problema que tuvimos con `imagen` como nombre de campo en v0.13 — el nombre de una página ahora acepta cualquier palabra en esa posición, igual que se arregló entonces para los campos de `datos`
+
+---
+
 ## [0.23.0] - 2026-08-04
 
 ### Contexto

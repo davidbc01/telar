@@ -253,6 +253,37 @@ Sin declarar `tema`, Telar sigue el sistema operativo del visitante (igual que s
 
 ---
 
+## Colecciones de contenido (Markdown)
+
+```telar
+aplicación MiBlog
+
+colección Articulos en "contenido/articulos"
+
+página blog en "/blog"
+  listar Articulos
+    ordenados por fecha
+
+página detalle en "/blog/(slug)"
+  diseño principal
+  artículo Articulos
+```
+
+Cada archivo `.md` dentro de la carpeta declarada, con cabecera YAML (`título`, `fecha`, lo que necesites), se convierte en una página real — un HTML de verdad por artículo, generado en tiempo de compilación, con el contenido ya dentro. No es como las rutas dinámicas normales (que resuelven un `id` en el navegador con JS): aquí el contenido existe en disco al compilar, así que se genera directamente, mejor para SEO y sin depender de JS para ver el artículo.
+
+```markdown
+---
+título: Mi primer artículo
+fecha: 2026-08-01
+---
+
+Contenido en **Markdown** normal: negrita, *cursiva*, `código`, listas, citas y enlaces.
+```
+
+`listar` muestra la lista (con `ordenados por` y `máximo`, igual que `mostrar`), enlazando a la URL real de cada artículo. `artículo` solo se puede usar en una página con ruta dinámica (`(slug)`) — Telar avisa si falta, porque sin eso todos los artículos se generarían con el mismo nombre de archivo, pisándose entre sí.
+
+---
+
 ## SEO y metadatos
 
 ```telar
@@ -339,7 +370,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (245) + CI/CD | ✅ Completo |
+| Tests completos (262) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -354,6 +385,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Gramática limpia (sin `tipo`/`filtrados por`/`hacer`) | ✅ Completo |
 | Componentes conectados a listas de datos reales | ✅ Completo |
 | Componentes con varios parámetros nombrados y slots | ✅ Completo |
+| Colecciones de contenido (Markdown) | ✅ Completo |
 | Validación semántica (diseños/componentes inexistentes) | ✅ Completo |
 | Control del `<head>` (favicon, meta personalizadas) | ✅ Completo |
 | Tests de integración de `telar servir` | ✅ Completo |
@@ -491,6 +523,16 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Validación: número de argumentos incorrecto, o un componente de varios parámetros usado como plantilla de lista (solo vale con uno), ahora son errores de compilación claros
 - Motivado también por la comparación con Astro — "componentes más potentes" era el segundo de los tres huecos identificados
 - 19 tests nuevos (245 en total)
+
+### v0.24 — Colecciones de contenido (Markdown) ✅
+- `colección Articulos en "contenido/articulos"` — cada `.md` de la carpeta, con cabecera YAML, se convierte en un elemento real
+- `listar Articulos` — lista generada en tiempo de compilación, enlazando a la URL real de cada artículo
+- `artículo Articulos` — genera **un HTML real y distinto por cada archivo .md**, con el contenido ya dentro (a diferencia de las rutas dinámicas normales, que resuelven todo en el navegador con JS porque los datos vienen de una API en vivo)
+- Conversor Markdown → HTML propio: encabezados, negrita, cursiva, código, listas, citas, enlaces
+- El `sitemap.xml` incluye la URL real de cada artículo automáticamente
+- Tercero y último de los huecos que salieron al comparar Telar con Astro — el más grande de los tres, casi un subsistema nuevo
+- De paso, arreglado otro caso de colisión de palabra reservada: una página no podía llamarse "articulo" (mismo problema que tuvimos con `imagen` como nombre de campo en v0.13)
+- 17 tests nuevos, con archivos `.md` reales en disco (262 en total)
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

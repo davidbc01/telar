@@ -78,6 +78,11 @@ const PALABRAS_CLAVE: Record<string, TipoToken> = {
     "meta": TipoToken.Meta,
     "y": TipoToken.Y,
     "contenido": TipoToken.Contenido,
+    "colección": TipoToken.Coleccion,
+    "coleccion": TipoToken.Coleccion,
+    "listar": TipoToken.Listar,
+    "artículo": TipoToken.Articulo,
+    "articulo": TipoToken.Articulo,
 }
  
 export class Lexer {

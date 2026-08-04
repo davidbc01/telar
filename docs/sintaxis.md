@@ -274,6 +274,56 @@ Pendiente para una versión futura: colores de tema totalmente personalizados, m
 
 ---
 
+## Colecciones de contenido (Markdown)
+
+```telar
+colección Articulos en "contenido/articulos"
+```
+
+Declara una colección respaldada por una carpeta de archivos `.md`, relativa a la raíz del proyecto. Cada archivo se convierte en un elemento de la colección; el nombre del archivo (sin `.md`) es su `slug`.
+
+Cada archivo `.md` lleva una cabecera YAML simple entre `---`, seguida del contenido:
+
+```markdown
+---
+título: Mi primer artículo
+fecha: 2026-08-01
+autor: David
+---
+
+Contenido en Markdown normal.
+```
+
+La cabecera admite pares `clave: valor` de una sola línea — sin listas ni objetos anidados. `título` (o `titulo`, sin tilde) se usa automáticamente como `<title>` de la página y como `og:title`/`twitter:title`; `descripción`/`descripcion`/`resumen` para la meta descripción, si existen.
+
+El Markdown soportado cubre lo habitual en un artículo: encabezados (`#`, `##`, `###`), párrafos, negrita (`**texto**`), cursiva (`*texto*`), código en línea (`` `código` ``), bloques de código (` ``` `), listas (`- item`), citas (`> texto`) y enlaces (`[texto](url)`). No cubre tablas ni Markdown anidado complejo.
+
+### Listar
+
+```telar
+página blog en "/blog"
+  listar Articulos
+    ordenados por fecha
+    máximo 5
+```
+
+Genera la lista completa en tiempo de compilación (no en el navegador), enlazando a la URL real de cada artículo. Admite los mismos modificadores `ordenados por` y `máximo` que `mostrar`.
+
+### Artículo
+
+```telar
+página detalle en "/blog/(slug)"
+  artículo Articulos
+```
+
+**Diferencia clave con las rutas dinámicas normales:** `/producto/(id)` genera un único HTML compartido que resuelve el `id` en el navegador con JS, porque los datos vienen de una API en tiempo de ejecución. Una colección de Markdown ya existe en disco al compilar, así que Telar genera **un HTML real y distinto por cada artículo**, con el contenido ya dentro — mejor para SEO, más rápido, sin depender de JS.
+
+Por esto mismo, `artículo` exige que la página tenga un segmento dinámico en la ruta (`(slug)` o el nombre que prefieras) — sin eso, todos los artículos generarían el mismo nombre de archivo y se pisarían entre sí. Telar lo detecta y avisa al compilar.
+
+El `sitemap.xml` (si hay `dominio` declarado) incluye la URL real de cada artículo automáticamente.
+
+---
+
 ## SEO y metadatos
 
 A nivel de aplicación, en `app.telar`:

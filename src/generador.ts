@@ -16,13 +16,21 @@ import {
     NodoBoton, NodoCampo, NodoSi,
     NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
-    NodoVariable, NodoTextoVariable, NodoImagen
+    NodoVariable, NodoTextoVariable, NodoImagen,
+    NodoColeccion, NodoListar, NodoArticulo
 } from './tipos'
 import { GeneradorJS } from './generador-js'
 
 export interface ArchivoGenerado {
     nombre: string // e.g. "index.html"
     contenido: string
+}
+
+// Un archivo .md de una colección, ya parseado
+export interface ItemColeccion {
+    slug: string // nombre del archivo sin ".md"
+    frontmatter: Record<string, string>
+    contenidoHTML: string
 }
 
 // "/producto/(id)" -> "producto-id.html"  (el nombre del archivo compilado
@@ -38,6 +46,7 @@ export class Generador {
     private app: NodoAplicacion
     private dirProyecto: string  // ← NUEVO: para buscar estilos.css local
     private paginaActual: NodoPagina | null = null  // contexto para resolver variables
+    private itemColeccionActual: ItemColeccion | null = null  // contexto al generar un artículo real
  
     constructor(app: NodoAplicacion, dirProyecto: string = process.cwd()) {
         this.app = app
@@ -48,6 +57,26 @@ export class Generador {
         const archivos: ArchivoGenerado[] = []
  
         for (const pagina of this.app.paginas) {
+            const nodoArticulo = pagina.hijos.find(h => h.tipo === 'articulo_coleccion') as NodoArticulo | undefined
+
+            if (nodoArticulo) {
+                // Página respaldada por una colección de Markdown: un HTML
+                // real por cada archivo .md, con el contenido ya dentro —
+                // no el archivo genérico compartido de rutas dinámicas.
+                const coleccion = this.app.colecciones.find(c => c.nombre === nodoArticulo.coleccion)
+                if (coleccion) {
+                    const items = this.leerColeccion(coleccion)
+                    for (const item of items) {
+                        this.itemColeccionActual = item
+                        const contenido = this.generarPagina(pagina)
+                        const rutaReal = pagina.ruta.replace(/\([a-zA-Z_][a-zA-Z0-9_]*\)/, item.slug)
+                        archivos.push({ nombre: rutaANombre(rutaReal), contenido })
+                    }
+                    this.itemColeccionActual = null
+                }
+                continue
+            }
+
             const nombreArchivo = rutaANombre(pagina.ruta)
             const contenido = this.generarPagina(pagina)
             archivos.push({ nombre: nombreArchivo, contenido })
@@ -99,9 +128,31 @@ export class Generador {
                 const url = `${dominio}${p.ruta === '/' ? '' : p.ruta}`
                 return `    <url>\n        <loc>${this.escapar(url)}</loc>\n    </url>`
             })
+            .concat(this.obtenerURLsArticulos(dominio))
             .join('\n')
 
         return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
+    }
+
+    // URLs reales de cada elemento de una colección — a diferencia de las
+    // rutas dinámicas normales, aquí cada artículo SÍ es una URL real que
+    // merece estar en el sitemap.
+    private obtenerURLsArticulos(dominio: string): string[] {
+        const urls: string[] = []
+        for (const pagina of this.app.paginas) {
+            const nodoArticulo = pagina.hijos.find(h => h.tipo === 'articulo_coleccion') as NodoArticulo | undefined
+            if (!nodoArticulo) continue
+
+            const coleccion = this.app.colecciones.find(c => c.nombre === nodoArticulo.coleccion)
+            if (!coleccion) continue
+
+            for (const item of this.leerColeccion(coleccion)) {
+                const ruta = pagina.ruta.replace(/\([a-zA-Z_][a-zA-Z0-9_]*\)/, item.slug)
+                const url = `${dominio}${ruta}`
+                urls.push(`    <url>\n        <loc>${this.escapar(url)}</loc>\n    </url>`)
+            }
+        }
+        return urls
     }
 
     private generarRobots(): string {
@@ -219,6 +270,9 @@ ${this.indentar(cuerpo, 4)}
             case 'variable':    return ''
             case 'texto_variable': return this.generarTextoVariable(nodo)
             case 'imagen':      return this.generarImagen(nodo)
+            case 'coleccion':   return ''
+            case 'listar':      return this.generarListar(nodo)
+            case 'articulo_coleccion': return this.generarArticuloColeccion(nodo)
             default:            return ''
         }
     }
@@ -243,6 +297,166 @@ ${this.indentar(cuerpo, 4)}
         const alt = this.extraerTitulo(this.paginaActual!) ?? ''
         return `<img src="${this.escapar(nodo.url)}" alt="${this.escapar(alt)}" ${this.claseHTML('imagen', nodo.clase)}>`
     }
+
+    // --- Colecciones de contenido (Markdown) ---
+
+    private leerColeccion(coleccion: NodoColeccion): ItemColeccion[] {
+        const carpeta = path.join(this.dirProyecto, coleccion.ruta)
+        if (!fs.existsSync(carpeta)) return []
+
+        return fs.readdirSync(carpeta)
+            .filter(archivo => archivo.endsWith('.md'))
+            .map(archivo => {
+                const contenido = fs.readFileSync(path.join(carpeta, archivo), 'utf-8')
+                const { frontmatter, cuerpo } = this.parsearFrontmatter(contenido)
+                const slug = archivo.replace(/\.md$/, '')
+                return { slug, frontmatter, contenidoHTML: this.markdownAHTML(cuerpo) }
+            })
+    }
+
+    // Cabecera YAML simple: --- \n clave: valor \n --- seguido del cuerpo.
+    // Solo pares clave: valor de una línea — suficiente para título, fecha,
+    // autor, etc. Sin listas ni objetos anidados.
+    private parsearFrontmatter(contenido: string): { frontmatter: Record<string, string>; cuerpo: string } {
+        const coincidencia = contenido.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/)
+        if (!coincidencia) return { frontmatter: {}, cuerpo: contenido }
+
+        const [, bloque, cuerpo] = coincidencia
+        const frontmatter: Record<string, string> = {}
+        for (const linea of bloque.split('\n')) {
+            const indice = linea.indexOf(':')
+            if (indice === -1) continue
+            const clave = linea.slice(0, indice).trim()
+            const valor = linea.slice(indice + 1).trim().replace(/^["']|["']$/g, '')
+            frontmatter[clave] = valor
+        }
+        return { frontmatter, cuerpo: cuerpo.trim() }
+    }
+
+    // Conversor Markdown -> HTML mínimo: encabezados, párrafos, listas,
+    // citas, bloques de código, negrita/cursiva/código en línea, enlaces.
+    // No cubre tablas ni Markdown anidado complejo — suficiente para un
+    // artículo de blog normal.
+    private markdownAHTML(md: string): string {
+        const lineas = md.split('\n')
+        const salida: string[] = []
+        let enLista = false
+        let enCodigo = false
+
+        for (const linea of lineas) {
+            if (linea.trim().startsWith('```')) {
+                salida.push(enCodigo ? '</code></pre>' : '<pre><code>')
+                enCodigo = !enCodigo
+                continue
+            }
+            if (enCodigo) {
+                salida.push(this.escapar(linea))
+                continue
+            }
+
+            if (linea.trim() === '') {
+                if (enLista) { salida.push('</ul>'); enLista = false }
+                continue
+            }
+
+            const encabezado = linea.match(/^(#{1,3})\s+(.*)$/)
+            if (encabezado) {
+                if (enLista) { salida.push('</ul>'); enLista = false }
+                const nivel = encabezado[1].length
+                salida.push(`<h${nivel}>${this.inlineMarkdown(encabezado[2])}</h${nivel}>`)
+                continue
+            }
+
+            const item = linea.match(/^[-*]\s+(.*)$/)
+            if (item) {
+                if (!enLista) { salida.push('<ul>'); enLista = true }
+                salida.push(`<li>${this.inlineMarkdown(item[1])}</li>`)
+                continue
+            }
+
+            const cita = linea.match(/^>\s?(.*)$/)
+            if (cita) {
+                if (enLista) { salida.push('</ul>'); enLista = false }
+                salida.push(`<blockquote>${this.inlineMarkdown(cita[1])}</blockquote>`)
+                continue
+            }
+
+            if (enLista) { salida.push('</ul>'); enLista = false }
+            salida.push(`<p>${this.inlineMarkdown(linea)}</p>`)
+        }
+
+        if (enLista) salida.push('</ul>')
+        return salida.join('\n')
+    }
+
+    private inlineMarkdown(texto: string): string {
+        let resultado = this.escapar(texto)
+        resultado = resultado.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        resultado = resultado.replace(/\*(.+?)\*/g, '<em>$1</em>')
+        resultado = resultado.replace(/`(.+?)`/g, '<code>$1</code>')
+        resultado = resultado.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+        return resultado
+    }
+
+    // listar Articulos — vista de lista, generada en tiempo de compilación
+    // (no en el navegador): enlaza a la página real de cada artículo.
+    private generarListar(nodo: NodoListar): string {
+        const coleccion = this.app.colecciones.find(c => c.nombre === nodo.coleccion)
+        if (!coleccion) return `<!-- colección desconocida: ${nodo.coleccion} -->`
+
+        let items = this.leerColeccion(coleccion)
+
+        const ordenados = nodo.modificadores.find(m => m.tipo === 'ordenados') as { tipo: 'ordenados'; campo: string } | undefined
+        if (ordenados) {
+            items = [...items].sort((a, b) =>
+                (b.frontmatter[ordenados.campo] ?? '').localeCompare(a.frontmatter[ordenados.campo] ?? '')
+            )
+        }
+
+        const maximo = nodo.modificadores.find(m => m.tipo === 'maximo') as { tipo: 'maximo'; cantidad: number } | undefined
+        if (maximo) items = items.slice(0, maximo.cantidad)
+
+        const rutaArticulo = this.encontrarRutaArticulo(nodo.coleccion)
+
+        const itemsHTML = items.map(item => {
+            const titulo = item.frontmatter['título'] ?? item.frontmatter['titulo'] ?? item.slug
+            const href = rutaArticulo ? rutaArticulo.replace(/\([a-zA-Z_][a-zA-Z0-9_]*\)/, item.slug) : '#'
+            const fecha = item.frontmatter['fecha']
+            return `<li class="articulo-item">
+    <a href="${this.escapar(href)}">${this.escapar(titulo)}</a>
+    ${fecha ? `<time>${this.escapar(fecha)}</time>` : ''}
+</li>`
+        }).join('\n')
+
+        return `<ul class="lista-articulos">\n${this.indentar(itemsHTML, 4)}\n</ul>`
+    }
+
+    // Encuentra la ruta de la página que usa "artículo <coleccion>", para
+    // poder enlazar desde un "listar" a la página real de cada elemento.
+    private encontrarRutaArticulo(nombreColeccion: string): string | null {
+        for (const pagina of this.app.paginas) {
+            const tiene = pagina.hijos.some(h => h.tipo === 'articulo_coleccion' && h.coleccion === nombreColeccion)
+            if (tiene) return pagina.ruta
+        }
+        return null
+    }
+
+    // artículo Articulos — el contenido real del elemento actual (viene de
+    // this.itemColeccionActual, fijado por generar() antes de llamar aquí)
+    private generarArticuloColeccion(nodo: NodoArticulo): string {
+        const item = this.itemColeccionActual
+        if (!item) return `<!-- artículo sin contexto: ${nodo.coleccion} -->`
+
+        const titulo = item.frontmatter['título'] ?? item.frontmatter['titulo'] ?? item.slug
+        const fecha = item.frontmatter['fecha']
+
+        return `<article class="articulo">
+    <h1>${this.escapar(titulo)}</h1>
+    ${fecha ? `<time>${this.escapar(fecha)}</time>` : ''}
+${this.indentar(item.contenidoHTML, 4)}
+</article>`
+    }
+
  
     private generarDescripcion(nodo: NodoDescripcion): string {
         return `<p ${this.claseHTML(this.claseConSlug('descripcion', nodo.texto.slice(0, 30)), nodo.clase)}>${this.escapar(nodo.texto)}</p>`
@@ -868,11 +1082,21 @@ html[data-tema="oscuro"] select { background: #1a1d27; }
     }
  
     private extraerTitulo(pagina: NodoPagina): string | null {
+        if (this.itemColeccionActual) {
+            const fm = this.itemColeccionActual.frontmatter
+            const titulo = fm['título'] ?? fm['titulo']
+            if (titulo) return titulo
+        }
         const nodo = pagina.hijos.find(h => h.tipo === 'titulo') as NodoTitulo | undefined
         return nodo?.texto ?? null
     }
- 
+
     private extraerDescripcion(pagina: NodoPagina): string | null {
+        if (this.itemColeccionActual) {
+            const fm = this.itemColeccionActual.frontmatter
+            const descripcion = fm['descripción'] ?? fm['descripcion'] ?? fm['resumen']
+            if (descripcion) return descripcion
+        }
         const nodo = pagina.hijos.find(h => h.tipo === 'descripcion') as NodoDescripcion | undefined
         return nodo?.texto ?? null
     }
