@@ -399,7 +399,7 @@ describe("Parser — mostrar con componente como plantilla", () => {
 
     it("parsea mostrar Modelo con NombreComponente", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con TarjetaProducto`
+            `aplicación MiApp\n\ncomponente TarjetaProducto con item\n  mostrar item.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con TarjetaProducto`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.componentePlantilla).toBe("TarjetaProducto")
@@ -407,7 +407,7 @@ describe("Parser — mostrar con componente como plantilla", () => {
 
     it("con se puede combinar con otros modificadores en cualquier orden", () => {
         const arbol = parsear(
-            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    máximo 8\n    con TarjetaProducto\n    ordenados por precio`
+            `aplicación MiApp\n\ncomponente TarjetaProducto con item\n  mostrar item.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    máximo 8\n    con TarjetaProducto\n    ordenados por precio`
         )
         const mostrar = arbol.paginas[0].hijos[0] as any
         expect(mostrar.componentePlantilla).toBe("TarjetaProducto")
@@ -438,13 +438,13 @@ describe("Parser — validación semántica de referencias", () => {
 
     it("un componente existente (uso directo) no da error", () => {
         expect(() => parsear(
-            `aplicación MiApp\n\ncomponente Tarjeta\n  mostrar item.nombre\n\npágina inicio en "/"\n  Tarjeta con producto`
+            `aplicación MiApp\n\ncomponente Tarjeta con item\n  mostrar item.nombre\n\npágina inicio en "/"\n  Tarjeta con producto`
         )).not.toThrow()
     })
 
     it("un componente inexistente (uso directo) lanza un error con las opciones disponibles", () => {
         expect(() => parsear(
-            `aplicación MiApp\n\ncomponente Tarjeta\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaX con producto`
+            `aplicación MiApp\n\ncomponente Tarjeta con item\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaX con producto`
         )).toThrow(/"TarjetaX con \.\.\." usa un componente que no existe/)
     })
 
@@ -526,6 +526,84 @@ describe("Parser — control del <head>: favicon y meta", () => {
             { nombre: "theme-color", valor: "#0B0B0D" },
             { nombre: "apple-mobile-web-app-title", valor: "MiApp" }
         ])
+    })
+
+})
+
+describe("Parser — componentes con varios parámetros y slots", () => {
+
+    it("parsea un componente con un solo parámetro", () => {
+        const arbol = parsear(`aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre`)
+        expect(arbol.componentes[0].parametros).toEqual(["producto"])
+    })
+
+    it("parsea un componente con varios parámetros separados por 'y'", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y destacado y indice\n  mostrar producto.nombre`
+        )
+        expect(arbol.componentes[0].parametros).toEqual(["producto", "destacado", "indice"])
+    })
+
+    it("parsea un uso con varios argumentos separados por 'y'", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y destacado\n  mostrar producto.nombre\n\npágina inicio en "/"\n  Tarjeta con producto y destacado`
+        )
+        const uso = arbol.paginas[0].hijos[0] as any
+        expect(uso.argumentos).toEqual(["producto", "destacado"])
+    })
+
+    it("un uso sin bloque indentado tiene contenidoSlot vacío", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre\n\npágina inicio en "/"\n  Tarjeta con producto`
+        )
+        const uso = arbol.paginas[0].hijos[0] as any
+        expect(uso.contenidoSlot).toEqual([])
+    })
+
+    it("un uso con bloque indentado lo guarda como contenidoSlot", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre\n\npágina inicio en "/"\n  Tarjeta con producto\n    descripción "Extra"`
+        )
+        const uso = arbol.paginas[0].hijos[0] as any
+        expect(uso.contenidoSlot).toHaveLength(1)
+        expect(uso.contenidoSlot[0].tipo).toBe("descripcion")
+    })
+
+    it("parsea el marcador 'contenido' dentro de un componente", () => {
+        const arbol = parsear(`aplicación MiApp\n\ncomponente Tarjeta con producto\n  contenido`)
+        expect(arbol.componentes[0].hijos[0].tipo).toBe("contenido_slot")
+    })
+
+    it("si <parámetro> sin operador genera la condición parametro_verdadero", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y destacado\n  si destacado\n    título "⭐"`
+        )
+        const si = arbol.componentes[0].hijos[0] as any
+        expect(si.condicion).toEqual({ tipo: "parametro_verdadero", nombre: "destacado" })
+    })
+
+    it("usar un componente con menos argumentos de los que declara es un error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y destacado\n  mostrar producto.nombre\n\npágina inicio en "/"\n  Tarjeta con producto`
+        )).toThrow(/espera 2 argumentos/)
+    })
+
+    it("usar un componente con más argumentos de los que declara es un error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre\n\npágina inicio en "/"\n  Tarjeta con producto y extra`
+        )).toThrow(/espera 1 argumento/)
+    })
+
+    it("usar un componente de varios parámetros como plantilla de lista es un error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y destacado\n  mostrar producto.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con Tarjeta`
+        )).toThrow(/solo puede tener uno/)
+    })
+
+    it("usar un componente de un solo parámetro como plantilla de lista no da error", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con Tarjeta`
+        )).not.toThrow()
     })
 
 })

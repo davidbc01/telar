@@ -149,27 +149,47 @@ página contacto en "/contacto"
   título "Contacto"
 ```
 
-Los componentes son piezas reutilizables sin paréntesis ni argumentos posicionales. Dentro del componente, accedes a las propiedades con `item.propiedad`:
+Los componentes son piezas reutilizables con parámetros nombrados — sin paréntesis, sin argumentos posicionales que memorizar:
 
 ```telar
-componente TarjetaProducto
-  mostrar item.nombre
-  mostrar item.precio
+componente Tarjeta con producto y destacado
+  mostrar producto.nombre
+  mostrar producto.precio
+  si destacado
+    título "⭐ Destacado"
 
 página inicio en "/"
-  TarjetaProducto con producto
+  Tarjeta con producto y destacado
 ```
 
-Y se pueden usar como plantilla de una lista real, para que cada elemento se vea con tu diseño en vez del genérico "campo: valor":
+Se pueden combinar tantos parámetros como haga falta, separados por `y` — tanto al declarar el componente como al usarlo. También aceptan contenido pasado desde fuera, con `contenido` como marcador de dónde va:
 
 ```telar
+componente Tarjeta con producto
+  título producto.nombre
+  contenido
+
+página inicio en "/"
+  Tarjeta con producto
+    descripción "Esto se inserta donde está 'contenido'"
+```
+
+Si no hay ningún marcador `contenido` explícito, lo que se pase se inserta al final — igual que hace `diseño` con el contenido de una página.
+
+Y un componente de **un solo parámetro** se puede usar como plantilla de una lista real, para que cada elemento se vea con tu diseño en vez del genérico "campo: valor":
+
+```telar
+componente TarjetaProducto con producto
+  mostrar producto.nombre
+  mostrar producto.precio
+
 página inicio en "/"
   mostrar Producto recientes
     máximo 8
     con TarjetaProducto
 ```
 
-`con TarjetaProducto` conecta el componente a los datos reales que llegan de `/api/producto` — cada `item.propiedad` se rellena con el valor real de cada producto, uno por uno, no con texto fijo.
+`con TarjetaProducto` conecta el componente a los datos reales que llegan de `/api/producto` — cada `producto.propiedad` se rellena con el valor real de cada elemento, uno por uno, no con texto fijo. Solo componentes de un único parámetro sirven como plantilla de lista (el elemento de la lista es ese único valor); si el componente declara más de uno, Telar avisa al compilar.
 
 Si escribes mal el nombre de un diseño o un componente, Telar lo detecta al compilar (`telar verificar` o `telar compilar`) y te dice cuáles están declarados de verdad — antes de v0.18 esto compilaba en silencio y el error solo se notaba mirando la web ya en el navegador.
 
@@ -319,7 +339,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (226) + CI/CD | ✅ Completo |
+| Tests completos (245) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -333,7 +353,9 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Tests del CLI + cobertura ampliada | ✅ Completo |
 | Gramática limpia (sin `tipo`/`filtrados por`/`hacer`) | ✅ Completo |
 | Componentes conectados a listas de datos reales | ✅ Completo |
+| Componentes con varios parámetros nombrados y slots | ✅ Completo |
 | Validación semántica (diseños/componentes inexistentes) | ✅ Completo |
+| Control del `<head>` (favicon, meta personalizadas) | ✅ Completo |
 | Tests de integración de `telar servir` | ✅ Completo |
 | Lanzamiento público | 🟪 Pendiente |
 | Web oficial de Telar | 🟪 Pendiente |
@@ -383,7 +405,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Sintaxis `diseño <nombre>` para estructuras compartidas entre páginas
 - Diseño por defecto aplicado automáticamente si existe uno declarado
 - Sintaxis `componente <Nombre>` para elementos reutilizables, sin paréntesis ni argumentos posicionales
-- Uso con `NombreComponente con argumento`, accediendo a propiedades vía `item.propiedad`
+- Uso con `NombreComponente con argumento` (rediseñado en v0.23 con varios parámetros nombrados y slots)
 
 ### v0.9 — Rutas dinámicas ✅
 - Parámetros en URLs: `página detalle en "/producto/(id)"`
@@ -433,7 +455,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 
 ### v0.17 — Componentes conectados a listas reales ✅
 - `mostrar Modelo ... con NombreComponente` — antes, los componentes y las listas de datos eran dos sistemas que nunca se hablaban entre sí
-- Cada `item.propiedad` del componente se rellena con el valor real de cada elemento de la lista, no con texto fijo
+- Cada propiedad del parámetro del componente se rellena con el valor real de cada elemento de la lista, no con texto fijo
 - Probado de extremo a extremo con un DOM real y datos simulados
 
 ### v0.18 — Validación semántica ✅
@@ -461,6 +483,14 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - `meta "nombre" "valor"` — cualquier etiqueta `<meta>` personalizada (color de tema, título de app iOS, verificación de buscadores...), repetible
 - Motivado por comparar Telar con frameworks como Astro y encontrar este hueco real al intentar montar telar.dev
 - 8 tests nuevos (226 en total)
+
+### v0.23 — Componentes con varios parámetros y slots ✅
+- `componente Tarjeta con producto y destacado` — parámetros nombrados en vez del "item" genérico de antes, tantos como haga falta separados por `y`
+- Slots: contenido pasado desde fuera con `contenido` como marcador de dónde va, o al final si no se indica (mismo criterio que `diseño`)
+- `si <parámetro>` — nuevo, comprueba un parámetro booleano. Se evalúa de verdad (ternario JS real) cuando el componente se usa como plantilla de una lista; en el uso suelto se renderiza siempre (limitación documentada, ese camino no tiene datos reales detrás)
+- Validación: número de argumentos incorrecto, o un componente de varios parámetros usado como plantilla de lista (solo vale con uno), ahora son errores de compilación claros
+- Motivado también por la comparación con Astro — "componentes más potentes" era el segundo de los tres huecos identificados
+- 19 tests nuevos (245 en total)
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes

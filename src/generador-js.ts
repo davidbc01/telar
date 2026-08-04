@@ -326,12 +326,15 @@ ${lineas.join('\n')}
 
         const funciones = Array.from(usados).map(nombre => {
             const html = this.plantillas[nombre]
+            const definicion = (this.app.componentes ?? []).find(c => c.nombre === nombre)
+            const nombreParam = definicion?.parametros[0] ?? 'item'
+
             if (!html) {
                 return `// La plantilla "${nombre}" se referenció con "con" pero el componente no existe
-function plantilla_${nombre}(item) { return ''; }`
+function plantilla_${nombre}(${nombreParam}) { return ''; }`
             }
             return `// Plantilla del componente ${nombre}, una por elemento de la lista
-function plantilla_${nombre}(item) {
+function plantilla_${nombre}(${nombreParam}) {
     return \`
 ${html}
 \`

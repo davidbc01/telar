@@ -31,6 +31,8 @@ export enum TipoToken {
     Dominio = "dominio",
     Favicon = "favicon",
     Meta = "meta",
+    Y = "y",
+    Contenido = "contenido",
  
     // Palabras clave - contenido
     Titulo = "titulo",
@@ -126,6 +128,7 @@ export type Nodo =
     | NodoVariable
     | NodoTextoVariable
     | NodoImagen
+    | NodoContenidoSlot
  
 // aplicación MiTienda
 export interface NodoAplicacion {
@@ -170,15 +173,24 @@ export interface NodoDiseno {
 export interface NodoComponente {
     tipo: "componente"
     nombre: string
+    parametros: string[] // componente Tarjeta con producto y destacado
     hijos: Nodo[]
     linea: number
 }
  
-// TarjetaProducto con producto
+// Tarjeta con producto y destacado
 export interface NodoUsoComponente {
     tipo: "uso_componente"
     nombre: string
-    argumento: string
+    argumentos: string[]
+    contenidoSlot: Nodo[] // bloque indentado opcional bajo el uso — va donde esté "contenido"
+    linea: number
+}
+
+// contenido — marcador dentro de un componente, donde se inserta lo que
+// el que lo usa pase como bloque indentado (o al final, si no hay marcador)
+export interface NodoContenidoSlot {
+    tipo: "contenido_slot"
     linea: number
 }
 
@@ -356,6 +368,7 @@ export type Condicion =
     | { tipo: "hay_resultados" }
     | { tipo: "campo_igual"; campo: string; valor: string }
     | { tipo: "campo_mayor"; campo: string; valor: number }
+    | { tipo: "parametro_verdadero"; nombre: string } // si <parámetro> de un componente
  
  
 // --- ERRORES ---

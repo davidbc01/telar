@@ -76,6 +76,8 @@ const PALABRAS_CLAVE: Record<string, TipoToken> = {
     "dominio": TipoToken.Dominio,
     "favicon": TipoToken.Favicon,
     "meta": TipoToken.Meta,
+    "y": TipoToken.Y,
+    "contenido": TipoToken.Contenido,
 }
  
 export class Lexer {

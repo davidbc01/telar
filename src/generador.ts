@@ -397,21 +397,58 @@ ${nodo.contenido}
             return `<!-- componente desconocido: ${nodo.nombre} -->`
         }
 
-        const cuerpo = definicion.hijos
-            .map(h => this.generarNodo(this.sustituirItem(h, nodo.argumento)))
-            .join('\n')
+        // Mapa parámetro declarado -> argumento real pasado por quien lo usa
+        // (Tarjeta con producto y destacado -> {producto: "producto", destacado: "destacado"})
+        const mapa: Record<string, string> = {}
+        definicion.parametros.forEach((param, i) => {
+            mapa[param] = nodo.argumentos[i] ?? param
+        })
+
+        const slotHTML = nodo.contenidoSlot.map(h => this.generarNodo(h)).join('\n')
+        let slotInsertado = false
+
+        const cuerpo = definicion.hijos.map(h => {
+            if (h.tipo === 'contenido_slot') {
+                slotInsertado = true
+                return slotHTML
+            }
+            return this.generarNodoComponenteEstatico(h, mapa)
+        }).join('\n')
+
+        // Si no hay marcador "contenido" explícito, el slot va al final
+        // (mismo criterio que usa "diseño" con el contenido de la página)
+        const cuerpoFinal = (slotInsertado || !slotHTML) ? cuerpo : `${cuerpo}\n${slotHTML}`
 
         return `<div class="componente componente-${this.slugify(definicion.nombre)}">
-${this.indentar(cuerpo, 4)}
+${this.indentar(cuerpoFinal, 4)}
 </div>`
     }
 
-    // Sustituye "item.propiedad" por "<argumento>.propiedad" dentro de un nodo
-    // del cuerpo de un componente, antes de generarlo. Solo afecta a los
-    // nodos "mostrar" que acceden a un campo (mostrar item.nombre).
-    private sustituirItem(nodo: Nodo, argumento: string): Nodo {
-        if (nodo.tipo === 'mostrar' && nodo.modelo.startsWith('item.')) {
-            return { ...nodo, modelo: argumento + nodo.modelo.slice('item'.length) }
+    // Genera un nodo del cuerpo de un componente para el uso "estático"
+    // (Tarjeta con producto y destacado), sustituyendo cada parámetro
+    // declarado por su argumento real, en tiempo de compilación.
+    //
+    // Limitación conocida: este camino no tiene datos reales detrás (es
+    // sustitución de texto en compilación), así que "si <parámetro>" no
+    // se puede evaluar de verdad aquí — se renderiza siempre. Para una
+    // condición que sí se evalúe con datos reales, usar el componente
+    // como plantilla de una lista con "mostrar ... con X" (ver v0.17).
+    private generarNodoComponenteEstatico(nodo: Nodo, mapa: Record<string, string>): string {
+        if (nodo.tipo === 'si' && nodo.condicion.tipo === 'parametro_verdadero') {
+            return nodo.entonces.map(h => this.generarNodoComponenteEstatico(h, mapa)).join('\n')
+        }
+        return this.generarNodo(this.sustituirParametro(nodo, mapa))
+    }
+
+    // Sustituye "parametro.propiedad" (o "parametro" a secas) por el
+    // argumento real, dentro de un nodo del cuerpo de un componente.
+    private sustituirParametro(nodo: Nodo, mapa: Record<string, string>): Nodo {
+        if (nodo.tipo === 'mostrar') {
+            for (const [param, valor] of Object.entries(mapa)) {
+                if (nodo.modelo === param || nodo.modelo.startsWith(param + '.')) {
+                    return { ...nodo, modelo: valor + nodo.modelo.slice(param.length) }
+                }
+            }
         }
         return nodo
     }
@@ -425,8 +462,13 @@ ${this.indentar(cuerpo, 4)}
     generarPlantillasComponentes(): Record<string, string> {
         const plantillas: Record<string, string> = {}
         for (const componente of this.app.componentes ?? []) {
+            // Solo un componente con un único parámetro puede usarse como
+            // plantilla de lista: cada elemento de la lista es ese único valor
+            if (componente.parametros.length !== 1) continue
+
+            const nombreParam = componente.parametros[0]
             const cuerpo = componente.hijos
-                .map(h => this.generarNodoPlantilla(h))
+                .map(h => this.generarNodoPlantilla(h, nombreParam))
                 .join('\n')
             plantillas[componente.nombre] =
                 `<div class="componente componente-${this.slugify(componente.nombre)}">\n${this.indentar(cuerpo, 4)}\n</div>`
@@ -434,11 +476,19 @@ ${this.indentar(cuerpo, 4)}
         return plantillas
     }
 
-    private generarNodoPlantilla(nodo: Nodo): string {
-        if (nodo.tipo === 'mostrar' && nodo.modelo.startsWith('item.')) {
-            const propiedad = nodo.modelo.slice('item.'.length)
-            return `<p ${this.claseHTML('campo', nodo.clase)}>\${item.${propiedad}}</p>`
+    private generarNodoPlantilla(nodo: Nodo, nombreParam: string): string {
+        if (nodo.tipo === 'mostrar' && (nodo.modelo === nombreParam || nodo.modelo.startsWith(nombreParam + '.'))) {
+            return `<p ${this.claseHTML('campo', nodo.clase)}>\${${nodo.modelo}}</p>`
         }
+
+        // si <parámetro> — aquí sí hay datos reales detrás (uno por elemento
+        // de la lista), así que se genera un ternario JS real, no texto fijo
+        if (nodo.tipo === 'si' && nodo.condicion.tipo === 'parametro_verdadero' &&
+            (nodo.condicion.nombre === nombreParam || nodo.condicion.nombre.startsWith(nombreParam + '.'))) {
+            const contenidoHTML = nodo.entonces.map(h => this.generarNodoPlantilla(h, nombreParam)).join('')
+            return `\${${nodo.condicion.nombre} ? \`${contenidoHTML}\` : ''}`
+        }
+
         return this.generarNodo(nodo)
     }
 

@@ -5,6 +5,42 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.23.0] - 2026-08-04
+
+### Contexto
+Segundo de los tres huecos que salieron al comparar Telar con Astro (el primero, control del `<head>`, ya cerrado en v0.22). Rediseño completo de cómo funcionan los componentes.
+
+### Cambiado — breaking change
+El "item" genérico e implícito desaparece. Ahora los parámetros se declaran con nombre:
+
+```telar
+# Antes (v0.8–v0.22)
+componente TarjetaProducto
+  mostrar item.nombre
+página inicio en "/"
+  TarjetaProducto con producto
+
+# Ahora
+componente TarjetaProducto con producto
+  mostrar producto.nombre
+página inicio en "/"
+  TarjetaProducto con producto
+```
+
+Todo componente necesita ahora declarar al menos un parámetro con `con`. Varios parámetros se separan con `y`, tanto al declarar como al usar.
+
+### Añadido
+- Slots: contenido pasado desde fuera con `contenido` como marcador de dónde va dentro del componente, o insertado al final si no hay marcador — mismo criterio que ya usa `diseño` con el contenido de una página
+- `si <parámetro>` — nueva condición que comprueba un parámetro booleano. En un componente usado como plantilla de lista (`mostrar ... con X`) se evalúa de verdad, generando un ternario JavaScript real (`${destacado ? '...' : ''}`) con datos reales por cada elemento. En el uso suelto (`X con producto`) se renderiza siempre — limitación documentada, ese camino sigue siendo sustitución de texto en compilación, sin datos reales detrás
+- Validación nueva: usar un componente con un número de argumentos distinto al declarado es ahora un error de compilación claro, con el uso correcto en la sugerencia
+- Validación nueva: un componente de varios parámetros no se puede usar como plantilla de lista (`mostrar ... con X` solo admite componentes de un único parámetro, porque un elemento de lista es un solo valor) — error de compilación claro en vez de comportamiento indefinido
+- 19 tests nuevos, incluida una prueba de extremo a extremo con un DOM real y datos simulados confirmando el ternario `si <parámetro>` con dos elementos, uno cumpliendo la condición y otro no (245 en total)
+
+### Corregido
+- Bug encontrado durante la propia implementación: la función de plantilla generada para listas seguía usando `item` como nombre del parámetro de la función aunque el cuerpo ya usara el nombre real declarado (ej. `producto`) — el parámetro nunca coincidía con las referencias del cuerpo, lo que habría lanzado `ReferenceError` en el navegador. Corregido antes de publicar
+
+---
+
 ## [0.22.0] - 2026-08-04
 
 ### Contexto

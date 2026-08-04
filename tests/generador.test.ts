@@ -287,14 +287,14 @@ describe("Generador — componentes (v0.8)", () => {
 
     it("expande el uso de un componente dentro de una página", () => {
         const resultado = html(
-            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaProducto con producto`
+            `aplicación MiApp\n\ncomponente TarjetaProducto con producto\n  mostrar producto.nombre\n\npágina inicio en "/"\n  TarjetaProducto con producto`
         )
         expect(resultado).toContain('componente-tarjetaproducto')
     })
 
-    it("sustituye item.propiedad por el argumento pasado", () => {
+    it("sustituye el parámetro por el argumento pasado", () => {
         const resultado = html(
-            `aplicación MiApp\n\ncomponente TarjetaProducto\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaProducto con producto`
+            `aplicación MiApp\n\ncomponente TarjetaProducto con item\n  mostrar item.nombre\n\npágina inicio en "/"\n  TarjetaProducto con producto`
         )
         expect(resultado).toContain('producto.nombre')
         expect(resultado).not.toContain('item.nombre')
@@ -689,7 +689,7 @@ describe("Generador — combinaciones diseño + rutas dinámicas + componentes (
 
     it("un componente se puede usar dentro del bloque de un diseño, no solo en páginas", () => {
         const resultado = html(
-            `aplicación MiApp\n\ncomponente Saludo\n  mostrar item.nombre\n\ndiseño principal\n  Saludo con usuario\n\npágina inicio en "/"\n  título "Inicio"`
+            `aplicación MiApp\n\ncomponente Saludo con item\n  mostrar item.nombre\n\ndiseño principal\n  Saludo con usuario\n\npágina inicio en "/"\n  título "Inicio"`
         )
         expect(resultado).toContain('componente-saludo')
         expect(resultado).toContain('usuario.nombre')
@@ -701,7 +701,7 @@ describe("Generador — componente como plantilla de lista (mostrar ... con X)",
 
     const codigoBase = `aplicación MiApp
 
-componente TarjetaProducto
+componente TarjetaProducto con item
   mostrar item.nombre
   mostrar item.precio
 
@@ -739,7 +739,7 @@ página inicio en "/"
 
     it("no genera función de plantilla para componentes que no se usan con 'con'", () => {
         const archivos = compilar(
-            `aplicación MiApp\n\ncomponente SinUsar\n  mostrar item.x\n\npágina inicio en "/"\n  mostrar Producto recientes`
+            `aplicación MiApp\n\ncomponente SinUsar con item\n  mostrar item.x\n\npágina inicio en "/"\n  mostrar Producto recientes`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
         expect(js.contenido).not.toContain('function plantilla_SinUsar')
@@ -820,6 +820,66 @@ describe("Generador — control del <head>: favicon y meta personalizadas", () =
         for (const archivo of archivos.filter(a => a.nombre.endsWith('.html'))) {
             expect(archivo.contenido).toContain('rel="icon"')
         }
+    })
+
+})
+
+describe("Generador — componentes: varios parámetros, slots y si-parámetro", () => {
+
+    it("sustituye varios parámetros a la vez, cada uno por su argumento real", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y usuario\n  mostrar producto.nombre\n  mostrar usuario.email\n\npágina inicio en "/"\n  Tarjeta con miProducto y miUsuario`
+        )
+        expect(resultado).toContain('miProducto.nombre')
+        expect(resultado).toContain('miUsuario.email')
+    })
+
+    it("el slot se inserta en el marcador 'contenido'", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  título "Tarjeta"\n  contenido\n\npágina inicio en "/"\n  Tarjeta con producto\n    descripción "Contenido extra"`
+        )
+        expect(resultado).toContain('Contenido extra')
+    })
+
+    it("sin marcador 'contenido', el slot se inserta al final", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  título "Tarjeta"\n\npágina inicio en "/"\n  Tarjeta con producto\n    descripción "Al final"`
+        )
+        const posTitulo = resultado.indexOf('titulo-')
+        const posDescripcion = resultado.indexOf('Al final')
+        expect(posDescripcion).toBeGreaterThan(posTitulo)
+    })
+
+    it("sin contenido pasado, no hay rastro de un slot vacío", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  título "Tarjeta"\n  contenido\n\npágina inicio en "/"\n  Tarjeta con producto`
+        )
+        expect(resultado).toContain('titulo-')
+    })
+
+    it("si <parámetro> se renderiza siempre en el uso estático (limitación documentada)", () => {
+        const resultado = html(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto y destacado\n  si destacado\n    título "⭐ Destacado"\n\npágina inicio en "/"\n  Tarjeta con producto y noEsUnBooleanoReal`
+        )
+        expect(resultado).toContain('⭐ Destacado')
+    })
+
+    it("si <parámetro> genera un ternario JS real en la plantilla de lista", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre\n  si producto.destacado\n    título "⭐ Oferta"\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con Tarjeta`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("producto.destacado ? `")
+        expect(js.contenido).toContain('⭐ Oferta')
+    })
+
+    it("la función de plantilla usa el nombre real del parámetro, no 'item' fijo", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ncomponente Tarjeta con producto\n  mostrar producto.nombre\n\npágina inicio en "/"\n  mostrar Producto recientes\n    con Tarjeta`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function plantilla_Tarjeta(producto)')
+        expect(js.contenido).not.toContain('function plantilla_Tarjeta(item)')
     })
 
 })

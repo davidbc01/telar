@@ -124,4 +124,18 @@ export const Errores = {
         linea,
         columna,
     }),
+
+    numeroArgumentosIncorrecto: (nombre: string, parametros: string[], recibidos: number, linea: number, columna: number): ErrorTelar => ({
+        mensaje: `"${nombre}" espera ${parametros.length} argumento${parametros.length === 1 ? '' : 's'} (${parametros.join(', ')}), pero se le pasaron ${recibidos}`,
+        sugerencia: `Escríbelo así: ${nombre} con ${parametros.join(' y ')}`,
+        linea,
+        columna,
+    }),
+
+    plantillaConVariosParametros: (nombre: string, cantidad: number, linea: number, columna: number): ErrorTelar => ({
+        mensaje: `"mostrar ... con ${nombre}" no es válido: el componente tiene ${cantidad} argumentos, y una plantilla de lista solo puede tener uno (el elemento de la lista)`,
+        sugerencia: `Declara "${nombre}" con un solo argumento para poder usarlo como plantilla, o usa "${nombre} con X" suelto en vez de en una lista`,
+        linea,
+        columna,
+    }),
 }

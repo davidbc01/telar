@@ -149,26 +149,61 @@ página contacto en "/contacto"
 ## Componentes
 
 ```telar
-componente NombreComponente
-  mostrar item.propiedad
+componente NombreComponente con param1 y param2
+  mostrar param1.propiedad
+  si param2
+    título "Condicional"
 ```
 
-Se usan pasando un solo argumento con `con` — sin paréntesis ni parámetros posicionales. Dentro del componente, `item` referencia el argumento pasado:
+Los parámetros se declaran con `con`, separados por `y` — tantos como haga falta. Al usarlo, pasas un argumento por cada parámetro declarado, en el mismo orden, también separados por `y`:
 
 ```telar
 página inicio en "/"
-  NombreComponente con producto
+  NombreComponente con producto y destacado
 ```
 
-Un componente también sirve como plantilla de una lista real completa, con `mostrar ... con`:
+### Contenido pasado desde fuera (slots)
+
+Un componente puede recibir contenido extra como un bloque indentado bajo su uso, insertado donde esté el marcador `contenido`:
 
 ```telar
-mostrar Producto recientes
-  máximo 8
-  con TarjetaProducto
+componente Tarjeta con producto
+  título producto.nombre
+  contenido
+
+página inicio en "/"
+  Tarjeta con producto
+    descripción "Esto se inserta donde está 'contenido'"
 ```
 
-A diferencia del uso anterior (`NombreComponente con producto`, donde `item.propiedad` es texto fijo sustituido en tiempo de compilación), aquí `item.propiedad` se convierte en una interpolación real: por cada producto que llegue de `/api/producto`, la plantilla se rellena con sus datos reales, uno por uno. Sin `con`, `mostrar Modelo recientes` sigue funcionando como antes — muestra todos los campos de cada elemento sin control de diseño.
+Sin marcador `contenido` explícito en el componente, lo que se pase se inserta al final (mismo criterio que usa `diseño` con el contenido de una página).
+
+### `si <parámetro>` — condición sobre un parámetro
+
+```telar
+componente Tarjeta con producto y destacado
+  si destacado
+    título "⭐ Destacado"
+```
+
+**Importante:** esto solo se evalúa con datos reales cuando el componente se usa como plantilla de una lista (ver más abajo) — ahí se genera un ternario JavaScript real (`${destacado ? '...' : ''}`) evaluado con el valor de cada elemento. Si el componente se usa suelto (`Tarjeta con producto y destacado`), no hay datos reales detrás — ese camino sigue siendo sustitución de texto en tiempo de compilación, así que el bloque `si <parámetro>` se renderiza siempre, sin condición real.
+
+### Como plantilla de una lista real
+
+Un componente de **un solo parámetro** sirve como plantilla de `mostrar Modelo`, para que cada elemento se vea con tu diseño en vez del genérico "campo: valor":
+
+```telar
+componente TarjetaProducto con producto
+  mostrar producto.nombre
+  mostrar producto.precio
+
+página inicio en "/"
+  mostrar Producto recientes
+    máximo 8
+    con TarjetaProducto
+```
+
+A diferencia del uso suelto (`TarjetaProducto con producto`, donde `producto.nombre` es texto fijo sustituido en compilación), aquí se convierte en una interpolación real: por cada producto que llegue de `/api/producto`, la plantilla se rellena con sus datos reales, uno por uno. Sin `con`, `mostrar Modelo recientes` sigue funcionando como antes — muestra todos los campos de cada elemento sin control de diseño. Solo componentes de un único parámetro pueden usarse así — con más de uno, Telar avisa al compilar.
 
 ---
 

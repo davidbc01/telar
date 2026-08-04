@@ -10,7 +10,7 @@ import {
     NodoTitulo, NodoDescripcion, NodoMostrar, NodoBoton,
     NodoCampo, NodoSi, NodoOptimizar, NodoCache, NodoReintentar,
     NodoUsar, NodoCodigo, NodoDiseno, NodoComponente, NodoUsoComponente,
-    NodoVariable, NodoTextoVariable, NodoImagen,
+    NodoVariable, NodoTextoVariable, NodoImagen, NodoContenidoSlot,
     Nodo, TipoDato, TipoCampo, ModificadorMostrar, Condicion, AccionBoton
 } from './tipos'
 import { Errores } from './errores'
@@ -47,7 +47,7 @@ export class Parser {
     // Ahora es un error de compilación, con las opciones válidas a mano.
     private validarReferencias(app: NodoAplicacion) {
         const nombresDisenos = app.disenos.map(d => d.nombre)
-        const nombresComponentes = app.componentes.map(c => c.nombre)
+        const componentes = app.componentes
 
         for (const pagina of app.paginas) {
             if (pagina.diseno && !nombresDisenos.includes(pagina.diseno)) {
@@ -55,40 +55,60 @@ export class Parser {
                     Errores.disenoNoExiste(pagina.diseno, nombresDisenos, pagina.linea, 1)
                 )
             }
-            this.validarNodosHijos(pagina.hijos, nombresComponentes)
+            this.validarNodosHijos(pagina.hijos, componentes)
         }
 
         for (const diseno of app.disenos) {
-            this.validarNodosHijos(diseno.hijos, nombresComponentes)
+            this.validarNodosHijos(diseno.hijos, componentes)
         }
     }
 
-    private validarNodosHijos(hijos: Nodo[], nombresComponentes: string[]) {
+    private validarNodosHijos(hijos: Nodo[], componentes: NodoComponente[]) {
+        const nombresComponentes = componentes.map(c => c.nombre)
+
         for (const nodo of hijos) {
-            if (nodo.tipo === 'uso_componente' && !nombresComponentes.includes(nodo.nombre)) {
-                throw new TelarError(
-                    Errores.componenteNoExiste(nodo.nombre, nombresComponentes, nodo.linea, 1)
-                )
+            if (nodo.tipo === 'uso_componente') {
+                const definicion = componentes.find(c => c.nombre === nodo.nombre)
+                if (!definicion) {
+                    throw new TelarError(
+                        Errores.componenteNoExiste(nodo.nombre, nombresComponentes, nodo.linea, 1)
+                    )
+                }
+                if (nodo.argumentos.length !== definicion.parametros.length) {
+                    throw new TelarError(
+                        Errores.numeroArgumentosIncorrecto(
+                            nodo.nombre, definicion.parametros, nodo.argumentos.length, nodo.linea, 1
+                        )
+                    )
+                }
+                this.validarNodosHijos(nodo.contenidoSlot, componentes)
             }
 
-            if (nodo.tipo === 'mostrar' && nodo.componentePlantilla &&
-                !nombresComponentes.includes(nodo.componentePlantilla)) {
-                throw new TelarError(
-                    Errores.componentePlantillaNoExiste(nodo.componentePlantilla, nombresComponentes, nodo.linea, 1)
-                )
+            if (nodo.tipo === 'mostrar' && nodo.componentePlantilla) {
+                const definicion = componentes.find(c => c.nombre === nodo.componentePlantilla)
+                if (!definicion) {
+                    throw new TelarError(
+                        Errores.componentePlantillaNoExiste(nodo.componentePlantilla, nombresComponentes, nodo.linea, 1)
+                    )
+                }
+                if (definicion.parametros.length !== 1) {
+                    throw new TelarError(
+                        Errores.plantillaConVariosParametros(nodo.componentePlantilla, definicion.parametros.length, nodo.linea, 1)
+                    )
+                }
             }
 
             // Recorrer bloques anidados (si/si no, si falla, si funciona)
             if (nodo.tipo === 'si') {
-                this.validarNodosHijos(nodo.entonces, nombresComponentes)
-                if (nodo.siNo) this.validarNodosHijos(nodo.siNo, nombresComponentes)
+                this.validarNodosHijos(nodo.entonces, componentes)
+                if (nodo.siNo) this.validarNodosHijos(nodo.siNo, componentes)
             }
             if (nodo.tipo === 'mostrar') {
-                if (nodo.siFalla) this.validarNodosHijos(nodo.siFalla, nombresComponentes)
-                if (nodo.siFunciona) this.validarNodosHijos(nodo.siFunciona, nombresComponentes)
+                if (nodo.siFalla) this.validarNodosHijos(nodo.siFalla, componentes)
+                if (nodo.siFunciona) this.validarNodosHijos(nodo.siFunciona, componentes)
             }
             if (nodo.tipo === 'boton' && nodo.siFalla) {
-                this.validarNodosHijos(nodo.siFalla, nombresComponentes)
+                this.validarNodosHijos(nodo.siFalla, componentes)
             }
         }
     }
@@ -229,16 +249,39 @@ export class Parser {
     private parsearComponente(): NodoComponente {
         const token = this.consumir(TipoToken.Componente)
         const nombre = this.consumir(TipoToken.Nombre).valor
+
+        this.consumir(TipoToken.Con)
+        const parametros: string[] = [this.consumirIdentificador().valor]
+        while (this.actual().tipo === TipoToken.Y) {
+            this.avanzar()
+            parametros.push(this.consumirIdentificador().valor)
+        }
+
         const hijos = this.parsearBloqueIndentado()
-        return { tipo: "componente", nombre, hijos, linea: token.linea }
+        return { tipo: "componente", nombre, parametros, hijos, linea: token.linea }
     }
- 
-    // TarjetaProducto con producto
+
+    // Tarjeta con producto y destacado
+    //   [bloque indentado opcional — va donde esté "contenido" en el componente]
     private parsearUsoComponente(): NodoUsoComponente {
         const token = this.consumir(TipoToken.Nombre)
         this.consumir(TipoToken.Con)
-        const argumento = this.consumirIdentificador().valor
-        return { tipo: "uso_componente", nombre: token.valor, argumento, linea: token.linea }
+
+        const argumentos: string[] = [this.consumirIdentificador().valor]
+        while (this.actual().tipo === TipoToken.Y) {
+            this.avanzar()
+            argumentos.push(this.consumirIdentificador().valor)
+        }
+
+        const contenidoSlot = this.parsearBloqueIndentado()
+
+        return { tipo: "uso_componente", nombre: token.valor, argumentos, contenidoSlot, linea: token.linea }
+    }
+
+    // contenido — marcador de slot dentro de un componente
+    private parsearContenidoSlot(): NodoContenidoSlot {
+        const token = this.consumir(TipoToken.Contenido)
+        return { tipo: "contenido_slot", linea: token.linea }
     }
  
   // ── datos Producto ──────────────────────────────────────────
@@ -365,6 +408,7 @@ export class Parser {
             case TipoToken.Variable:    return this.parsearVariable()
             case TipoToken.PalabraTexto: return this.parsearTextoVariable()
             case TipoToken.Imagen:      return this.parsearImagen()
+            case TipoToken.Contenido:   return this.parsearContenidoSlot()
             default:
             this.avanzar()
             return null
@@ -755,6 +799,10 @@ export class Parser {
                 const valor = this.consumir(TipoToken.Texto).valor
                 return { tipo: "campo_igual", campo, valor }
             }
+            // si destacado — a secas, sin operador: comprueba un parámetro
+            // booleano de un componente (solo tiene efecto real cuando el
+            // componente se usa como plantilla de una lista, ver v0.17)
+            return { tipo: "parametro_verdadero", nombre: campo }
         }
  
         throw new TelarError(
