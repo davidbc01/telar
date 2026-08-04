@@ -883,3 +883,59 @@ describe("Generador — componentes: varios parámetros, slots y si-parámetro",
     })
 
 })
+
+describe("Generador — JS de elementos interactivos dentro de un diseño (regresión pre-v1.0)", () => {
+
+    it("un botón de acción dentro de un diseño genera su función JS", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  botón "🌙" alterna tema\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function cambiar_tema()')
+    })
+
+    it("un botón de acción dentro de un diseño registra su listener de clic", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  botón "🌙" alterna tema\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain("document.querySelector('[data-accion=\"cambiar_tema\"]')")
+        expect(js.contenido).toContain('registrarAcciones();')
+    })
+
+    it("una variable declarada dentro de un diseño se incluye en Telar.estado", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  variable visitas = 0\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('visitas: 0')
+    })
+
+    it("un botón hacer sumar/restar dentro de un diseño funciona igual que en una página", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  variable cuenta = 0\n  botón "+" suma cuenta\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('function sumar_cuenta()')
+        expect(js.contenido).toContain('Telar.estado.cuenta = Telar.estado.cuenta + 1')
+    })
+
+    it("un 'si' condicional dentro de un diseño dispara aplicarCondiciones", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  si el usuario está conectado\n    botón "Mi cuenta" ir a cuenta\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('aplicarCondiciones();')
+        expect(js.contenido).toContain("Telar.aplicarCondicion('usuario-conectado');")
+    })
+
+    it("un 'mostrar Modelo' dentro de un diseño genera su cargador y se llama en el init", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  mostrar Notificacion recientes\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('async function cargarNotificacion()')
+        expect(js.contenido).toContain('cargarNotificacion();')
+    })
+
+})

@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.24.2] - 2026-08-04
+
+### Corregido
+- **Bug real y grave, encontrado al probar telar.dev en local**: cualquier elemento interactivo (`botón` con acción, `variable`, `si`, `mostrar Modelo`) dentro de un `diseño` (no directamente en una página) **nunca generaba su JavaScript** — la extracción de acciones, condiciones, variables y cargadores solo recorría `app.paginas`, nunca `app.disenos`. El botón de cambiar tema en un navbar compartido, el ejemplo más obvio, no hacía absolutamente nada al hacer clic, sin ningún error visible
+- Eran 9 sitios distintos con el mismo patrón (algunos con bucles `for`, otros con `.some()`), todos corregidos con un helper único que recorre páginas y diseños por igual
+- 6 tests de regresión nuevos, probando botón/variable/si/mostrar dentro de un diseño (269 en total)
+- Probado de extremo a extremo con un DOM real: clic en un botón de tema dentro de un navbar compartido, confirmando el cambio real de `oscuro` a `claro`
+
+---
+
 ## [0.24.1] - 2026-08-04
 
 ### Corregido

@@ -19,6 +19,17 @@ export class GeneradorJS {
         this.plantillas = plantillas
     }
 
+    // Todas las listas de hijos relevantes para generar JS: las de cada
+    // página, y también las de cada diseño. Antes solo se miraban las
+    // páginas — un botón, variable o condición dentro de un "diseño"
+    // (ej. el botón de tema en un navbar compartido) nunca se registraba.
+    private todosLosHijos(): Nodo[][] {
+        return [
+            ...this.app.paginas.map(p => p.hijos),
+            ...(this.app.disenos ?? []).map(d => d.hijos)
+        ]
+    }
+
     generar(): string {
         const secciones: string[] = []
 
@@ -233,8 +244,8 @@ ${this.generarEstadoInicial()}`
 
     private generarEstadoInicial(): string {
         const variables: { nombre: string; valorInicial: number }[] = []
-        for (const pagina of this.app.paginas) {
-            for (const nodo of pagina.hijos) {
+        for (const hijos of this.todosLosHijos()) {
+            for (const nodo of hijos) {
                 if (nodo.tipo === 'variable') {
                     variables.push({ nombre: nodo.nombre, valorInicial: nodo.valorInicial })
                 }
@@ -278,8 +289,8 @@ ${this.generarEstadoInicial()}`
     private generarCondiciones(): string {
         const condiciones = new Set<string>()
     
-        for (const pagina of this.app.paginas) {
-            this.extraerCondiciones(pagina.hijos, condiciones)
+        for (const hijos of this.todosLosHijos()) {
+            this.extraerCondiciones(hijos, condiciones)
         }
     
         if (condiciones.size === 0) return ''
@@ -314,8 +325,8 @@ ${lineas.join('\n')}
 
     private generarFuncionesPlantilla(): string {
         const usados = new Set<string>()
-        for (const pagina of this.app.paginas) {
-            for (const nodo of pagina.hijos) {
+        for (const hijos of this.todosLosHijos()) {
+            for (const nodo of hijos) {
                 if (nodo.tipo === 'mostrar' && nodo.componentePlantilla) {
                     usados.add(nodo.componentePlantilla)
                 }
@@ -347,8 +358,8 @@ ${html}
     private generarCargadores(): string {
         const cargadores: string[] = []
     
-        for (const pagina of this.app.paginas) {
-            for (const nodo of pagina.hijos) {
+        for (const hijos of this.todosLosHijos()) {
+            for (const nodo of hijos) {
                 if (nodo.tipo === 'mostrar' && !nodo.modelo.includes('.')) {
                 cargadores.push(this.generarCargador(nodo))
                 }
@@ -419,8 +430,8 @@ async function cargar${modelo}() {
     private generarAcciones(): string {
         const acciones = new Map<string, { operacion?: 'sumar' | 'restar' | 'cambiar_tema'; variable?: string }>()
     
-        for (const pagina of this.app.paginas) {
-            this.extraerAcciones(pagina.hijos, acciones)
+        for (const hijos of this.todosLosHijos()) {
+            this.extraerAcciones(hijos, acciones)
         }
     
         if (acciones.size === 0) return ''
@@ -514,16 +525,18 @@ async function ${accion}() {
     // --- Inicialización ---
 
     private generarInit(): string {
-        const tieneCargadores = this.app.paginas.some(p =>
-            p.hijos.some(h => h.tipo === 'mostrar' && !('modelo' in h && (h as NodoMostrar).modelo.includes('.')))
+        const todosHijos = this.todosLosHijos()
+
+        const tieneCargadores = todosHijos.some(hijos =>
+            hijos.some(h => h.tipo === 'mostrar' && !('modelo' in h && (h as NodoMostrar).modelo.includes('.')))
         )
     
-        const tieneCondiciones = this.app.paginas.some(p =>
-            p.hijos.some(h => h.tipo === 'si')
+        const tieneCondiciones = todosHijos.some(hijos =>
+            hijos.some(h => h.tipo === 'si')
         )
     
-        const tieneAcciones = this.app.paginas.some(p =>
-            p.hijos.some(h => h.tipo === 'boton' && (h as NodoBoton).accion === 'hacer')
+        const tieneAcciones = todosHijos.some(hijos =>
+            hijos.some(h => h.tipo === 'boton' && (h as NodoBoton).accion === 'hacer')
         )
     
         const llamadas: string[] = ['  Telar.iniciarSesion();', '  Telar.iniciarTema();']
@@ -532,8 +545,8 @@ async function ${accion}() {
         if (tieneAcciones) llamadas.push('  registrarAcciones();')
     
         // Llamar a cada cargador
-        for (const pagina of this.app.paginas) {
-            for (const nodo of pagina.hijos) {
+        for (const hijos of this.todosLosHijos()) {
+            for (const nodo of hijos) {
                 if (nodo.tipo === 'mostrar' && !('modelo' in nodo && (nodo as NodoMostrar).modelo.includes('.'))) {
                 llamadas.push(`  cargar${(nodo as NodoMostrar).modelo}();`)
                 }
