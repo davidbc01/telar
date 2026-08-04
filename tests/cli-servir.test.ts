@@ -85,6 +85,20 @@ describe("CLI — telar servir (integración HTTP real)", () => {
         expect(await res.text()).toContain("Inicio")
     })
 
+    it("una ruta estática de varios segmentos se sirve bien, no como carpeta anidada (regresión pre-v1.0)", async () => {
+        silenciarConsola()
+        dirTemp = crearProyecto(
+            `aplicación Prueba\n\npágina detalle en "/blog/mi-articulo"\n  título "Mi artículo"`
+        )
+
+        handle = comandoServir([path.join(dirTemp, "app.telar"), "-o", path.join(dirTemp, "dist"), "-p", "3907"])
+        await esperarServidor(handle.servidor)
+
+        const res = await fetch(`http://localhost:${handle.puerto}/blog/mi-articulo`)
+        expect(res.status).toBe(200)
+        expect(await res.text()).toContain("Mi artículo")
+    })
+
     it("devuelve 404 para una ruta que no existe", async () => {
         silenciarConsola()
         dirTemp = crearProyecto(`aplicación Prueba\n\npágina inicio en "/"\n  título "Hola"`)

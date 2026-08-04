@@ -366,9 +366,15 @@ export function comandoServir(args: string[]) {
     const servidor = http.createServer((req, res) => {
         let urlPath = req.url === '/' ? '/index.html' : req.url ?? '/index.html'
         urlPath = urlPath.split('?')[0]
-        if (!path.extname(urlPath)) urlPath = urlPath + '.html'
- 
-        const rutaArchivo = path.join(salida, urlPath)
+
+        // Los assets (con extensión: .css, .js...) se sirven tal cual.
+        // Las rutas de página (sin extensión) se aplanan con guion igual
+        // que hace rutaANombre al compilar — antes esto trataba "/blog/x"
+        // como una carpeta anidada "blog/x.html", que nunca existe de
+        // verdad (el archivo real es "blog-x.html", plano).
+        const rutaArchivo = path.extname(urlPath)
+            ? path.join(salida, urlPath)
+            : path.join(salida, rutaANombre(urlPath))
  
         if (fs.existsSync(rutaArchivo)) {
             servirArchivo(res, rutaArchivo)

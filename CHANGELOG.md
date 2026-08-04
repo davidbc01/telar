@@ -5,6 +5,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.24.1] - 2026-08-04
+
+### Corregido
+- **Bug real y serio, encontrado al ampliar telar.dev con una sección de novedades**: `telar servir` trataba cualquier ruta de más de un segmento (`/blog/mi-articulo`) como una carpeta anidada en disco (`blog/mi-articulo.html`), cuando el archivo real que genera Telar es plano y con guion (`blog-mi-articulo.html`, igual que hace `rutaANombre` al compilar). Esto hacía que el servidor de desarrollo **crasheara** al pedir cualquier artículo real de una colección, y llevaba roto para cualquier ruta estática de dos o más segmentos desde que `telar servir` existe — nunca se había probado con una
+- 1 test de regresión nuevo (263 en total)
+
+---
+
 ## [0.24.0] - 2026-08-04
 
 ### Contexto
