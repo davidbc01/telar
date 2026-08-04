@@ -986,8 +986,76 @@ describe("Generador — JS de elementos interactivos dentro de un diseño (regre
             `aplicación MiApp\n\ndiseño principal\n  mostrar Notificacion recientes\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"`
         )
         const js = archivos.find(a => a.nombre === 'telar.js')!
-        expect(js.contenido).toContain('async function cargarNotificacion()')
-        expect(js.contenido).toContain('cargarNotificacion();')
+        expect(js.contenido).toContain('async function cargarNotificacion_disenoprincipal()')
+        expect(js.contenido).toContain('cargarNotificacion_disenoprincipal();')
+    })
+
+})
+
+describe("Generador — dos páginas con el mismo modelo no colisionan (regresión pre-v1.0)", () => {
+
+    const codigo = `aplicación MiApp
+
+componente TarjetaProducto con producto
+  mostrar producto.nombre
+
+página inicio en "/"
+  título "Inicio"
+  mostrar Producto recientes
+    máximo 8
+    con TarjetaProducto
+
+página detalle en "/producto/(id)"
+  título "Detalle"
+  mostrar Producto donde id = parametro.id`
+
+    it("genera dos funciones de cargador con nombres distintos, no una que pise a la otra", () => {
+        const archivos = compilar(codigo)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        const coincidencias = js.contenido.match(/async function cargarProducto\w*\(\)/g) ?? []
+        expect(coincidencias.length).toBe(2)
+        expect(new Set(coincidencias).size).toBe(2) // sin nombres duplicados
+    })
+
+    it("la función de la página con lista conserva sus modificadores (máximo, con componente)", () => {
+        const archivos = compilar(codigo)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        const funcionInicio = js.contenido.match(/async function cargarProducto_inicio\(\)[\s\S]*?\n}/)![0]
+        expect(funcionInicio).toContain("maximo: '8'")
+        expect(funcionInicio).toContain('plantilla_TarjetaProducto')
+    })
+
+    it("la función de la página de detalle conserva su filtro por parámetro, no el de la otra página", () => {
+        const archivos = compilar(codigo)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        const funcionDetalle = js.contenido.match(/async function cargarProducto_detalle\(\)[\s\S]*?\n}/)![0]
+        expect(funcionDetalle).toContain("filtroCampo: 'id'")
+        expect(funcionDetalle).not.toContain("maximo:")
+        expect(funcionDetalle).not.toContain('plantilla_TarjetaProducto')
+    })
+
+    it("cada página llama solo a su propio cargador en el init", () => {
+        const archivos = compilar(codigo)
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        expect(js.contenido).toContain('cargarProducto_inicio();')
+        expect(js.contenido).toContain('cargarProducto_detalle();')
+    })
+
+    it("los contenedores HTML de cada página llevan un data-instancia distinto", () => {
+        const archivos = compilar(codigo)
+        const inicio = archivos.find(a => a.nombre === 'index.html')!.contenido
+        const detalle = archivos.find(a => a.nombre === 'producto-id.html')!.contenido
+        expect(inicio).toContain('data-instancia="inicio"')
+        expect(detalle).toContain('data-instancia="detalle"')
+    })
+
+    it("una variable compartida por un diseño no se declara duplicada en Telar.estado", () => {
+        const archivos = compilar(
+            `aplicación MiApp\n\ndiseño principal\n  variable visitas = 0\n\npágina inicio en "/"\n  diseño principal\n  título "Inicio"\n\npágina otra en "/otra"\n  diseño principal\n  título "Otra"`
+        )
+        const js = archivos.find(a => a.nombre === 'telar.js')!
+        const coincidencias = js.contenido.match(/visitas: 0/g) ?? []
+        expect(coincidencias.length).toBe(1)
     })
 
 })

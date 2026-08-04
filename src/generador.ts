@@ -46,6 +46,7 @@ export class Generador {
     private app: NodoAplicacion
     private dirProyecto: string  // ← NUEVO: para buscar estilos.css local
     private paginaActual: NodoPagina | null = null  // contexto para resolver variables
+    private contextoActual: string = ''  // "nombrePagina" o "diseno-nombreDiseno" — para dar nombres únicos a los cargadores de mostrar, en sincronía con el mismo cálculo en generador-js.ts
     private itemColeccionActual: ItemColeccion | null = null  // contexto al generar un artículo real
  
     constructor(app: NodoAplicacion, dirProyecto: string = process.cwd()) {
@@ -210,6 +211,7 @@ export class Generador {
         this.paginaActual = pagina
         const titulo = this.extraerTitulo(pagina) ?? this.app.nombre
         const descripcion = this.extraerDescripcion(pagina) ?? ''
+        this.contextoActual = pagina.nombre
         const contenidoPagina = pagina.hijos.map(h => this.generarNodo(h)).join('\n')
         const cuerpo = this.envolverEnDiseno(pagina, contenidoPagina)
         const tieneCache = pagina.hijos.some(h => h.tipo === 'cache')
@@ -517,6 +519,7 @@ ${this.indentar(item.contenidoHTML, 4)}
  
         const atributos = [
             `data-modelo="${nodo.modelo}"`,
+            `data-instancia="${this.contextoActual.toLowerCase().replace(/[^a-z0-9]+/g, '')}"`,
             maximo ? `data-maximo="${(maximo as any).cantidad}"` : '',
             ordenados ? `data-ordenar="${(ordenados as any).campo}"` : '',
             recientes ? `data-recientes="true"` : '',
@@ -636,6 +639,7 @@ ${nodo.contenido}
         const diseno = disenos.find(d => d.nombre === nombreDiseno)
         if (!diseno) return contenidoPagina
 
+        this.contextoActual = `diseno-${diseno.nombre}`
         const cuerpoDiseno = diseno.hijos.map(h => this.generarNodo(h)).join('\n')
 
         // El contenido de la página se inyecta implícito, al final del diseño

@@ -585,3 +585,27 @@ describe("Parser — componentes con varios parámetros y slots", () => {
     })
 
 })
+
+describe("Parser — nombres que colisionan con palabras reservadas (regresión pre-v1.0)", () => {
+
+    it("un parámetro de componente se puede llamar 'titulo' pese a colisionar con la palabra clave", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con titulo\n  mostrar titulo`
+        )).not.toThrow()
+    })
+
+    it("un argumento al usar un componente también puede llamarse 'titulo'", () => {
+        const arbol = parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con item\n  mostrar item\n\npágina inicio en "/"\n  Tarjeta con titulo`
+        )
+        const uso = arbol.paginas[0].hijos[0] as any
+        expect(uso.argumentos).toEqual(["titulo"])
+    })
+
+    it("consumirIdentificador sigue rechazando literales (texto/número) donde se espera un nombre", () => {
+        expect(() => parsear(
+            `aplicación MiApp\n\ncomponente Tarjeta con "no es un nombre"\n  mostrar item`
+        )).toThrow()
+    })
+
+})

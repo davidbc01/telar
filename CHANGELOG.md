@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [0.25.1] - 2026-08-05
+
+### Contexto
+Auditoría combinada pre-v1.0: un proyecto real con absolutamente todo lo construido esta sesión a la vez, para pillar bugs de interacción que las pruebas de una sola función no ven.
+
+### Corregido
+- **El bug más serio encontrado en toda la sesión**: cuando dos páginas distintas usan `mostrar` con el mismo modelo (ej. la home con `mostrar Producto recientes con TarjetaProducto`, y el detalle con `mostrar Producto donde id = parametro.id`), Telar generaba **dos funciones JavaScript con el mismo nombre** (`cargarProducto`). En JavaScript, la segunda declaración pisa a la primera en silencio, sin ningún error — la página que se cargaba primero en el archivo perdía su configuración real y heredaba la de la otra página. El síntoma observado: la lista de la home usaba el fetch del detalle, y encima se renderizaba duplicada
+  - Cada cargador ahora tiene un nombre único por página (o por diseño, si el `mostrar` vive ahí), y el HTML lleva un `data-instancia` a juego para que cada uno apunte a su propio contenedor
+  - Una variable compartida por un diseño entre varias páginas ya no se declara duplicada en `Telar.estado`
+- **Otro bug sistémico, no puntual**: `consumirIdentificador()` — usado en 17 sitios distintos del parser — rechazaba cualquier palabra reservada en posición de nombre. Esto ya había obligado a parchear casos concretos por separado (nombres de página, nombres de modelo); ahora se arregló de raíz, aceptando cualquier palabra en posición de nombre salvo los tokens que nunca tienen sentido ahí (literales, marcadores de indentación)
+- 8 tests de regresión nuevos (278 en total)
+
+---
+
 ## [0.25.0] - 2026-08-05
  
 ### Contexto

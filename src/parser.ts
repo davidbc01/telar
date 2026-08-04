@@ -1014,9 +1014,19 @@ export class Parser {
         return token
     }
  
+    // Acepta cualquier palabra en posición de nombre — incluidas palabras
+    // reservadas (título, imagen, articulo, tema...), porque cualquiera de
+    // ellas puede colisionar con un nombre real que alguien quiera usar
+    // (un modelo "Articulo", un parámetro "titulo"...). Solo se rechazan
+    // los tokens que nunca tienen sentido como nombre: literales y
+    // marcadores de estructura del propio lenguaje.
     private consumirIdentificador(): Token {
         const token = this.actual()
-        if (token.tipo !== TipoToken.Identificador && token.tipo !== TipoToken.Nombre) {
+        const noValidoComoNombre = new Set([
+            TipoToken.Indentacion, TipoToken.FinIndentacion, TipoToken.FinArchivo,
+            TipoToken.NuevaLinea, TipoToken.Texto, TipoToken.Numero
+        ])
+        if (noValidoComoNombre.has(token.tipo)) {
             throw new TelarError(
                 Errores.seEsperaba("un nombre", token.valor, token.linea, token.columna)
             )

@@ -23,11 +23,27 @@ export class GeneradorJS {
     // página, y también las de cada diseño. Antes solo se miraban las
     // páginas — un botón, variable o condición dentro de un "diseño"
     // (ej. el botón de tema en un navbar compartido) nunca se registraba.
-    private todosLosHijos(): Nodo[][] {
-        return [
-            ...this.app.paginas.map(p => p.hijos),
-            ...(this.app.disenos ?? []).map(d => d.hijos)
-        ]
+    // Un grupo por diseño realmente usado (una vez, aunque lo compartan
+    // varias páginas) y un grupo por cada página, con su propio nombre
+    // como contexto. El "contexto" sirve para dar nombres únicos a los
+    // cargadores — antes, dos páginas con "mostrar" del mismo modelo (con
+    // modificadores distintos) se pisaban entre sí en el JS generado,
+    // porque el nombre de la función solo dependía del modelo.
+    private todosLosHijos(): { contexto: string; hijos: Nodo[] }[] {
+        const disenos = this.app.disenos ?? []
+        const grupos: { contexto: string; hijos: Nodo[] }[] = []
+        const disenosVistos = new Set<string>()
+
+        for (const p of this.app.paginas) {
+            const nombreDiseno = p.diseno ?? disenos[0]?.nombre
+            if (nombreDiseno && !disenosVistos.has(nombreDiseno)) {
+                disenosVistos.add(nombreDiseno)
+                const diseno = disenos.find(d => d.nombre === nombreDiseno)
+                if (diseno) grupos.push({ contexto: `diseno-${diseno.nombre}`, hijos: diseno.hijos })
+            }
+            grupos.push({ contexto: p.nombre, hijos: p.hijos })
+        }
+        return grupos
     }
 
     generar(): string {
@@ -243,18 +259,20 @@ ${this.generarEstadoInicial()}`
     // contiene en el DOM los elementos de sus propias variables.
 
     private generarEstadoInicial(): string {
-        const variables: { nombre: string; valorInicial: number }[] = []
-        for (const hijos of this.todosLosHijos()) {
+        // Map, no array: si un diseño comparte una variable entre varias
+        // páginas, no queremos claves duplicadas en Telar.estado
+        const variables = new Map<string, number>()
+        for (const { hijos } of this.todosLosHijos()) {
             for (const nodo of hijos) {
                 if (nodo.tipo === 'variable') {
-                    variables.push({ nombre: nodo.nombre, valorInicial: nodo.valorInicial })
+                    variables.set(nodo.nombre, nodo.valorInicial)
                 }
             }
         }
 
-        if (variables.length === 0) return 'Telar.estado = {};'
+        if (variables.size === 0) return 'Telar.estado = {};'
 
-        const entradas = variables.map(v => `    ${v.nombre}: ${v.valorInicial}`)
+        const entradas = Array.from(variables.entries()).map(([nombre, valorInicial]) => `    ${nombre}: ${valorInicial}`)
         return `Telar.estado = {\n${entradas.join(',\n')}\n};`
     }
 
@@ -289,7 +307,7 @@ ${this.generarEstadoInicial()}`
     private generarCondiciones(): string {
         const condiciones = new Set<string>()
     
-        for (const hijos of this.todosLosHijos()) {
+        for (const { hijos } of this.todosLosHijos()) {
             this.extraerCondiciones(hijos, condiciones)
         }
     
@@ -325,7 +343,7 @@ ${lineas.join('\n')}
 
     private generarFuncionesPlantilla(): string {
         const usados = new Set<string>()
-        for (const hijos of this.todosLosHijos()) {
+        for (const { hijos } of this.todosLosHijos()) {
             for (const nodo of hijos) {
                 if (nodo.tipo === 'mostrar' && nodo.componentePlantilla) {
                     usados.add(nodo.componentePlantilla)
@@ -358,10 +376,10 @@ ${html}
     private generarCargadores(): string {
         const cargadores: string[] = []
     
-        for (const hijos of this.todosLosHijos()) {
+        for (const { contexto, hijos } of this.todosLosHijos()) {
             for (const nodo of hijos) {
                 if (nodo.tipo === 'mostrar' && !nodo.modelo.includes('.')) {
-                cargadores.push(this.generarCargador(nodo))
+                cargadores.push(this.generarCargador(nodo, contexto))
                 }
             }
         }
@@ -370,17 +388,23 @@ ${html}
         return cargadores.join('\n\n')
     }
 
-    private generarCargador(nodo: NodoMostrar): string {
+    // Nombre único por (contexto, modelo) — antes era solo "cargar${modelo}",
+    // así que dos páginas mostrando el mismo modelo (con modificadores
+    // distintos: máximo, donde, con-componente...) se pisaban entre sí:
+    // la segunda función declarada ganaba silenciosamente sobre la primera,
+    // y todas las páginas acababan usando la configuración equivocada.
+    private nombreCargador(modelo: string, contexto: string): string {
+        return `cargar${modelo}_${this.slugify(contexto)}`
+    }
+
+    private slugify(texto: string): string {
+        return texto.toLowerCase().replace(/[^a-z0-9]+/g, '')
+    }
+
+    private generarCargador(nodo: NodoMostrar, contexto: string): string {
         const modelo = nodo.modelo
-        const atributos = [
-            `data-modelo="${modelo}"`,
-            ...nodo.modificadores.map(m => {
-                if (m.tipo === 'maximo') return `data-maximo="${m.cantidad}"`
-                if (m.tipo === 'ordenados') return `data-ordenar="${m.campo}"`
-                if (m.tipo === 'recientes') return `data-recientes="true"`
-                return ''
-            }).filter(Boolean)
-        ]
+        const nombreFuncion = this.nombreCargador(modelo, contexto)
+        const selector = `[data-modelo="${modelo}"][data-instancia="${this.slugify(contexto)}"]`
     
         const opciones: string[] = []
         nodo.modificadores.forEach(m => {
@@ -399,7 +423,7 @@ ${html}
     
         const reintentar = nodo.siFalla?.find(n => n.tipo === 'reintentar') as NodoReintentar | undefined
         const reintentarJS = reintentar
-            ? `Telar.reintentar(() => cargar${modelo}(), ${reintentar.segundos});`
+            ? `Telar.reintentar(() => ${nombreFuncion}(), ${reintentar.segundos});`
             : ''
     
         const siFallaMsg = nodo.siFalla?.find(n => n.tipo === 'mostrar')
@@ -409,9 +433,9 @@ ${html}
     
         const argPlantilla = nodo.componentePlantilla ? `, plantilla_${nodo.componentePlantilla}` : ''
 
-        return `// Cargar ${modelo}
-async function cargar${modelo}() {
-    const contenedor = document.querySelector('[data-modelo="${modelo}"]')
+        return `// Cargar ${modelo} (${contexto})
+async function ${nombreFuncion}() {
+    const contenedor = document.querySelector('${selector}')
     if (!contenedor) return
 
     try {
@@ -430,7 +454,7 @@ async function cargar${modelo}() {
     private generarAcciones(): string {
         const acciones = new Map<string, { operacion?: 'sumar' | 'restar' | 'cambiar_tema'; variable?: string }>()
     
-        for (const hijos of this.todosLosHijos()) {
+        for (const { hijos } of this.todosLosHijos()) {
             this.extraerAcciones(hijos, acciones)
         }
     
@@ -527,15 +551,15 @@ async function ${accion}() {
     private generarInit(): string {
         const todosHijos = this.todosLosHijos()
 
-        const tieneCargadores = todosHijos.some(hijos =>
+        const tieneCargadores = todosHijos.some(({ hijos }) =>
             hijos.some(h => h.tipo === 'mostrar' && !('modelo' in h && (h as NodoMostrar).modelo.includes('.')))
         )
     
-        const tieneCondiciones = todosHijos.some(hijos =>
+        const tieneCondiciones = todosHijos.some(({ hijos }) =>
             hijos.some(h => h.tipo === 'si')
         )
     
-        const tieneAcciones = todosHijos.some(hijos =>
+        const tieneAcciones = todosHijos.some(({ hijos }) =>
             hijos.some(h => h.tipo === 'boton' && (h as NodoBoton).accion === 'hacer')
         )
     
@@ -545,10 +569,10 @@ async function ${accion}() {
         if (tieneAcciones) llamadas.push('  registrarAcciones();')
     
         // Llamar a cada cargador
-        for (const hijos of this.todosLosHijos()) {
+        for (const { contexto, hijos } of this.todosLosHijos()) {
             for (const nodo of hijos) {
                 if (nodo.tipo === 'mostrar' && !('modelo' in nodo && (nodo as NodoMostrar).modelo.includes('.'))) {
-                llamadas.push(`  cargar${(nodo as NodoMostrar).modelo}();`)
+                llamadas.push(`  ${this.nombreCargador((nodo as NodoMostrar).modelo, contexto)}();`)
                 }
             }
         }

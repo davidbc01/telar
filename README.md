@@ -377,7 +377,7 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 | Mensajes de error con contexto visual | ✅ Completo |
 | Gestor de paquetes | ✅ Completo |
 | Sintaxis `usar` y bloque `código` | ✅ Completo |
-| Tests completos (269) + CI/CD | ✅ Completo |
+| Tests completos (278) + CI/CD | ✅ Completo |
 | Proyectos multi-archivo con `incluir` | ✅ Completo |
 | Estilos personalizables + Tailwind | ✅ Completo |
 | Palabra clave `clase` en elementos | ✅ Completo |
@@ -553,6 +553,12 @@ Telar compila a HTML + CSS + JavaScript optimizados. El desarrollador nunca toca
 - Los 3 proyectos reales de esta sesión (`examples/blog`, `examples/tienda`, telar.dev) migrados a la estructura nueva y reverificados compilando
 - Breaking change total — se decidió deliberadamente no mantener compatibilidad con la estructura antigua, estando pre-v1.0
 - 269 tests en total
+
+### v0.25.1 — Auditoría combinada pre-v1.0 ✅
+- Un proyecto real con todo lo de esta sesión a la vez — sacó el **bug más serio de toda la sesión**: dos páginas con `mostrar` del mismo modelo generaban dos funciones JS con el mismo nombre, y la segunda pisaba a la primera en silencio (sin error, sin aviso)
+- Cada cargador ahora tiene un nombre único por página, con el HTML y el JS sincronizados vía `data-instancia`
+- Arreglado también de raíz otro bug sistémico: `consumirIdentificador()` (17 sitios del parser) ya acepta cualquier palabra reservada en posición de nombre, en vez de ir parcheando colisión por colisión
+- 8 tests de regresión nuevos (278 en total)
 
 ### v1.0 — Lanzamiento público
 - Sintaxis estable — sin breaking changes
